@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Test styles to verify Tailwind is working */
+body {
+  @apply bg-background text-text_primary;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Custom utilities */
+.shadow-outer {
+  @apply shadow-[0px_4px_8px_0px_rgba(0,0,0,0.5),0px_2px_4px_0px_rgba(255,255,255,0.1)_inset];
+}
+
+.shadow-outer-md {
+  @apply shadow-[0px_6px_12px_0px_rgba(0,0,0,0.6),0px_3px_6px_0px_rgba(255,255,255,0.1)_inset];
+}
+
+.shadow-inner {
+  @apply shadow-[0px_2px_4px_0px_rgba(0,0,0,0.5)_inset,0px_1px_2px_0px_rgba(255,255,255,0.1)];
+}
+
+/* Animation for loading indicators */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
