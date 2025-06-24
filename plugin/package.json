@@ -1,0 +1,12 @@
+{
+  "name": "rythm-daw-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "framer-motion": "^11.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}

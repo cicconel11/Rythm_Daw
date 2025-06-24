@@ -1,0 +1,312 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(cuid())
+  email            String         @unique
+  name             String?
+  password         String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  lastLoginAt      DateTime?
+  inventoryHash    String?
+  lastInventorySync DateTime?
+  
+  // Relations
+  plugins          UserPlugins[]
+  presence         UserPresence?
+}
+
+enum UserStatus {
+  ONLINE
+  IN_DAW
+  RECORDING
+  IDLE
+}
+
+model UserPresence {
+  id          String     @id @default(cuid())
+  userId      String     @unique
+  status      UserStatus @default(ONLINE)
+  lastSeen    DateTime   @default(now())
+  expiresAt   DateTime
+  projectId   String?
+  sessionId   String?
+  userAgent   String?
+  ipAddress   String?
+  
+  // Relations
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([projectId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model Plugin {
+  uid      String    @id
+  name     String
+  vendor   String
+  version  String
+  lastSeen DateTime  @default(now())
+  
+  // Relations
+  users    UserPlugins[]
+}
+
+model UserPlugins {
+  userId      String   @map("user_id")
+  pluginUid   String   @map("plugin_uid")
+  isActive    Boolean  @default(true)
+  lastSynced  DateTime @default(now())
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plugin      Plugin   @relation(fields: [pluginUid], references: [uid], onDelete: Cascade)
+  
+  @@id([userId, pluginUid], name: "user_plugin_pkey")
+  @@index([userId])
+  @@index([pluginUid])
+}
+
+model Project {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  createdById String     @map("created_by_id")
+  
+  // Relations
+  members     ProjectMember[]
+  snapshots   Snapshot[]
+  
+  @@index([createdById])
+}
+
+model ProjectMember {
+  userId    String   @map("user_id")
+  projectId String   @map("project_id")
+  role      String   @default("member")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@id([userId, projectId], name: "project_member_pkey")
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Snapshot {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  metadata    Json
+  files       Json       // Array of FileMetadataDto
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  // Relations
+  projectId   String    @map("project_id")
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdById String    @map("created_by_id")
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  
+  @@index([projectId])
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  event     String
+  payload   Json?    @default("{}")
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  projectId String?  @map("project_id")
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([projectId])
+  @@index([userId])
+  @@index([event])
+  @@index([createdAt])
+}
+
+model Tag {
+  id        String       @id @default(cuid())
+  name      String       @unique
+  color     String?      @default("#6B7280") // Default gray color
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  
+  // Relations
+  entities  EntityTag[]
+  
+  @@index([name])
+  @@index([createdAt])
+}
+
+model EntityTag {
+  id          String   @id @default(cuid())
+  entityType  String   @map("entity_type") // e.g., 'project', 'file', 'snapshot'
+  entityId    String   @map("entity_id")   // ID of the tagged entity
+  
+  // Relations
+  tagId      String   @map("tag_id")
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdById String   @map("created_by_id")
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@unique([entityType, entityId, tagId])
+  @@index([entityType])
+  @@index([entityId])
+  @@index([tagId])
+  @@index([createdById])
+  @@index([createdAt])
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  eventType   String   @map("event_type")   // e.g., 'page_view', 'button_click'
+  userId      String?  @map("user_id")      // Nullable for anonymous events
+  sessionId   String?  @map("session_id")    // Session identifier
+  anonymousId String?  @map("anonymous_id")  // Anonymous user ID if not logged in
+  
+  // Context
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  url         String?  // Current URL
+  path        String?  // Current path
+  referrer    String?  // Referrer URL
+  
+  // Device info
+  osName      String?  @map("os_name")
+  osVersion   String?  @map("os_version")
+  browserName String?  @map("browser_name")
+  browserVersion String? @map("browser_version")
+  deviceType  String?  @map("device_type")  // 'mobile', 'desktop', 'tablet'
+  
+  // Location
+  country     String?
+  region      String?
+  city        String?
+  
+  // Event data
+  properties  Json?    // Additional event properties
+  
+  // Timestamps
+  receivedAt  DateTime @default(now()) @map("received_at")
+  eventTime   DateTime @map("event_time") // When the event actually occurred
+  
+  // Relations
+  projectId   String?  @map("project_id")
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@index([eventType])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([anonymousId])
+  @@index([receivedAt])
+  @@index([eventTime])
+  @@index([projectId])
+  @@index([createdAt])
+  
+  // For time-series partitioning
+  createdAt   DateTime @default(now()) @map("created_at")
+}
+
+model WebRtcMetric {
+  id              String   @id @default(cuid())
+  
+  // Connection metrics
+  peerConnectionId String   @map("peer_connection_id") // Unique ID for the peer connection
+  rttMs           Float?   @map("rtt_ms")            // Round-trip time in milliseconds
+  jitterMs        Float?   @map("jitter_ms")         // Jitter in milliseconds
+  packetLoss      Float?   @map("packet_loss")       // Packet loss percentage (0-100)
+  
+  // Network conditions
+  networkType     String?  @map("network_type")      // 'wifi', 'cellular', 'ethernet', etc.
+  effectiveType   String?  @map("effective_type")    // 'slow-2g', '2g', '3g', '4g'
+  downlinkMbps    Float?   @map("downlink_mbps")     // Estimated downlink speed in Mbps
+  
+  // Peer connection details
+  iceCandidatePairId String?  @map("ice_candidate_pair_id")
+  localCandidateId  String?  @map("local_candidate_id")
+  remoteCandidateId String?  @map("remote_candidate_id")
+  
+  // Timestamps
+  timestamp       DateTime @map("timestamp")     // When the metrics were recorded
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  userId          String?  @map("user_id")
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String?  @map("project_id")
+  project         Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@index([peerConnectionId])
+  @@index([userId])
+  @@index([projectId])
+  @@index([timestamp])
+  @@index([createdAt])
+}
+
+model CrashReport {
+  id              String   @id @default(cuid())
+  
+  // Crash details
+  type            String   // 'uncaught', 'unhandledrejection', 'window_error', etc.
+  name            String?  // Error name (e.g., 'TypeError')
+  message         String?  // Error message
+  stack           String?  @db.Text // Encrypted stack trace
+  
+  // Device and environment
+  platform        String?  // 'web', 'windows', 'macos', 'linux', 'ios', 'android'
+  os              String?  // OS name and version
+  browser         String?  // Browser name and version
+  userAgent       String?  @map("user_agent")
+  url             String?  // URL where crash occurred
+  
+  // Memory and performance
+  memoryUsage     Json?    @map("memory_usage")  // {jsHeapSizeLimit, usedJSHeapSize, totalJSHeapSize}
+  
+  // Breadcrumbs (encrypted)
+  breadcrumbs     String?  @db.Text // Encrypted JSON array of breadcrumbs
+  
+  // Context (encrypted)
+  context         String?  @db.Text // Encrypted JSON with additional context
+  
+  // Timestamps
+  timestamp       DateTime @map("timestamp") // When the crash occurred
+  reportedAt      DateTime @default(now()) @map("reported_at") // When the report was received
+  
+  // Relations
+  userId          String?  @map("user_id")
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String?  @map("project_id")
+  project         Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@index([type])
+  @@index([userId])
+  @@index([projectId])
+  @@index([timestamp])
+  @@index([reportedAt])
+}

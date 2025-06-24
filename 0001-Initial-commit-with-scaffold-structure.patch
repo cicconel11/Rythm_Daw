@@ -1,0 +1,299 @@
+From 61862689e888a9695e8f930ee028b843ef03829f Mon Sep 17 00:00:00 2001
+From: cicconel11 <cicconel@umich.edu>
+Date: Tue, 24 Jun 2025 13:42:45 -0400
+Subject: [PATCH] Initial commit with scaffold structure
+
+---
+ .env.example     |   5 ++
+ ci/README.md     |   3 +
+ infra/README.md  |   3 +
+ plugin/README.md |   3 +
+ server/README.md |   3 +
+ shared/README.md |   3 +
+ spec.yaml        | 212 +++++++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 232 insertions(+)
+ create mode 100644 .env.example
+ create mode 100644 ci/README.md
+ create mode 100644 infra/README.md
+ create mode 100644 plugin/README.md
+ create mode 100644 server/README.md
+ create mode 100644 shared/README.md
+ create mode 100644 spec.yaml
+
+diff --git a/.env.example b/.env.example
+new file mode 100644
+index 0000000..9c660d9
+--- /dev/null
++++ b/.env.example
+@@ -0,0 +1,5 @@
++# .env.example
++
++# Add your environment variables here
++# For example:
++# DATABASE_URL=postgres://user:password@localhost:5432/dbname
+diff --git a/ci/README.md b/ci/README.md
+new file mode 100644
+index 0000000..4e0771b
+--- /dev/null
++++ b/ci/README.md
+@@ -0,0 +1,3 @@
++# CI
++
++This directory will contain all continuous integration configurations and scripts.
+diff --git a/infra/README.md b/infra/README.md
+new file mode 100644
+index 0000000..7a303bb
+--- /dev/null
++++ b/infra/README.md
+@@ -0,0 +1,3 @@
++# Infra
++
++This directory will contain all infrastructure-related code and configurations.
+diff --git a/plugin/README.md b/plugin/README.md
+new file mode 100644
+index 0000000..213052e
+--- /dev/null
++++ b/plugin/README.md
+@@ -0,0 +1,3 @@
++# Plugin
++
++This directory will contain all plugin-related code.
+diff --git a/server/README.md b/server/README.md
+new file mode 100644
+index 0000000..1560e5e
+--- /dev/null
++++ b/server/README.md
+@@ -0,0 +1,3 @@
++# Server
++
++This directory will contain all server-related code.
+diff --git a/shared/README.md b/shared/README.md
+new file mode 100644
+index 0000000..143ed6a
+--- /dev/null
++++ b/shared/README.md
+@@ -0,0 +1,3 @@
++# Shared
++
++This directory will contain all shared code and resources.
+diff --git a/spec.yaml b/spec.yaml
+new file mode 100644
+index 0000000..3512b95
+--- /dev/null
++++ b/spec.yaml
+@@ -0,0 +1,212 @@
++# ============================================================
++# RHYTHM COLLABORATION SUITE — MASTER SPEC  v1.0  (Free Beta)
++# ============================================================
++
++# ─────────────────────────────────────────────────────────────
++# 1. PLUG-IN BINARY
++# ─────────────────────────────────────────────────────────────
++plugin:
++  id:            com.rhythm.dawcollab
++  name:          "RHYTHM"
++  sdk:           JUCE 7.x
++  formats:       [VST3, AU, AAX]           # LV2 build headless CI-only
++  channelConfig: { inChannels: 2, outChannels: 2 }
++  gui:
++    framework:  React 18 (JUCE-React wrapper)
++    theme:      Tailwind + custom purple
++  ui:
++    tabs:
++      - Chat
++      - Files
++      - History
++      - Account   # shows “Free Beta – paid plans coming soon”
++  distribution:
++    macOS:
++      package:   RHYTHM.pkg
++      notarised: true
++      sign:      Apple Dev ID (hardened runtime)
++    windows:
++      package:   RHYTHM-Setup.exe
++      sign:      EV cert via signtool
++    linux:
++      package:   rhythm_lv2.tar.gz
++      gpg:       optional
++  build-steps:
++    - cmake .. -B build -DJUCE_ENABLE_REACT=ON
++    - npm ci && npm run build:ui            # bundle React panel
++    - link UI bundle into JUCE BinaryData   # CMake custom cmd
++    - ctest
++  auto-update:
++    manifest-url: https://rhythm.app/latest.json
++    check-interval-h: 24
++
++# ─────────────────────────────────────────────────────────────
++# 2. HIGH-LEVEL MODULES (C++ client unless noted)
++# ─────────────────────────────────────────────────────────────
++modules:
++
++  - name: AuthService           # (NextAuth on server; device-code in plug-in)
++    desc: "E-mail, Google, Apple; device-code flow for DAW context."
++    defaults: { subscriptionStatus: "free" }
++    sessionFields: [user.id, user.email, user.display_name]
++
++  - name: RealtimeChat
++    desc: "Secure WebSocket chat per-project/room."
++
++  - name: FileShare
++    desc: "Peer-to-peer (WebRTC SCTP) stem/full-audio exchange with S3 relay fallback."
++
++  - name: PluginScanner
++    desc: "Enumerate local plug-ins on macOS/Win; extract UID/name/vendor."
++
++  - name: InventorySync
++    desc: "POST plug-in list to backend; broadcast to peers if hash changes."
++
++  - name: PresenceSync
++    desc: "Heartbeat every 15 s; status = Online/In-DAW/Recording/Idle."
++
++  - name: SnapshotManager
++    desc: "Project-wide diff snapshots every 5 min idle or manual save."
++
++  - name: ActivityLogger
++    desc: "Append-only audit log (track edits, file shares, role changes)."
++
++  - name: TagService
++    desc: "Normalized tags on users, stems, projects for later ML/recs."
++
++  - name: EventTracker
++    desc: "Client analytics → bulk REST endpoint → Redshift."
++
++  - name: QoSMonitor
++    desc: "WebRTC stats + crash logs to server."
++
++# ─────────────────────────────────────────────────────────────
++# 3. SERVER STACK
++# ─────────────────────────────────────────────────────────────
++server:
++  runtime:   Node.js 20 + TypeScript
++  framework: Next.js 14 (App Router + API Routes)
++  auth:      NextAuth.js + PrismaAdapter
++  orm:       Prisma 5
++  storage:
++    s3:
++      snapshots: s3://rhythm-snapshots/{project_id}/{snapshot_id}.zip
++      stems:     s3://rhythm-stems/{sha256}.{ext}
++  env:
++    NEXTAUTH_SECRET:   32-byte-hex
++    NEXTAUTH_URL:      https://api.rhythm.app
++    POSTGRES_URL:      postgres://…
++    S3_ACCESS_KEY:     ****
++    S3_SECRET_KEY:     ****
++
++# ───────── Database schema (PostgreSQL 14) ─────────
++db:
++  - table: users
++    cols:
++      id              uuid  PK
++      email           text  UNIQUE
++      password_hash   text              # bcrypt(12) for email-pw flow
++      display_name    text
++      created_at      timestamptz DEFAULT now()
++  - table: plugins
++    cols: id bigserial PK, uid text UNIQUE, name, vendor, version
++  - table: user_plugins          # user ↔ plug-in (inventory)
++    cols: user_id uuid, plugin_id bigint, first_seen timestamptz DEFAULT now(), last_seen timestamptz
++    pk:   [user_id, plugin_id]
++  - table: projects
++    cols: id uuid PK, owner_id uuid, name, bpm, created_at
++  - table: project_snapshots
++    cols: id uuid PK, project_id uuid FK, parent_id uuid, diff jsonb, s3_key text, created_by uuid, created_at
++  - table: project_members
++    cols: project_id uuid, user_id uuid, role text, joined_at, left_at
++    pk:   [project_id, user_id]
++  - table: activity_log
++    cols: id bigserial PK, project_id uuid, user_id uuid, event text, payload jsonb, ts timestamptz
++  - table: tags
++    cols: id serial PK, name text UNIQUE
++  - table: entity_tags
++    cols: entity_type text, entity_id uuid, tag_id int
++    pk:   [entity_type, entity_id, tag_id]
++  - table: collaboration_edges
++    cols: user_a uuid, user_b uuid, projects_shared int, last_collab timestamptz
++    pk:   [user_a, user_b]
++  - table: analytics_events_raw
++    cols: id bigserial, ts timestamptz, session_id uuid, event text, props jsonb
++    partition: DAILY
++  - table: webrtc_stats
++    cols: id bigserial, session_id uuid, rtt_ms int, jitter_ms int, packet_loss real, ts timestamptz
++  - table: crash_logs
++    cols: id bigserial, user_id uuid, host text, daw text, os text, stack text, ts timestamptz
++  - table: asset_licenses
++    cols: id uuid PK, sha256 text UNIQUE, license_type text, url text
++  # payout_info table reserved for future Stripe Connect rollout (not used in free beta)
++
++# ───────── REST & WS endpoints ─────────
++endpoints:
++  # Auth / user
++  POST /api/auth/register
++  POST /api/auth/login
++  POST /auth/device/request            # device-code flow
++  POST /auth/device/token
++  # Core collab
++  WS   /ws/chat
++  POST /api/inventory/sync
++  POST /api/presence/heartbeat
++  POST /api/files/share
++  # Projects & snapshots
++  POST /api/projects
++  POST /api/snapshots
++  GET  /api/snapshots/{project_id}
++  # Tags & analytics
++  PUT  /api/tags/{entity}/{id}
++  POST /v1/events/bulk
++  POST /api/qos/webrtc
++  POST /api/qos/crash
++
++# ─────────────────────────────────────────────────────────────
++# 4. SECURITY & COMPLIANCE
++# ─────────────────────────────────────────────────────────────
++security:
++  transport:   TLS 1.3 everywhere
++  jwtClaims:   { sub, exp, scope:[chat, share, inventory] }
++  dataRetention:
++    snapshots:  user-controlled (no auto delete)
++    analytics_events_raw: 13 months → cold storage
++    crash_logs: 90 days
++  encryption:
++    db_field_level: AES-GCM for e-mails & IP hashes
++    s3:            SSE-KMS
++  gdpr:  full delete cascade on users.id
++
++# ─────────────────────────────────────────────────────────────
++# 5. CI / CD
++# ─────────────────────────────────────────────────────────────
++ci/cd:
++  runner:      GitHub Actions
++  jobs:
++    build-plugin:
++      matrix.os: [macOS-latest, windows-latest, ubuntu-latest]
++      steps: [cmake, notarise/sign, upload-artifacts]
++    build-server:
++      steps: [npm ci, prisma generate, jest]
++    migrate-prod:
++      needs: build-server
++      run: npx prisma migrate deploy
++    prisma-docs:
++      run: npx prisma generate --data-proxy
++    integration-tests:
++      run: |
++        npm run test:snapshots
++        npm run test:tags
++
++# ─────────────────────────────────────────────────────────────
++# 6. ANALYTICS & MONITORING
++# ─────────────────────────────────────────────────────────────
++monitoring:
++  metrics: Prometheus export via /metrics
++  logs:    Loki stack
++  tracing: OpenTelemetry auto-instrument (Node + C++)
++
++# ============================================================
++# END OF SPEC
++# ============================================================
+-- 
+2.47.1
+
