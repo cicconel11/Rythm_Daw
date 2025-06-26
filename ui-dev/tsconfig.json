@@ -4,7 +4,6 @@
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "skipLibCheck": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
@@ -13,19 +12,18 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["../plugin/Source/UI/*"],
+      "@/*": ["./src/*"],
       "@store": ["./src/store"],
       "@store/*": ["./src/store/*"]
     },
-    "types": ["vite/client"],
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "esModuleInterop": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": false,
+    "jsxImportSource": "react"
   },
-  "include": [
-    "src",
-    "../plugin/Source/UI",
-    "vite.config.ts"
-  ],
+  "include": ["src/**/*", "vite.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

@@ -26,10 +26,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      // Local paths
-      '@': path.resolve(__dirname, '../plugin/Source/UI'),
+      // Local paths - point @ to the src directory
+      '@': path.resolve(__dirname, 'src'),
       '@store': path.resolve(__dirname, 'src/store'),
-      // Core dependencies
+      // Core dependencies - ensure these point to the correct node_modules
       'react': path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
       'framer-motion': path.resolve(__dirname, 'node_modules/framer-motion'),
