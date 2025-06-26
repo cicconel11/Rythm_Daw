@@ -1,10 +1,10 @@
-import React, { useState, FC } from 'react';
+import * as React from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '@store';
 
-const HistoryTab: FC = () => {
-  const [showDiff, setShowDiff] = useState(false);
-  const [selectedSnapshot, setSelectedSnapshot] = useState<number | null>(null);
+const HistoryTab = () => {
+  const [showDiff, setShowDiff] = React.useState(false);
+  const [selectedSnapshot, setSelectedSnapshot] = React.useState<number | null>(null);
 
   const snapshots = [
     { id: 1, name: 'Kick tweak', timestamp: '10 minutes ago' },
@@ -22,11 +22,8 @@ const HistoryTab: FC = () => {
       <div className="flex-1 overflow-y-auto px-4 relative">
         <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-gray-700" />
         {snapshots.map((snapshot, index) => (
-          <motion.Div
+          <div
             key={snapshot.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
             className="relative mb-6"
           >
             <div className="absolute left-[-18px] top-2 w-4 h-4 rounded-full bg-brand border-2 border-background" />
@@ -42,7 +39,7 @@ const HistoryTab: FC = () => {
                 View Diff
               </button>
             </div>
-          </motion.Div>
+          </motion.div>
         ))}
       </div>
 
