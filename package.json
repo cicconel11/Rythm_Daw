@@ -1,6 +1,8 @@
 {
 	"dependencies": {
+		"@types/react-window": "^1.8.8",
+		"@types/uuid": "^10.0.0",
 		"react-window": "^1.8.11",
-		"@types/react-window": "^1.8.8"
+		"uuid": "^11.1.0"
 	}
 }
