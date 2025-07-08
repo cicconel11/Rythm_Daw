@@ -18,7 +18,7 @@ export declare class MockWebSocket extends EventEmitter implements WebSocket {
     onclose: ((this: WebSocket, ev: CloseEvent) => any) | null;
     onerror: ((this: WebSocket, ev: Event) => any) | null;
     readyState: number;
-    send: jest.Mock<void, [data: string | Blob | ArrayBufferLike | ArrayBufferView], any>;
+    send: jest.Mock<void, [data: string | ArrayBufferView | Blob | ArrayBufferLike], any>;
     close: jest.Mock<void, [code?: number | undefined, reason?: string | undefined], any>;
     terminate: jest.Mock<void, [], any>;
     pause: jest.Mock<any, any, any>;
