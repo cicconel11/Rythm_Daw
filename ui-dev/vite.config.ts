@@ -6,6 +6,15 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  server: {
+    port: 5173,
+    strictPort: true,
+    host: true,
+    open: true,
+    fs: {
+      allow: ['..']
+    }
+  },
   plugins: [
     react({
       jsxImportSource: 'react',
@@ -68,14 +77,7 @@ export default defineConfig({
       }
     }
   },
-  server: {
-    port: 3000,
-    strictPort: true,
-    open: true,
-    fs: {
-      allow: ['..']
-    }
-  },
+
   define: {
     'process.env': {}
   }

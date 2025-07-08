@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore, type Tab } from '@/store';
 import { cn } from '@/lib/utils';
 import { LayoutDashboard, File, Clock, Users, MessageSquare, Settings, Shield } from 'lucide-react';
@@ -21,14 +22,17 @@ const navItems: NavItem[] = [
 ];
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const { activeTab, setActiveTab } = useStore();
   const { isAdmin } = useAuth();
   
-  // Helper function to safely set the active tab
+  // Helper function to handle tab clicks
   const handleTabClick = (tabId: string) => {
     const validTabs = ['dashboard', 'files', 'history', 'friends', 'chat', 'settings', 'admin'];
     if (validTabs.includes(tabId)) {
       setActiveTab(tabId as Tab);
+      // Navigate to the corresponding route
+      navigate(`/${tabId}`);
     }
   };
   const [isCollapsed, setIsCollapsed] = useState(false);

@@ -14,7 +14,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@store": ["./src/store"],
-      "@store/*": ["./src/store/*"]
+      "@store/*": ["./src/store/*"],
+      "@rhythm/ui-kit": ["ui-kit/src"]
     },
     "typeRoots": ["./node_modules/@types", "./src/types"],
     "esModuleInterop": true,

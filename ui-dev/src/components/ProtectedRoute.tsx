@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import PendingApproval from '@/pages/PendingApproval';
 
@@ -18,25 +19,46 @@ const ProtectedRoute = ({
   requireAdmin = false, 
   requireApproved = true 
 }: ProtectedRouteProps) => {
-  const auth = getAuthState();
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const [authState, setAuthState] = useState<any>(null);
+
+  useEffect(() => {
+    const auth = getAuthState();
+    setAuthState(auth);
+    setIsLoading(false);
+  }, []);
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
   // If not authenticated, redirect to sign in
-  if (!auth) {
+  if (!authState) {
     return <Navigate to="/signin" replace />;
   }
   
   // If admin access required but user is not admin
-  if (requireAdmin && !auth.user?.isAdmin) {
+  if (requireAdmin && !authState.user?.isAdmin) {
     return <Navigate to="/" replace />;
   }
   
   // If account requires approval and is not approved
-  if (requireApproved && !auth.isApproved) {
+  if (requireApproved && !authState.isApproved) {
     return <PendingApproval />;
   }
   
-  // If all checks pass, render the children or outlet
-  return children ? <>{children}</> : <Outlet />;
+  // If all checks pass
+  if (children) {
+    return <>{children}</>;
+  }
+  
+  // Render the nested routes
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

@@ -22,18 +22,22 @@ const AccountSettings = () => {
     avatar: ''
   });
 
-  useEffect(() => {
-    if (!auth?.user) {
-      navigate('/signin');
-      return;
-    }
+  const [isLoading, setIsLoading] = useState(true);
 
-    setUserData({
-      displayName: auth.user.displayName || auth.user.email?.split('@')[0] || 'User',
-      email: auth.user.email || '',
-      bio: '',
-      avatar: auth.user.avatar || ''
-    });
+  useEffect(() => {
+    // Only update state if we have auth data
+    if (auth?.user) {
+      setUserData({
+        displayName: auth.user.displayName || auth.user.email?.split('@')[0] || 'User',
+        email: auth.user.email || '',
+        bio: auth.user.bio || '',
+        avatar: auth.user.avatar || ''
+      });
+      setIsLoading(false);
+    } else if (auth === null) {
+      // Only redirect if we're certain there's no auth (not just loading)
+      navigate('/signin');
+    }
   }, [auth, navigate]);
 
   const handleUpdateAccount = async (data: { displayName: string; email: string; bio: string }) => {
