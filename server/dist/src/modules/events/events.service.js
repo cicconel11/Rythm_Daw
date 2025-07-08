@@ -9,21 +9,25 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var EventsService_1;
-var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EventsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const event_emitter_1 = require("@nestjs/event-emitter");
+const client_1 = require("@prisma/client");
+const uuid_1 = require("uuid");
 let EventsService = EventsService_1 = class EventsService {
     constructor(prisma, eventEmitter) {
         this.prisma = prisma;
         this.eventEmitter = eventEmitter;
         this.logger = new common_1.Logger(EventsService_1.name);
-        this.MAX_BATCH_SIZE = 50;
-        this.BATCH_FLUSH_INTERVAL = 5000;
-        this.MAX_QUEUE_SIZE = 1000;
-        this.queue = [];
+        this.BATCH_SIZE = 100;
+        this.FLUSH_INTERVAL_MS = 5000;
+        this.MAX_BATCH_SIZE = 1000;
+        this.eventQueue = [];
+        this.flushTimeout = null;
+        this.isProcessing = false;
+        this.shutdownListener = null;
     }
     onModuleInit() {
         this.scheduleFlush();
@@ -33,53 +37,40 @@ let EventsService = EventsService_1 = class EventsService {
         if (events.length > this.MAX_BATCH_SIZE) {
             throw new Error(`Maximum batch size is ${this.MAX_BATCH_SIZE} events`);
         }
-        const now = new Date();
-        const dbEvents = events.map((event) => {
-            const timestamp = event.timestamp ? new Date(event.timestamp) : now;
-            const context = event.context || {};
-            const dbEvent = {
-                eventType: event.type,
-                name: event.name || null,
-                userId: event.userId || null,
-                anonymousId: event.anonymousId || null,
-                sessionId: event.sessionId || null,
-                projectId: event.projectId || null,
-                ipAddress: context.ip || null,
-                userAgent: context.userAgent || null,
-                url: context.url || null,
-                path: context.path || null,
-                referrer: context.referrer || null,
-                osName: context.osName || null,
-                osVersion: context.osVersion || null,
-                browserName: context.browserName || null,
-                browserVersion: context.browserVersion || null,
-                deviceType: context.deviceType || null,
-                country: context.country || null,
-                region: context.region || null,
-                city: context.city || null,
-                properties: event.properties || {},
-                eventTime: timestamp,
-                createdAt: timestamp,
-            };
-            return dbEvent;
+        const validEvents = events.filter(event => {
+            if (!event.userId) {
+                this.logger.warn('Skipping event - userId is required');
+                return false;
+            }
+            return true;
         });
-        this.enqueueEvents(dbEvents);
+        const trackEvents = validEvents.map((event) => {
+            const trackEvent = {
+                type: event.type,
+                userId: event.userId,
+                timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
+            };
+            const assignIfExists = (key, value) => {
+                if (value !== undefined) {
+                    trackEvent[key] = value;
+                }
+            };
+            assignIfExists('properties', event.properties);
+            assignIfExists('context', event.context);
+            assignIfExists('entityType', event.entityType);
+            assignIfExists('entityId', event.entityId);
+            assignIfExists('name', event.name);
+            assignIfExists('anonymousId', event.anonymousId);
+            assignIfExists('sessionId', event.sessionId);
+            assignIfExists('projectId', event.projectId);
+            return trackEvent;
+        });
         if (debug) {
-            this.logger.debug(`Processing ${dbEvents.length} events in debug mode`);
-            await this.processEvents(dbEvents);
+            this.logger.debug(`Processing ${trackEvents.length} events in debug mode`);
+            await this.processEvents(trackEvents);
         }
         else {
-            this.eventEmitter.emit('analytics.events.received', dbEvents);
-        }
-    }
-    enqueueEvents(events) {
-        if (this.queue.length + events.length > this.MAX_QUEUE_SIZE) {
-            this.logger.warn(`Event queue full (${this.queue.length}), forcing flush`);
-            this.flushQueue();
-        }
-        this.queue.push(...events);
-        if (this.queue.length >= this.MAX_BATCH_SIZE / 2) {
-            this.flushQueue();
+            await this.enqueueEvents(trackEvents);
         }
     }
     async processEvents(events) {
@@ -87,78 +78,201 @@ let EventsService = EventsService_1 = class EventsService {
             return;
         try {
             await this.prisma.$transaction(async (tx) => {
-                const batchSize = 100;
-                for (let i = 0; i < events.length; i += batchSize) {
-                    const batch = events.slice(i, i + batchSize);
-                    await tx.event.createMany({
-                        data: batch,
-                        skipDuplicates: true,
-                    });
+                for (const event of events) {
+                    if (!event.userId) {
+                        this.logger.warn('Skipping event - userId is required');
+                        continue;
+                    }
+                    await this.createActivityLog(event, tx);
                 }
             });
-            this.logger.log(`Processed ${events.length} analytics events`);
+            this.logger.log(`Processed ${events.length} events synchronously`);
         }
         catch (error) {
-            this.logger.error(`Failed to process events: ${error.message}`, error.stack);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorStack = error instanceof Error ? error.stack : undefined;
+            this.logger.error(`Error processing events: ${errorMessage}`, errorStack);
             throw error;
         }
     }
-    async flushQueue() {
-        if (this.queue.length === 0)
+    async enqueueEvents(events) {
+        if (!events || events.length === 0)
             return;
-        const eventsToProcess = [...this.queue];
-        this.queue = [];
+        this.eventQueue.push(...events);
+        if (this.eventQueue.length >= this.BATCH_SIZE) {
+            await this.processQueue();
+        }
+        else if (!this.flushTimeout) {
+            this.scheduleFlush();
+        }
+    }
+    async createActivityLog(event, tx) {
+        const { userId, type, properties = {}, context = {}, timestamp, projectId, entityType, entityId } = event;
+        const activityData = {
+            action: type,
+            entityType: entityType || 'event',
+            entityId: entityId || (0, uuid_1.v4)(),
+            metadata: {
+                ...properties,
+                ...(projectId ? { projectId } : {})
+            },
+            createdAt: timestamp ? new Date(timestamp) : new Date(),
+            user: {
+                connect: {
+                    id: userId
+                }
+            },
+            ...(context?.ip && { ipAddress: context.ip }),
+            ...(context?.userAgent && { userAgent: context.userAgent }),
+        };
         try {
-            await this.processEvents(eventsToProcess);
+            await tx.activityLog.create({
+                data: activityData
+            });
         }
         catch (error) {
-            this.queue.unshift(...eventsToProcess);
-            this.logger.warn(`Requeued ${eventsToProcess.length} failed events`);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error(`Failed to create activity log: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
+            throw error;
+        }
+    }
+    async processQueue() {
+        if (this.isProcessing || this.eventQueue.length === 0) {
+            return;
+        }
+        this.isProcessing = true;
+        const batch = this.eventQueue.splice(0, this.BATCH_SIZE);
+        try {
+            await this.prisma.$transaction(async (tx) => {
+                for (const event of batch) {
+                    if (!event.userId) {
+                        this.logger.warn('Skipping event - userId is required');
+                        continue;
+                    }
+                    await this.createActivityLog(event, tx);
+                }
+            });
+            this.logger.log(`Processed ${batch.length} events`);
+            this.eventEmitter.emit('events.processed', { count: batch.length });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorStack = error instanceof Error ? error.stack : undefined;
+            this.logger.error(`Error processing events: ${errorMessage}`, errorStack);
+            this.eventQueue.unshift(...batch);
+        }
+        finally {
+            this.isProcessing = false;
+            if (this.eventQueue.length > 0) {
+                setImmediate(() => this.processQueue());
+            }
         }
     }
     scheduleFlush() {
-        if (this.flushTimer) {
-            clearTimeout(this.flushTimer);
+        if (this.flushTimeout) {
+            clearTimeout(this.flushTimeout);
+            this.flushTimeout = null;
         }
-        this.flushTimer = setTimeout(async () => {
-            await this.flushQueue();
-            this.scheduleFlush();
-        }, this.BATCH_FLUSH_INTERVAL);
-        this.flushTimer.unref();
+        this.flushTimeout = setTimeout(async () => {
+            try {
+                if (this.eventQueue.length > 0) {
+                    await this.processQueue();
+                }
+            }
+            catch (error) {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                const errorStack = error instanceof Error ? error.stack : undefined;
+                this.logger.error(`Error in scheduled flush: ${errorMessage}`, errorStack);
+            }
+            finally {
+                this.flushTimeout = null;
+            }
+        }, this.FLUSH_INTERVAL_MS);
     }
-    async getStats(options) {
-        const { startDate, endDate, eventType, projectId } = options;
+    async getStats(options = {}) {
+        const { startDate, endDate, userId, action } = options;
         const where = {
-            eventTime: {
-                gte: startDate,
-                lte: endDate,
-            },
+            AND: [
+                startDate ? { createdAt: { gte: startDate } } : {},
+                endDate ? { createdAt: { lte: endDate } } : {},
+                userId ? { userId } : {},
+                action ? { action } : {},
+            ].filter(Boolean),
         };
-        if (eventType)
-            where.eventType = eventType;
-        if (projectId)
-            where.projectId = projectId;
-        const [total, byType] = await Promise.all([
-            this.prisma.event.count({ where }),
-            this.prisma.event.groupBy({
-                by: ['eventType'],
+        const stats = {
+            total: 0,
+            byType: {},
+            byDay: [],
+            byUser: {},
+            byProject: {}
+        };
+        try {
+            stats.total = await this.prisma.activityLog.count({ where });
+            const byTypeResults = await this.prisma.activityLog.groupBy({
+                by: ['action'],
                 where,
-                _count: { _all: true },
-                orderBy: { _count: { eventType: 'desc' } },
-            }),
-        ]);
-        return {
-            total,
-            byType: byType.map((item) => ({
-                eventType: item.eventType,
-                count: item._count._all,
-            })),
-        };
+                _count: true,
+            });
+            stats.byType = byTypeResults.reduce((acc, { action, _count }) => {
+                if (action) {
+                    acc[action] = _count;
+                }
+                return acc;
+            }, {});
+            const byDay = await this.prisma.$queryRaw `
+        SELECT DATE("createdAt") as date, COUNT(*)::int as count
+        FROM "ActivityLog"
+        WHERE ${client_1.Prisma.raw(JSON.stringify(where))}
+        GROUP BY DATE("createdAt")
+        ORDER BY date ASC
+      `;
+            stats.byDay = byDay.map(({ date, count }) => ({
+                date,
+                count: Number(count)
+            }));
+            const byUserResults = await this.prisma.activityLog.groupBy({
+                by: ['userId'],
+                where,
+                _count: true,
+            });
+            stats.byUser = byUserResults.reduce((acc, { userId, _count }) => {
+                if (userId) {
+                    acc[userId] = _count;
+                }
+                return acc;
+            }, {});
+            try {
+                const byProjectResults = await this.prisma.$queryRaw `
+          SELECT 
+            metadata->>'projectId' as "projectId", 
+            COUNT(*)::int as count
+          FROM "ActivityLog"
+          WHERE ${client_1.Prisma.raw(JSON.stringify(where))}
+          AND metadata->>'projectId' IS NOT NULL
+          GROUP BY metadata->>'projectId'
+        `;
+                stats.byProject = byProjectResults.reduce((acc, { projectId, count }) => {
+                    if (projectId) {
+                        acc[projectId] = Number(count);
+                    }
+                    return acc;
+                }, {});
+            }
+            catch (error) {
+                this.logger.debug('Project grouping not available in ActivityLog metadata');
+            }
+            return stats;
+        }
+        catch (error) {
+            this.logger.error(`Error getting event stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw error;
+        }
     }
 };
 EventsService = EventsService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object, typeof (_b = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        event_emitter_1.EventEmitter2])
 ], EventsService);
 exports.EventsService = EventsService;
 //# sourceMappingURL=events.service.js.map

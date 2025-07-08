@@ -1,9 +1,43 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { LogActivityDto } from './dto/log-activity.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+
+// Type for raw activity log from database
+type RawActivityLog = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  metadata: Prisma.JsonValue | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  userId: string;
+  projectId: string | null;
+  createdAt: Date;
+};
+
+// Type for activity log with user data
+type ActivityWithUser = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  metadata: Prisma.JsonValue | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: Date;
+  userId: string;
+  projectId: string | null;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+  } | null;
+};
 
 @Injectable()
 @WebSocketGateway({ namespace: 'activity' })
@@ -27,53 +61,95 @@ export class ActivityLoggerService implements OnModuleInit {
    * @param data Activity data to log
    * @returns The created activity log
    */
-  async logActivity(data: LogActivityDto) {
-    try {
-      const { projectId, userId, event, payload, ipAddress, userAgent } = data;
-      
-      // Create the activity log
-      const activity = await this.prisma.activityLog.create({
-        data: {
-          event,
-          payload: payload || {},
-          ipAddress,
-          userAgent,
-          project: projectId ? { connect: { id: projectId } } : undefined,
-          user: userId ? { connect: { id: userId } } : undefined,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true
-            }
-          }
-        }
-      });
+  async logActivity(data: LogActivityDto): Promise<ActivityWithUser> {
+    const { 
+      action, 
+      entityId = '', 
+      entityType = 'system',
+      userId,
+      projectId,
+      metadata = {},
+      ipAddress,
+      userAgent
+    } = data;
 
-      // Emit WebSocket event
-      const room = projectId ? `project:${projectId}` : `user:${userId}`;
-      const eventData = {
-        ...activity,
-        user: activity.user, // Include user data
-        projectId: activity.projectId,
-        userId: activity.userId
+    try {
+      // Create activity data
+      const activityData: any = {
+        action,
+        entityId,
+        entityType,
+        metadata: metadata as Prisma.InputJsonValue,
+        ...(ipAddress && { ipAddress }),
+        ...(userAgent && { userAgent }),
+        ...(userId && { userId }),
+        ...(projectId && { projectId }),
       };
 
-      // Emit to the specific room (project or user)
-      this.server.to(room).emit('activity', eventData);
+      // Create the activity log with all necessary fields using raw query
+      const query = `
+        INSERT INTO "ActivityLog" (${Object.keys(activityData).join(', ')})
+        VALUES (${Object.keys(activityData).map((_, i) => `$${i + 1}`).join(', ')})
+        RETURNING 
+          id, action, "entityType" as "entityType", "entityId" as "entityId", 
+          metadata, "ipAddress" as "ipAddress", "userAgent" as "userAgent", 
+          "userId" as "userId", "projectId" as "projectId", "createdAt" as "createdAt"
+      `;
       
-      // Also emit to the global namespace
-      this.server.emit('activity', eventData);
+      const values = Object.values(activityData);
+      const activity = (await this.prisma.$queryRawUnsafe<RawActivityLog[]>(query, ...values))[0];
+      
+      // Fetch user data if userId is provided
+      let user = null;
+      if (userId) {
+        user = await this.prisma.user.findUnique({
+          where: { id: userId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        });
+      }
+
+      // Map to our ActivityWithUser type
+      const activityWithUser: ActivityWithUser = {
+        id: activity.id,
+        action: activity.action,
+        entityType: activity.entityType,
+        entityId: activity.entityId,
+        metadata: activity.metadata,
+        createdAt: activity.createdAt,
+        ipAddress: activity.ipAddress,
+        userAgent: activity.userAgent,
+        userId: activity.userId,
+        projectId: activity.projectId,
+        user: user,
+      };
+
+      // Emit WebSocket event
+      if (this.server) {
+        const room = projectId ? `project:${projectId}` : `user:${userId || 'system'}`;
+        const eventData = {
+          ...activityWithUser,
+          user: activityWithUser.user || null,
+          projectId: activityWithUser.projectId || null,
+          userId: activityWithUser.userId || null
+        } as const;
+
+        // Emit to the specific room (project or user)
+        this.server.to(room).emit('activity', eventData);
+        
+        // Also emit to the global namespace
+        this.server.emit('activity', eventData);
+      }
       
       // Emit a system event for other services
-      this.eventEmitter.emit('activity.created', eventData);
+      this.eventEmitter.emit('activity.created', activityWithUser);
 
-      this.logger.debug(`Activity logged: ${event} for project ${projectId} by user ${userId}`);
+      this.logger.debug(`Activity logged: ${action} for project ${projectId} by user ${userId}`);
       
-      return activity;
+      return activityWithUser;
     } catch (error) {
       this.logger.error(`Failed to log activity: ${error.message}`, error.stack);
       throw error;
@@ -83,37 +159,105 @@ export class ActivityLoggerService implements OnModuleInit {
   /**
    * Get recent activities for a project or user
    * @param options Query options
-   * @returns List of activity logs
+   * @returns List of activity logs with user data
    */
   async getActivities(options: {
     projectId?: string;
-    userId?: string;
-    event?: string;
+    userId?: string | null;
+    action?: string;
+    entityType?: string;
+    entityId?: string;
     limit?: number;
     cursor?: string;
-  }) {
-    const { projectId, userId, event, limit = 50, cursor } = options;
+  }): Promise<ActivityWithUser[]> {
+    const { 
+      projectId, 
+      userId, 
+      action, 
+      entityType,
+      entityId,
+      limit = 50, 
+      cursor 
+    } = options;
+
+    // Build the WHERE clause
+    const whereClauses: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (projectId) {
+      whereClauses.push(`"projectId" = $${paramIndex++}`);
+      params.push(projectId);
+    }
     
-    return this.prisma.activityLog.findMany({
-      where: {
-        projectId,
-        userId,
-        event,
-        id: cursor ? { lt: cursor } : undefined,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-    });
+    if (userId) {
+      whereClauses.push(`"userId" = $${paramIndex++}`);
+      params.push(userId);
+    }
+    
+    if (action) {
+      whereClauses.push(`"action" = $${paramIndex++}`);
+      params.push(action);
+    }
+    
+    if (entityType) {
+      whereClauses.push(`"entityType" = $${paramIndex++}`);
+      params.push(entityType);
+    }
+    
+    if (entityId) {
+      whereClauses.push(`"entityId" = $${paramIndex++}`);
+      params.push(entityId);
+    }
+    
+    if (cursor) {
+      whereClauses.push(`id < $${paramIndex++}`);
+      params.push(cursor);
+    }
+
+    const whereClause = whereClauses.length > 0 
+      ? `WHERE ${whereClauses.join(' AND ')}` 
+      : '';
+
+    // Get activities with user data
+    const query = `
+      SELECT 
+        a.id, a.action, a."entityType", a."entityId", a.metadata, 
+        a."ipAddress", a."userAgent", a."userId", a."projectId", a."createdAt",
+        u.id as "user.id", u.name as "user.name", u.email as "user.email"
+      FROM "ActivityLog" a
+      LEFT JOIN "User" u ON a."userId" = u.id
+      ${whereClause}
+      ORDER BY a."createdAt" DESC
+      LIMIT $${paramIndex++}
+    `;
+    
+    params.push(limit);
+    
+    const activities = await this.prisma.$queryRawUnsafe<Array<RawActivityLog & {
+      "user.id"?: string;
+      "user.name"?: string | null;
+      "user.email"?: string;
+    }>>(query, ...params);
+
+    // Map the raw results to ActivityWithUser objects
+    return activities.map(row => ({
+      id: row.id,
+      action: row.action,
+      entityType: row.entityType,
+      entityId: row.entityId,
+      metadata: row.metadata,
+      ipAddress: row.ipAddress,
+      userAgent: row.userAgent,
+      userId: row.userId,
+      projectId: row.projectId,
+      createdAt: row.createdAt,
+      user: row["user.id"] ? {
+        id: row["user.id"]!,
+        name: row["user.name"] || null,
+        email: row["user.email"]!,
+      } : null,
+    }));
   }
 
   /**
@@ -129,12 +273,12 @@ export class ActivityLoggerService implements OnModuleInit {
     return this.prisma.$queryRaw`
       SELECT 
         DATE("createdAt") as date,
-        "event",
+        "action" as event,
         COUNT(*) as count
       FROM "ActivityLog"
       WHERE "projectId" = ${projectId}
         AND "createdAt" >= ${date}
-      GROUP BY DATE("createdAt"), "event"
+      GROUP BY DATE("createdAt"), "action"
       ORDER BY date DESC, count DESC;
     `;
   }

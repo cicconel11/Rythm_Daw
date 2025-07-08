@@ -5,6 +5,14 @@ import { Request } from 'express';
 import { HeartbeatDto } from './dto/heartbeat.dto';
 import { PresenceService } from './presence.service';
 
+interface RequestWithUser extends Request {
+  user: {
+    sub: string;
+    email: string;
+    [key: string]: any;
+  };
+}
+
 @ApiTags('presence')
 @Controller('presence')
 @UseGuards(JwtAuthGuard)
@@ -19,7 +27,7 @@ export class PresenceController {
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async heartbeat(
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
     @Body() dto: HeartbeatDto,
   ) {
     const userId = req.user.sub; // Set by JwtAuthGuard

@@ -1,3 +1,8 @@
 packages:
-  - 'server'
-  - 'ui-dev'
+  - server
+  - ui-dev
+  - ui-kit
+
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - prisma

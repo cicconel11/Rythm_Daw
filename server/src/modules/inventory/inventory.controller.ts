@@ -5,6 +5,14 @@ import { Request } from 'express';
 import { SyncInventoryDto } from './dto/sync-inventory.dto';
 import { InventoryService } from './inventory.service';
 
+interface RequestWithUser extends Request {
+  user: {
+    sub: string;
+    email: string;
+    [key: string]: any;
+  };
+}
+
 @ApiTags('inventory')
 @Controller('inventory')
 @UseGuards(JwtAuthGuard)
@@ -19,7 +27,7 @@ export class InventoryController {
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async syncInventory(
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
     @Body() dto: SyncInventoryDto,
   ) {
     const userId = req.user.sub; // Set by JwtAuthGuard

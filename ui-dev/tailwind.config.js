@@ -17,6 +17,20 @@ module.exports = {
   	},
   	extend: {
   		colors: {
+  			'rhythm-purple': {
+  				DEFAULT: '#8B5CF6',
+  				50: '#F5F3FF',
+  				100: '#EDE9FE',
+  				200: '#DDD6FE',
+  				300: '#C4B5FD',
+  				400: '#A78BFA',
+  				500: '#8B5CF6',
+  				600: '#7C3AED',
+  				700: '#6D28D9',
+  				800: '#5B21B6',
+  				900: '#4C1D95',
+  				950: '#2E1065',
+  			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
@@ -92,7 +106,11 @@ module.exports = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+  		},
+  		backgroundImage: {
+  			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+  			'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+  		},
   	}
   },
   plugins: [require("tailwindcss-animate")],

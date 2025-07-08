@@ -1,5 +1,5 @@
 import { Controller, Put, Param, Body, UseGuards, Get, Query, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
@@ -50,14 +50,18 @@ export class TagsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all tags with counts' })
-  @ApiResponse({ status: 200, description: 'Returns all tags with usage counts' })
-  @ApiParam({
-    name: 'entityType',
-    required: false,
-    description: 'Filter tags by entity type',
-  })
-  getAllTags(@Query('entityType') entityType?: string) {
-    return this.tagsService.getAllTags(entityType);
+  @ApiQuery({ name: 'search', required: false, description: 'Search term for tag names' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Limit the number of results' })
+  @ApiResponse({ status: 200, description: 'Returns all tags with their usage counts' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async findAll(
+    @Query('search') search?: string,
+    @Query('limit') limit?: number
+  ) {
+    return this.tagsService.findAll({
+      search,
+      limit: limit ? Number(limit) : undefined,
+    });
   }
 
   @Delete(':tagId')

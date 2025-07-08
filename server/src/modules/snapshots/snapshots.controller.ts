@@ -6,6 +6,14 @@ import { Request } from 'express';
 import { CreateSnapshotDto } from './dto/create-snapshot.dto';
 import { SnapshotsService } from './snapshots.service';
 
+interface RequestWithUser extends Request {
+  user: {
+    sub: string;
+    email: string;
+    [key: string]: any;
+  };
+}
+
 @ApiTags('snapshots')
 @Controller('api/snapshots')
 @UseGuards(JwtAuthGuard)
@@ -20,24 +28,41 @@ export class SnapshotsController {
   @ApiBody({
     schema: {
       type: 'object',
+      required: ['projectId', 'name'] as string[],
       properties: {
-        projectId: { type: 'string', format: 'uuid' },
-        name: { type: 'string' },
-        description: { type: 'string', required: false },
-        metadata: { type: 'object', description: 'JSON string of metadata' },
+        projectId: { 
+          type: 'string',
+          format: 'uuid',
+          description: 'ID of the project this snapshot belongs to'
+        },
+        name: { 
+          type: 'string',
+          description: 'Name of the snapshot'
+        },
+        description: { 
+          type: 'string',
+          description: 'Optional description of the snapshot',
+          nullable: true
+        },
+        metadata: { 
+          type: 'string',
+          description: 'JSON string of metadata',
+          nullable: true
+        },
         file: {
           type: 'string',
           format: 'binary',
           description: 'ZIP file containing project files (optional)',
+          nullable: true
         },
       },
-    },
+    }
   })
   @ApiResponse({ status: 201, description: 'Snapshot created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   async create(
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
     @Body() createSnapshotDto: any, // Using any to handle multipart form data
   ) {
@@ -68,7 +93,7 @@ export class SnapshotsController {
   @ApiResponse({ status: 200, description: 'List of snapshots' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   async findAll(
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
     @Param('projectId', ParseUUIDPipe) projectId: string,
   ) {
     const userId = req.user.sub; // From JWT
@@ -80,7 +105,7 @@ export class SnapshotsController {
   @ApiResponse({ status: 200, description: 'Snapshot details' })
   @ApiResponse({ status: 404, description: 'Snapshot not found' })
   async findOne(
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('snapshotId', ParseUUIDPipe) snapshotId: string,
   ) {

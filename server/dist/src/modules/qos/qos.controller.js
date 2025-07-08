@@ -11,14 +11,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QosController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
 const get_user_decorator_1 = require("../../common/decorators/get-user.decorator");
-const jwt_payload_interface_1 = require("../../auth/interfaces/jwt-payload.interface");
 const qos_service_1 = require("./qos.service");
 const webrtc_metric_dto_1 = require("./dto/webrtc-metric.dto");
 const crash_report_dto_1 = require("./dto/crash-report.dto");
@@ -70,7 +68,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __param(1, (0, get_user_decorator_1.GetUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [webrtc_metric_dto_1.WebRtcMetricDto, typeof (_a = typeof jwt_payload_interface_1.JwtPayload !== "undefined" && jwt_payload_interface_1.JwtPayload) === "function" ? _a : Object]),
+    __metadata("design:paramtypes", [webrtc_metric_dto_1.WebRtcMetricDto, Object]),
     __metadata("design:returntype", Promise)
 ], QosController.prototype, "recordWebRtcMetrics", null);
 __decorate([
@@ -111,7 +109,7 @@ __decorate([
     __param(1, (0, get_user_decorator_1.GetUser)()),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [crash_report_dto_1.CrashReportDto, typeof (_b = typeof jwt_payload_interface_1.JwtPayload !== "undefined" && jwt_payload_interface_1.JwtPayload) === "function" ? _b : Object, Object]),
+    __metadata("design:paramtypes", [crash_report_dto_1.CrashReportDto, Object, Object]),
     __metadata("design:returntype", Promise)
 ], QosController.prototype, "recordCrashReport", null);
 QosController = __decorate([

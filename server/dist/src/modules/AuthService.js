@@ -47,10 +47,13 @@ exports.authOptions = {
     },
     callbacks: {
         async session({ session, token }) {
-            if (token) {
-                session.user.id = token.sub || '';
-                session.user.email = token.email || '';
-                session.user.name = token.name || '';
+            if (token && session.user) {
+                session.user = {
+                    ...session.user,
+                    id: token.sub || '',
+                    email: token.email || '',
+                    name: token.name || null,
+                };
             }
             return session;
         },

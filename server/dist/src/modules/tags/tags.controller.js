@@ -11,14 +11,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TagsController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../../auth/guards/jwt-auth.guard");
 const get_user_decorator_1 = require("../../common/decorators/get-user.decorator");
-const jwt_payload_interface_1 = require("../../auth/interfaces/jwt-payload.interface");
 const tags_service_1 = require("./tags.service");
 const update_tags_dto_1 = require("./dto/update-tags.dto");
 let TagsController = class TagsController {
@@ -31,8 +29,11 @@ let TagsController = class TagsController {
     getEntityTags(entityType, entityId) {
         return this.tagsService.getEntityTags(entityType, entityId);
     }
-    getAllTags(entityType) {
-        return this.tagsService.getAllTags(entityType);
+    async findAll(search, limit) {
+        return this.tagsService.findAll({
+            search,
+            limit: limit ? Number(limit) : undefined,
+        });
     }
     deleteTag(tagId, force = false) {
         return this.tagsService.deleteTag(tagId, force);
@@ -51,7 +52,7 @@ __decorate([
     __param(2, (0, get_user_decorator_1.GetUser)()),
     __param(3, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, typeof (_a = typeof jwt_payload_interface_1.JwtPayload !== "undefined" && jwt_payload_interface_1.JwtPayload) === "function" ? _a : Object, update_tags_dto_1.UpdateTagsDto]),
+    __metadata("design:paramtypes", [String, String, Object, update_tags_dto_1.UpdateTagsDto]),
     __metadata("design:returntype", Promise)
 ], TagsController.prototype, "updateEntityTags", null);
 __decorate([
@@ -70,17 +71,16 @@ __decorate([
 __decorate([
     (0, common_1.Get)(),
     (0, swagger_1.ApiOperation)({ summary: 'Get all tags with counts' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns all tags with usage counts' }),
-    (0, swagger_1.ApiParam)({
-        name: 'entityType',
-        required: false,
-        description: 'Filter tags by entity type',
-    }),
-    __param(0, (0, common_1.Query)('entityType')),
+    (0, swagger_1.ApiQuery)({ name: 'search', required: false, description: 'Search term for tag names' }),
+    (0, swagger_1.ApiQuery)({ name: 'limit', required: false, description: 'Limit the number of results' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Returns all tags with their usage counts' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    __param(0, (0, common_1.Query)('search')),
+    __param(1, (0, common_1.Query)('limit')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], TagsController.prototype, "getAllTags", null);
+    __metadata("design:paramtypes", [String, Number]),
+    __metadata("design:returntype", Promise)
+], TagsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Delete)(':tagId'),
     (0, swagger_1.ApiOperation)({ summary: 'Delete a tag' }),

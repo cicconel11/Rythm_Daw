@@ -1,0 +1,355 @@
+cmake_minimum_required(VERSION 3.15)
+project(RHYTHM VERSION 0.1.0 LANGUAGES CXX)
+
+# Set C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Set output directories
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Set JUCE directory
+set(JUCE_DIR "/Users/louisciccone/JUCE" CACHE PATH "Path to JUCE installation")
+
+# Include JUCE's CMake API
+list(APPEND CMAKE_MODULE_PATH "${JUCE_DIR}/extras/Build/CMake")
+include(JUCEUtils)
+
+# Set up JUCE paths
+set(JUCE_MODULE_PATH "${JUCE_DIR}/modules" CACHE PATH "Path to JUCE modules")
+
+# Define JUCE modules
+set(JUCE_MODULES
+    juce_audio_basics
+    juce_audio_devices
+    juce_audio_formats
+    juce_audio_plugin_client
+    juce_audio_processors
+    juce_audio_utils
+    juce_core
+    juce_data_structures
+    juce_events
+    juce_graphics
+    juce_gui_basics
+    juce_gui_extra
+    juce_osc
+    juce_plugin_client
+)
+
+# Create a target for each JUCE module
+foreach(module ${JUCE_MODULES})
+    add_library(${module} INTERFACE)
+    target_include_directories(${module} INTERFACE ${JUCE_MODULES_DIR}/${module})
+    
+    # Add any module-specific dependencies
+    if(${module} STREQUAL "juce_audio_plugin_client")
+        target_link_libraries(${module} INTERFACE
+            juce_audio_basics
+            juce_audio_processors
+        )
+    elseif(${module} STREQUAL "juce_audio_processors")
+        target_link_libraries(${module} INTERFACE
+            juce_audio_basics
+            juce_audio_devices
+            juce_audio_formats
+            juce_audio_utils
+            juce_core
+            juce_data_structures
+        target_link_directories(${module} INTERFACE "/System/Library/Frameworks/WebKit.framework")
+    endif()
+endforeach()
+
+# Set up the plugin target
+set(PLUGIN_NAME "RHYTHM")
+set(JUCE_PROJECT_NAME "${PLUGIN_NAME}")
+
+# Define source files
+file(GLOB_RECURSE SOURCES
+    "Source/*.cpp"
+)
+
+# Define headers
+file(GLOB_RECURSE HEADERS
+    "Source/*.h"
+)
+
+# Create the plugin target
+add_library(${PROJECT_NAME} MODULE
+    ${SOURCES}
+    ${HEADERS}
+)
+
+# Set include directories
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source
+    ${CMAKE_CURRENT_SOURCE_DIR}/JuceLibraryCode
+    ${JUCE_MODULES_DIR}
+    ${JUCE_DIR}/modules
+)
+
+# Add JuceLibraryCode to the include path for the build
+target_include_directories(${PROJECT_NAME} PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/JuceLibraryCode>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Add JUCE modules to the include path
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE
+    $<BUILD_INTERFACE:${JUCE_DIR}/modules>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Set compile definitions
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    $<TARGET_PROPERTY:juce_audio_plugin_client,INTERFACE_COMPILE_DEFINITIONS>
+    $<TARGET_PROPERTY:juce_audio_processors,INTERFACE_COMPILE_DEFINITIONS>
+    
+    # Plugin metadata
+    JucePlugin_Build_VST3=0
+    JucePlugin_Build_AU=1
+    JucePlugin_Build_AUv3=1
+    JucePlugin_Build_AAX=0
+    JucePlugin_Build_Standalone=0
+    JucePlugin_Build_Unity=0
+    JucePlugin_Enable_IAA=0
+    JucePlugin_Enable_ARA=0
+    JucePlugin_IsMidiEffect=0
+    JucePlugin_IsSynth=0
+    JucePlugin_Name="RHYTHM"
+    JucePlugin_Desc="RHYTHM"
+    JucePlugin_Manufacturer="YourCompany"
+    JucePlugin_ManufacturerCode=0x4d616e75  # 'Manu'
+    JucePlugin_PluginCode=0x48756765      # 'Huge'
+    JucePlugin_Version=1.0.0
+    JucePlugin_VersionCode=0x10000
+    JucePlugin_VersionString="1.0.0"
+    JucePlugin_VSTUniqueID=JucePlugin_PluginCode
+    JucePlugin_VSTCategory=kPlugCategEffect
+    JucePlugin_AUMainType='aufx'
+    JucePlugin_AUSubType=JucePlugin_PluginCode
+    JucePlugin_AUExportPrefix=RHYTHMAU
+    JucePlugin_AUExportPrefixQuoted="RHYTHMAU"
+    JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode
+    JucePlugin_CFBundleIdentifier="com.yourcompany.rhythm"
+)
+
+# Set compiler flags
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wno-unused-parameter)
+    if(APPLE)
+        target_compile_options(${PROJECT_NAME} PRIVATE -ObjC++ -fobjc-arc)
+    endif()
+endif()
+
+# Set JUCE modules path if not already set
+if(NOT DEFINED JUCE_MODULES_PATH)
+    set(JUCE_MODULES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../JUCE/modules" CACHE PATH "Path to JUCE modules")
+    message(STATUS "Setting JUCE_MODULES_PATH to: ${JUCE_MODULES_PATH}")
+endif()
+
+# Verify JUCE modules path exists
+if(NOT EXISTS "${JUCE_MODULES_PATH}")
+    message(FATAL_ERROR "JUCE modules directory not found at: ${JUCE_MODULES_PATH}")
+endif()
+
+# Include JUCE modules
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${JUCE_MODULES_PATH}
+    ${JUCE_MODULES_PATH}/juce_audio_processors/format_types
+    ${JUCE_MODULES_PATH}/juce_audio_processors/processors
+    ${JUCE_MODULES_PATH}/juce_audio_processors/format_types/VST3_SDK
+)
+
+# Add JUCE module sources
+add_subdirectory(${JUCE_MODULES_PATH} ${CMAKE_BINARY_DIR}/JUCE)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    juce::juce_audio_plugin_client
+    juce::juce_audio_utils
+    juce::juce_audio_processors
+    juce::juce_audio_basics
+    juce::juce_audio_devices
+    juce::juce_audio_formats
+    juce::juce_gui_basics
+    juce::juce_gui_extra
+    juce::juce_events
+    juce::juce_core
+    juce::juce_data_structures
+    juce::juce_graphics
+)
+
+# Add required frameworks for macOS
+if(APPLE)
+    find_library(COCOA_LIBRARY Cocoa)
+    find_library(QUARTZCORE_LIBRARY QuartzCore)
+    find_library(AUDIOTOOLBOX_LIBRARY AudioToolbox)
+    find_library(COREAUDIO_LIBRARY CoreAudio)
+    find_library(COREMIDI_LIBRARY CoreMIDI)
+    find_library(ACCELERATE_LIBRARY Accelerate)
+    
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        ${COCOA_LIBRARY}
+        ${QUARTZCORE_LIBRARY}
+        ${AUDIOTOOLBOX_LIBRARY}
+        ${COREAUDIO_LIBRARY}
+        ${COREMIDI_LIBRARY}
+        ${ACCELERATE_LIBRARY}
+    )
+endif()
+
+# Add WebKit framework for WebBrowserComponent (commented out for now)
+#if(APPLE)
+#    target_link_libraries(${PROJECT_NAME} PRIVATE
+#        "-framework WebKit"
+#    )
+#    
+#    # Add WebKit framework search path
+#    target_compile_options(${PROJECT_NAME} PRIVATE "-F/System/Library/Frameworks")
+#    target_link_directories(${PROJECT_NAME} PRIVATE "/System/Library/Frameworks")
+#endif()
+
+# Set macOS deployment target
+if(APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        MACOSX_RPATH ON
+        MACOSX_DEPLOYMENT_TARGET "10.13"
+    )
+endif()
+
+# macOS specific settings
+if(APPLE)
+    # Add macOS frameworks
+    target_link_libraries(${PROJECT_NAME} PRIVATE
+        "-framework Cocoa"
+        "-framework QuartzCore"
+        "-framework AudioToolbox"
+        "-framework CoreAudio"
+        "-framework CoreMIDI"
+        "-framework WebKit"
+        "-framework Accelerate"
+    )
+    
+    # Set bundle properties
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        BUNDLE True
+        BUNDLE_EXTENSION "component"
+        MACOSX_BUNDLE_BUNDLE_NAME "RHYTHM"
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_LONG_VERSION_STRING ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        MACOSX_BUNDLE_COPYRIGHT "Copyright 2023 YourCompany. All rights reserved."
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.yourcompany.rhythm"
+        XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "-"  # Disable code signing for now
+    )
+    
+    # Set the output directory for the plugin bundle
+    set(PLUGIN_BUNDLE_DIR "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${PROJECT_NAME}.component")
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${PLUGIN_BUNDLE_DIR}/Contents/MacOS"
+        RUNTIME_OUTPUT_DIRECTORY "${PLUGIN_BUNDLE_DIR}/Contents/MacOS"
+        OUTPUT_NAME "RHYTHM"
+    )
+    
+    # Create the plugin bundle structure
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${PLUGIN_BUNDLE_DIR}/Contents/Resources"
+        COMMENT "Creating plugin bundle structure..."
+    )
+    
+    # Create a basic Info.plist if it doesn't exist
+    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist")
+        file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist" "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+            "<plist version=\"1.0\">\n"
+            "<dict>\n"
+            "    <key>CFBundleDevelopmentRegion</key>\n"
+            "    <string>en</string>\n"
+            "    <key>CFBundleExecutable</key>\n"
+            "    <string>${PROJECT_NAME}</string>\n"
+            "    <key>CFBundleGetInfoString</key>\n"
+            "    <string>${PROJECT_NAME} v${PROJECT_VERSION}</string>\n"
+            "    <key>CFBundleIconFile</key>\n"
+            "    <string></string>\n"
+            "    <key>CFBundleIdentifier</key>\n"
+            "    <string>com.yourcompany.rhythm</string>\n"
+            "    <key>CFBundleInfoDictionaryVersion</key>\n"
+            "    <string>6.0</string>\n"
+            "    <key>CFBundleName</key>\n"
+            "    <string>${PROJECT_NAME}</string>\n"
+            "    <key>CFBundlePackageType</key>\n"
+            "    <string>aumu</string>\n"
+            "    <key>CFBundleVersion</key>\n"
+            "    <string>${PROJECT_VERSION}</string>\n"
+            "    <key>CFBundleShortVersionString</key>\n"
+            "    <string>${PROJECT_VERSION}</string>\n"
+            "    <key>NSHumanReadableCopyright</key>\n"
+            "    <string>Copyright 2023 YourCompany. All rights reserved.</string>\n"
+            "    <key>NSMainNibFile</key>\n"
+            "    <string>MainMenu</string>\n"
+            "    <key>NSPrincipalClass</key>\n"
+            "    <string>NSApplication</string>\n"
+            "    <key>AudioComponents</key>\n"
+            "    <array>\n"
+            "        <dict>\n"
+            "            <key>factoryFunction</key>\n"
+            "            <string>createPluginFilter</string>\n"
+            "            <key>manufacturer</key>\n"
+            "            <string>Manu</string>\n"
+            "            <key>name</key>\n"
+            "            <string>RHYTHM</string>\n"
+            "            <key>subtype</key>\n"
+            "            <string>Huge</string>\n"
+            "            <key>type</key>\n"
+            "            <string>aufx</string>\n"
+            "            <key>version</key>\n"
+            "            <integer>1</integer>\n"
+            "        </dict>\n"
+            "    </array>\n"
+            "</dict>\n"
+            "</plist>\n"
+        )
+    endif()
+    
+    # Copy Info.plist to the bundle
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+            "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+            "${PLUGIN_BUNDLE_DIR}/Contents/Info.plist"
+        COMMENT "Copying Info.plist to plugin bundle..."
+    )
+    
+    # Build the React UI before building the plugin
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ui-dev")
+        # Skip React UI build for now
+        message(STATUS "Skipping React UI build for now")
+        
+        # Create Resources directory in the plugin bundle
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E make_directory
+                $<TARGET_BUNDLE_DIR:${PROJECT_NAME}>
+            COMMENT "Creating plugin bundle directory..."
+        )
+        
+        # Copy the built UI files to the plugin bundle
+        add_custom_command(
+            TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${CMAKE_CURRENT_SOURCE_DIR}/ui-dev/dist"
+                "${PLUGIN_BUNDLE_DIR}/Contents/Resources"
+            COMMENT "Copying UI files to plugin bundle..."
+        )
+    endif()
+    
+    # Install the plugin to the user's Audio Units folder
+    install(
+        DIRECTORY "${PLUGIN_BUNDLE_DIR}"
+        DESTINATION "$ENV{HOME}/Library/Audio/Plug-Ins/Components"
+        USE_SOURCE_PERMISSIONS
+    )
+endif()

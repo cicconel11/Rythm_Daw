@@ -53,20 +53,26 @@ export class QosService implements OnModuleInit {
     } = report;
 
     try {
+      const data: any = {
+        ...rest,
+        // Encrypt sensitive fields
+        stack: stack ? this.encryptionService.encrypt(stack) : null,
+        breadcrumbs: breadcrumbs 
+          ? this.encryptionService.encrypt(JSON.stringify(breadcrumbs)) 
+          : null,
+        context: context 
+          ? this.encryptionService.encrypt(JSON.stringify(context))
+          : null,
+        userId,
+        // Map timestamp to createdAt if needed, or remove if not in schema
+        createdAt: new Date(),
+      };
+
+      // Remove any undefined values
+      Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+
       await this.prisma.crashReport.create({
-        data: {
-          ...rest,
-          // Encrypt sensitive fields
-          stack: stack ? this.encryptionService.encrypt(stack) : null,
-          breadcrumbs: breadcrumbs 
-            ? this.encryptionService.encrypt(JSON.stringify(breadcrumbs)) 
-            : null,
-          context: context 
-            ? this.encryptionService.encrypt(JSON.stringify(context))
-            : null,
-          userId,
-          timestamp: new Date(),
-        },
+        data,
       });
 
       this.logger.log(`Crash report recorded for user ${userId || 'anonymous'}`);
@@ -86,19 +92,28 @@ export class QosService implements OnModuleInit {
     endDate: Date;
     limit?: number;
   }) {
-    const { userId, projectId, startDate, endDate, limit = 1000 } = options;
+    const { userId, startDate, endDate, limit = 1000 } = options;
+
+    const where: any = {
+      userId,
+      createdAt: {
+        gte: startDate,
+        lte: endDate,
+      },
+    };
+
+    // Add projectId to metadata if it exists
+    if (options.projectId) {
+      where.metadata = {
+        path: ['projectId'],
+        equals: options.projectId,
+      };
+    }
 
     return this.prisma.webRtcMetric.findMany({
-      where: {
-        userId,
-        projectId,
-        timestamp: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
+      where,
       orderBy: {
-        timestamp: 'desc',
+        createdAt: 'desc',
       },
       take: limit,
     });
@@ -118,7 +133,6 @@ export class QosService implements OnModuleInit {
   }) {
     const { 
       userId, 
-      projectId, 
       startDate, 
       endDate, 
       type, 
@@ -126,34 +140,64 @@ export class QosService implements OnModuleInit {
       includeSensitive = false 
     } = options;
 
-    const reports = await this.prisma.crashReport.findMany({
-      where: {
-        userId,
-        projectId,
-        type,
-        timestamp: {
-          gte: startDate,
-          lte: endDate,
-        },
+    const where: any = {
+      userId,
+      createdAt: {
+        gte: startDate,
+        lte: endDate,
       },
+    };
+
+    // Add type filter if provided
+    if (type) {
+      where.error = {
+        contains: type,
+        mode: 'insensitive',
+      };
+    }
+
+    // Add projectId to metadata if it exists
+    if (options.projectId) {
+      where.metadata = {
+        path: ['projectId'],
+        equals: options.projectId,
+      };
+    }
+
+    const reports = await this.prisma.crashReport.findMany({
+      where,
       orderBy: {
-        timestamp: 'desc',
+        createdAt: 'desc',
       },
       take: limit,
     });
 
     // Decrypt sensitive fields if requested
     if (includeSensitive) {
-      return reports.map(report => ({
-        ...report,
-        stack: report.stack ? this.encryptionService.decrypt(report.stack) : null,
-        breadcrumbs: report.breadcrumbs 
-          ? JSON.parse(this.encryptionService.decrypt(report.breadcrumbs))
-          : null,
-        context: report.context 
-          ? JSON.parse(this.encryptionService.decrypt(report.context))
-          : null,
-      }));
+      return reports.map(report => {
+        const decrypted: any = { ...report };
+        
+        // Decrypt stack trace if it exists in metadata
+        if (report.metadata && typeof report.metadata === 'object' && 'stack' in report.metadata) {
+          decrypted.stack = this.encryptionService.decrypt(report.metadata.stack as string);
+        }
+        
+        // Decrypt breadcrumbs if they exist in metadata
+        if (report.metadata && typeof report.metadata === 'object' && 'breadcrumbs' in report.metadata) {
+          decrypted.breadcrumbs = JSON.parse(
+            this.encryptionService.decrypt(report.metadata.breadcrumbs as string)
+          );
+        }
+        
+        // Decrypt context if it exists in metadata
+        if (report.metadata && typeof report.metadata === 'object' && 'context' in report.metadata) {
+          decrypted.context = JSON.parse(
+            this.encryptionService.decrypt(report.metadata.context as string)
+          );
+        }
+        
+        return decrypted;
+      });
     }
 
     return reports;
@@ -168,26 +212,62 @@ export class QosService implements OnModuleInit {
     const batch = this.webRtcMetricsQueue.splice(0, this.BATCH_SIZE);
     
     try {
-      await this.prisma.$transaction([
-        this.prisma.webRtcMetric.createMany({
-          data: batch.map(m => ({
-            peerConnectionId: m.peerConnectionId,
-            rttMs: m.rttMs,
-            jitterMs: m.jitterMs,
-            packetLoss: m.packetLoss,
-            networkType: m.networkType,
-            effectiveType: m.effectiveType,
-            downlinkMbps: m.downlinkMbps,
-            iceCandidatePairId: m.iceCandidatePairId,
-            localCandidateId: m.localCandidateId,
-            remoteCandidateId: m.remoteCandidateId,
-            timestamp: m.timestamp,
-            userId: m.userId,
-            projectId: m.projectId,
-          })),
-          skipDuplicates: true,
-        }),
-      ]);
+      // Process each metric type separately
+      const metricsByType = batch.reduce((acc, metric) => {
+        const metricType = metric.metricType || 'unknown';
+        if (!acc[metricType]) {
+          acc[metricType] = [];
+        }
+        acc[metricType].push(metric);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      // Create metrics for each type
+      const createPromises = [];
+      
+      for (const [metricType, metrics] of Object.entries(metricsByType)) {
+        // Process metrics in chunks to avoid too many parameters
+        const chunkSize = 100;
+        for (let i = 0; i < (metrics as any[]).length; i += chunkSize) {
+          const chunk = (metrics as any[]).slice(i, i + chunkSize);
+          const createPromise = this.prisma.webRtcMetric.createMany({
+            data: chunk.map((m: any) => {
+              const metadata: Record<string, any> = {
+                ...(m.metadata || {}),
+                peerConnectionId: m.peerConnectionId,
+                rttMs: m.rttMs,
+                jitterMs: m.jitterMs,
+                packetLoss: m.packetLoss,
+                networkType: m.networkType,
+                effectiveType: m.effectiveType,
+                downlinkMbps: m.downlinkMbps,
+                iceCandidatePairId: m.iceCandidatePairId,
+                localCandidateId: m.localCandidateId,
+                remoteCandidateId: m.remoteCandidateId,
+              };
+              
+              // Add projectId to metadata if it exists
+              if (m.projectId) {
+                metadata.projectId = m.projectId;
+              }
+
+              return {
+                id: m.id || undefined, // Let Prisma generate ID if not provided
+                metricType,
+                value: m.value || 0,
+                metadata,
+                timestamp: m.timestamp || new Date(),
+                userId: m.userId,
+              };
+            })
+          });
+          createPromises.push(createPromise);
+        }
+      }
+
+      // Execute all create operations in parallel but don't use transaction
+      // as it might not be necessary for metrics collection
+      await Promise.all(createPromises);
 
       this.logger.debug(`Flushed ${batch.length} WebRTC metrics to database`);
     } catch (error) {

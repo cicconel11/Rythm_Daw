@@ -11,6 +11,6 @@ export declare class EncryptionService implements OnModuleInit {
     onModuleInit(): void;
     encrypt(text: string): string;
     decrypt(encryptedText: string): string;
-    encryptObject<T extends object>(obj: T): string;
-    decryptObject<T extends object>(encrypted: string): T;
+    encryptObject<T extends object>(obj: T | null): string | null;
+    decryptObject<T>(encrypted: string | null): T | null;
 }

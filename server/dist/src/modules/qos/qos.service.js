@@ -9,7 +9,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var QosService_1;
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QosService = void 0;
 const common_1 = require("@nestjs/common");
@@ -42,19 +41,21 @@ let QosService = QosService_1 = class QosService {
     async recordCrashReport(report, userId) {
         const { stack, breadcrumbs, context, ...rest } = report;
         try {
+            const data = {
+                ...rest,
+                stack: stack ? this.encryptionService.encrypt(stack) : null,
+                breadcrumbs: breadcrumbs
+                    ? this.encryptionService.encrypt(JSON.stringify(breadcrumbs))
+                    : null,
+                context: context
+                    ? this.encryptionService.encrypt(JSON.stringify(context))
+                    : null,
+                userId,
+                createdAt: new Date(),
+            };
+            Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
             await this.prisma.crashReport.create({
-                data: {
-                    ...rest,
-                    stack: stack ? this.encryptionService.encrypt(stack) : null,
-                    breadcrumbs: breadcrumbs
-                        ? this.encryptionService.encrypt(JSON.stringify(breadcrumbs))
-                        : null,
-                    context: context
-                        ? this.encryptionService.encrypt(JSON.stringify(context))
-                        : null,
-                    userId,
-                    timestamp: new Date(),
-                },
+                data,
             });
             this.logger.log(`Crash report recorded for user ${userId || 'anonymous'}`);
         }
@@ -63,50 +64,70 @@ let QosService = QosService_1 = class QosService {
         }
     }
     async getWebRtcMetrics(options) {
-        const { userId, projectId, startDate, endDate, limit = 1000 } = options;
-        return this.prisma.webRtcMetric.findMany({
-            where: {
-                userId,
-                projectId,
-                timestamp: {
-                    gte: startDate,
-                    lte: endDate,
-                },
+        const { userId, startDate, endDate, limit = 1000 } = options;
+        const where = {
+            userId,
+            createdAt: {
+                gte: startDate,
+                lte: endDate,
             },
+        };
+        if (options.projectId) {
+            where.metadata = {
+                path: ['projectId'],
+                equals: options.projectId,
+            };
+        }
+        return this.prisma.webRtcMetric.findMany({
+            where,
             orderBy: {
-                timestamp: 'desc',
+                createdAt: 'desc',
             },
             take: limit,
         });
     }
     async getCrashReports(options) {
-        const { userId, projectId, startDate, endDate, type, limit = 100, includeSensitive = false } = options;
-        const reports = await this.prisma.crashReport.findMany({
-            where: {
-                userId,
-                projectId,
-                type,
-                timestamp: {
-                    gte: startDate,
-                    lte: endDate,
-                },
+        const { userId, startDate, endDate, type, limit = 100, includeSensitive = false } = options;
+        const where = {
+            userId,
+            createdAt: {
+                gte: startDate,
+                lte: endDate,
             },
+        };
+        if (type) {
+            where.error = {
+                contains: type,
+                mode: 'insensitive',
+            };
+        }
+        if (options.projectId) {
+            where.metadata = {
+                path: ['projectId'],
+                equals: options.projectId,
+            };
+        }
+        const reports = await this.prisma.crashReport.findMany({
+            where,
             orderBy: {
-                timestamp: 'desc',
+                createdAt: 'desc',
             },
             take: limit,
         });
         if (includeSensitive) {
-            return reports.map(report => ({
-                ...report,
-                stack: report.stack ? this.encryptionService.decrypt(report.stack) : null,
-                breadcrumbs: report.breadcrumbs
-                    ? JSON.parse(this.encryptionService.decrypt(report.breadcrumbs))
-                    : null,
-                context: report.context
-                    ? JSON.parse(this.encryptionService.decrypt(report.context))
-                    : null,
-            }));
+            return reports.map(report => {
+                const decrypted = { ...report };
+                if (report.metadata && typeof report.metadata === 'object' && 'stack' in report.metadata) {
+                    decrypted.stack = this.encryptionService.decrypt(report.metadata.stack);
+                }
+                if (report.metadata && typeof report.metadata === 'object' && 'breadcrumbs' in report.metadata) {
+                    decrypted.breadcrumbs = JSON.parse(this.encryptionService.decrypt(report.metadata.breadcrumbs));
+                }
+                if (report.metadata && typeof report.metadata === 'object' && 'context' in report.metadata) {
+                    decrypted.context = JSON.parse(this.encryptionService.decrypt(report.metadata.context));
+                }
+                return decrypted;
+            });
         }
         return reports;
     }
@@ -115,26 +136,51 @@ let QosService = QosService_1 = class QosService {
             return;
         const batch = this.webRtcMetricsQueue.splice(0, this.BATCH_SIZE);
         try {
-            await this.prisma.$transaction([
-                this.prisma.webRtcMetric.createMany({
-                    data: batch.map(m => ({
-                        peerConnectionId: m.peerConnectionId,
-                        rttMs: m.rttMs,
-                        jitterMs: m.jitterMs,
-                        packetLoss: m.packetLoss,
-                        networkType: m.networkType,
-                        effectiveType: m.effectiveType,
-                        downlinkMbps: m.downlinkMbps,
-                        iceCandidatePairId: m.iceCandidatePairId,
-                        localCandidateId: m.localCandidateId,
-                        remoteCandidateId: m.remoteCandidateId,
-                        timestamp: m.timestamp,
-                        userId: m.userId,
-                        projectId: m.projectId,
-                    })),
-                    skipDuplicates: true,
-                }),
-            ]);
+            const metricsByType = batch.reduce((acc, metric) => {
+                const metricType = metric.metricType || 'unknown';
+                if (!acc[metricType]) {
+                    acc[metricType] = [];
+                }
+                acc[metricType].push(metric);
+                return acc;
+            }, {});
+            const createPromises = [];
+            for (const [metricType, metrics] of Object.entries(metricsByType)) {
+                const chunkSize = 100;
+                for (let i = 0; i < metrics.length; i += chunkSize) {
+                    const chunk = metrics.slice(i, i + chunkSize);
+                    const createPromise = this.prisma.webRtcMetric.createMany({
+                        data: chunk.map((m) => {
+                            const metadata = {
+                                ...(m.metadata || {}),
+                                peerConnectionId: m.peerConnectionId,
+                                rttMs: m.rttMs,
+                                jitterMs: m.jitterMs,
+                                packetLoss: m.packetLoss,
+                                networkType: m.networkType,
+                                effectiveType: m.effectiveType,
+                                downlinkMbps: m.downlinkMbps,
+                                iceCandidatePairId: m.iceCandidatePairId,
+                                localCandidateId: m.localCandidateId,
+                                remoteCandidateId: m.remoteCandidateId,
+                            };
+                            if (m.projectId) {
+                                metadata.projectId = m.projectId;
+                            }
+                            return {
+                                id: m.id || undefined,
+                                metricType,
+                                value: m.value || 0,
+                                metadata,
+                                timestamp: m.timestamp || new Date(),
+                                userId: m.userId,
+                            };
+                        })
+                    });
+                    createPromises.push(createPromise);
+                }
+            }
+            await Promise.all(createPromises);
             this.logger.debug(`Flushed ${batch.length} WebRTC metrics to database`);
         }
         catch (error) {
@@ -163,7 +209,8 @@ let QosService = QosService_1 = class QosService {
 };
 QosService = QosService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object, encryption_service_1.EncryptionService,
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        encryption_service_1.EncryptionService,
         config_1.ConfigService])
 ], QosService);
 exports.QosService = QosService;

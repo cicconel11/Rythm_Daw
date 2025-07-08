@@ -1,8 +1,10 @@
 export declare class LogActivityDto {
-    projectId: string;
-    userId: string;
-    event: string;
-    payload?: Record<string, any>;
-    ipAddress?: string;
-    userAgent?: string;
+    userId?: string;
+    entityId?: string;
+    entityType?: string;
+    projectId?: string | null;
+    action: string;
+    metadata?: Record<string, unknown> | null;
+    ipAddress?: string | null;
+    userAgent?: string | null;
 }

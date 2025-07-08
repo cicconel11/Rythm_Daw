@@ -1,5 +1,5 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import NextAuth, { NextAuthOptions, Session, User } from 'next-auth';
+import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
+import NextAuth, { type NextAuthOptions, type Session, type DefaultSession } from 'next-auth';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { PrismaClient } from '@prisma/client';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -7,6 +7,26 @@ import GoogleProvider from 'next-auth/providers/google';
 import AppleProvider from 'next-auth/providers/apple';
 import EmailProvider from 'next-auth/providers/email';
 import { randomBytes } from 'crypto';
+
+declare module 'next-auth' {
+  interface Session extends DefaultSession {
+    user: {
+      id: string;
+      email: string;
+      name?: string | null;
+    } & DefaultSession['user'];
+  }
+}
+
+type NextApiRequest = ExpressRequest & {
+  body: any;
+  method?: string;
+};
+
+type NextApiResponse = ExpressResponse & {
+  status: (code: number) => NextApiResponse;
+  json: (data: any) => void;
+};
 
 const prisma = new PrismaClient();
 
@@ -55,10 +75,13 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async session({ session, token }): Promise<Session> {
-      if (token) {
-        session.user.id = token.sub || '';
-        session.user.email = token.email || '';
-        session.user.name = token.name || '';
+      if (token && session.user) {
+        session.user = {
+          ...session.user,
+          id: token.sub || '',
+          email: token.email || '',
+          name: token.name || null,
+        };
       }
       return session;
     },

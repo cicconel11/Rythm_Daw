@@ -7,4 +7,4 @@ export declare class FileShare {
     private static calculateFileHash;
     private static scanFileForViruses;
 }
-export declare const uploadMiddleware: any;
+export declare const uploadMiddleware: import("express").RequestHandler<import("express-serve-static-core").ParamsDictionary, any, any, import("qs").ParsedQs, Record<string, any>>;

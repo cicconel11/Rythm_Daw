@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SnapshotsController = void 0;
 const common_1 = require("@nestjs/common");
@@ -59,18 +58,35 @@ __decorate([
     (0, swagger_1.ApiBody)({
         schema: {
             type: 'object',
+            required: ['projectId', 'name'],
             properties: {
-                projectId: { type: 'string', format: 'uuid' },
-                name: { type: 'string' },
-                description: { type: 'string', required: false },
-                metadata: { type: 'object', description: 'JSON string of metadata' },
+                projectId: {
+                    type: 'string',
+                    format: 'uuid',
+                    description: 'ID of the project this snapshot belongs to'
+                },
+                name: {
+                    type: 'string',
+                    description: 'Name of the snapshot'
+                },
+                description: {
+                    type: 'string',
+                    description: 'Optional description of the snapshot',
+                    nullable: true
+                },
+                metadata: {
+                    type: 'string',
+                    description: 'JSON string of metadata',
+                    nullable: true
+                },
                 file: {
                     type: 'string',
                     format: 'binary',
                     description: 'ZIP file containing project files (optional)',
+                    nullable: true
                 },
             },
-        },
+        }
     }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'Snapshot created successfully' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input' }),
@@ -79,7 +95,7 @@ __decorate([
     __param(1, (0, common_1.UploadedFile)()),
     __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_b = typeof Express !== "undefined" && (_a = Express.Multer) !== void 0 && _a.File) === "function" ? _b : Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], SnapshotsController.prototype, "create", null);
 __decorate([

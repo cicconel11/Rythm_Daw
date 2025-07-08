@@ -23,7 +23,26 @@ export declare class QosService implements OnModuleInit {
         startDate: Date;
         endDate: Date;
         limit?: number;
-    }): Promise<any>;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        projectId: string | null;
+        metadata: import("@prisma/client/runtime/library").JsonValue;
+        value: number;
+        peerConnectionId: string | null;
+        rttMs: number | null;
+        jitterMs: number | null;
+        packetLoss: number | null;
+        networkType: string | null;
+        effectiveType: string | null;
+        downlinkMbps: number | null;
+        iceCandidatePairId: string | null;
+        localCandidateId: string | null;
+        remoteCandidateId: string | null;
+        userId: string;
+        metricType: string;
+        timestamp: Date;
+    }[]>;
     getCrashReports(options: {
         userId?: string;
         projectId?: string;
@@ -32,7 +51,7 @@ export declare class QosService implements OnModuleInit {
         type?: string;
         limit?: number;
         includeSensitive?: boolean;
-    }): Promise<any>;
+    }): Promise<any[]>;
     private flushWebRtcMetrics;
     private scheduleFlush;
     onModuleDestroy(): Promise<void>;

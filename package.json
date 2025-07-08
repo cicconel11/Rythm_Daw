@@ -1,8 +1,22 @@
 {
 	"dependencies": {
+		"@types/node": "^20.11.0",
 		"@types/react-window": "^1.8.8",
 		"@types/uuid": "^10.0.0",
 		"react-window": "^1.8.11",
 		"uuid": "^11.1.0"
+	},
+	"scripts": {
+		"dev:web": "pnpm --filter server dev",
+		"dev:plugin": "pnpm --filter ui-dev... dev",
+		"dev": "concurrently -n web,plugin -c cyan,magenta \"pnpm dev:web\" \"pnpm dev:plugin\"",
+		"db:generate": "pnpm exec prisma generate --schema=./server/prisma/schema.prisma",
+		"db:migrate": "pnpm exec prisma migrate dev --schema=./server/prisma/schema.prisma && ./scripts/restart-api.sh",
+		"postinstall": "pnpm db:generate"
+	},
+	"devDependencies": {
+		"concurrently": "^9.2.0",
+		"prisma": "^6.11.1",
+		"typescript": "^5.4.0"
 	}
 }

@@ -12,17 +12,21 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const util_1 = require("util");
 const child_process_1 = require("child_process");
+const stream_1 = require("stream");
 const execAsync = (0, util_1.promisify)(child_process_1.exec);
 const MAX_DIRECT_SIZE = 100 * 1024 * 1024;
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 const CLAMSCAN_CMD = process.env.CLAMSCAN_CMD || 'clamscan';
-const s3Client = new client_s3_1.S3Client({
+const s3Config = {
     region: process.env.AWS_REGION || 'us-east-1',
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-    },
-});
+};
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+    s3Config.credentials = {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    };
+}
+const s3Client = new client_s3_1.S3Client(s3Config);
 const peerConnections = new Map();
 const fileMetadata = new Map();
 if (!fs_1.default.existsSync(UPLOAD_DIR)) {
@@ -173,11 +177,28 @@ class FileShare {
                 });
                 const { Body } = await s3Client.send(command);
                 const writeStream = fs_1.default.createWriteStream(filePath);
-                await new Promise((resolve, reject) => {
-                    Body.pipe(writeStream)
-                        .on('error', reject)
-                        .on('close', resolve);
-                });
+                const handleStream = (stream) => {
+                    return new Promise((resolve, reject) => {
+                        stream.pipe(writeStream)
+                            .on('error', reject)
+                            .on('close', resolve);
+                    });
+                };
+                if (Body instanceof stream_1.Readable) {
+                    await handleStream(Body);
+                }
+                else if (Body instanceof Uint8Array || typeof Body === 'string') {
+                    writeStream.write(Body);
+                    writeStream.end();
+                    await new Promise((resolve) => writeStream.on('close', resolve));
+                }
+                else if (Body && typeof Body.transformToWebStream === 'function') {
+                    const webStream = Body.transformToWebStream();
+                    await handleStream(stream_1.Readable.fromWeb(webStream));
+                }
+                else {
+                    throw new Error('Unsupported file type');
+                }
             }
             await execAsync(`${CLAMSCAN_CMD} --no-summary "${filePath}"`);
             metadata.status = 'clean';
@@ -191,7 +212,7 @@ class FileShare {
             if (error instanceof Error && 'code' in error && error.code === 1) {
                 metadata.status = 'infected';
                 if (metadata.s3Key) {
-                    await s3Client.send(new DeleteObjectCommand({
+                    await s3Client.send(new client_s3_1.DeleteObjectCommand({
                         Bucket: process.env.S3_BUCKET_NAME,
                         Key: metadata.s3Key,
                     }));

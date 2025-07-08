@@ -5,11 +5,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Log important paths for debugging
-console.log('Project root:', __dirname);
-console.log('UI Source:', path.resolve(__dirname, '../plugin/Source/UI'));
-console.log('Store path:', path.resolve(__dirname, 'src/store.ts'));
-
 export default defineConfig({
   plugins: [
     react({
@@ -24,12 +19,22 @@ export default defineConfig({
       }
     })
   ],
+  base: './',
+  build: {
+    outDir: '../build/RHYTHM_artefacts/Release/AU/RHYTHM.component/Contents/Resources',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name].js',
+        assetFileNames: '[name].[ext]'
+      }
+    }
+  },
   resolve: {
     alias: {
-      // Local paths - point @ to the src directory
       '@': path.resolve(__dirname, 'src'),
       '@store': path.resolve(__dirname, 'src/store'),
-      // Core dependencies - ensure these point to the correct node_modules
       'react': path.resolve(__dirname, 'node_modules/react'),
       'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
       'framer-motion': path.resolve(__dirname, 'node_modules/framer-motion'),
@@ -55,22 +60,19 @@ export default defineConfig({
       'use-sync-external-store/shim/with-selector'
     ],
     esbuildOptions: {
-      // This helps with some dependency resolution issues
       preserveSymlinks: true,
-      // Ensure JSX is handled properly
       loader: {
         '.js': 'jsx',
         '.ts': 'tsx',
-        '.tsx': 'tsx',
-      },
-    },
+        '.tsx': 'tsx'
+      }
+    }
   },
   server: {
-    port: 5173,
+    port: 3000,
     strictPort: true,
     open: true,
     fs: {
-      // Allow serving files from one level up from the package root
       allow: ['..']
     }
   },

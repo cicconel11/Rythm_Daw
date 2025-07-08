@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { HeartbeatDto, UserStatus } from './dto/heartbeat.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
@@ -23,32 +24,36 @@ export class PresenceService implements OnModuleInit {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + this.HEARTBEAT_TIMEOUT_MS);
 
+    // First, get the user to include in the response
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    // Use the correct composite key for the where clause
+    const where: Prisma.UserPresenceWhereUniqueInput = {
+      id: userId, // Using id as the primary key since it's the @id field in the schema
+    };
+
     // Update or create presence
     const presence = await this.prisma.userPresence.upsert({
-      where: { userId },
+      where,
       update: {
-        status: dto.status,
+        status: dto.status as any, // Type assertion to handle Prisma enum mapping
         lastSeen: now,
         expiresAt,
-        projectId: dto.projectId,
-        sessionId: dto.sessionId,
+        projectId: dto.projectId || null,
       },
       create: {
         userId,
-        status: dto.status,
+        status: dto.status as any, // Type assertion to handle Prisma enum mapping
         lastSeen: now,
         expiresAt,
-        projectId: dto.projectId,
-        sessionId: dto.sessionId,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        projectId: dto.projectId || null,
       },
     });
 
@@ -66,7 +71,7 @@ export class PresenceService implements OnModuleInit {
         projectId: dto.projectId,
         userId,
         status: dto.status,
-        user: presence.user,
+        user: user, // Use the user we fetched earlier
       });
     }
 
@@ -74,7 +79,7 @@ export class PresenceService implements OnModuleInit {
   }
 
   async getUserPresence(userId: string) {
-    return this.prisma.userPresence.findUnique({
+    const presences = await this.prisma.userPresence.findMany({
       where: { userId },
       include: {
         user: {
@@ -86,6 +91,11 @@ export class PresenceService implements OnModuleInit {
         },
       },
     });
+    
+    // Return the most recent presence or null if none found
+    return presences.length > 0 
+      ? presences.sort((a, b) => b.lastSeen.getTime() - a.lastSeen.getTime())[0]
+      : null;
   }
 
   async getProjectPresence(projectId: string) {
@@ -132,6 +142,35 @@ export class PresenceService implements OnModuleInit {
     } catch (error) {
       this.logger.error('Failed to clean up stale presence', error);
       throw error;
+    }
+  }
+
+  async removePresence(userId: string, projectId?: string) {
+    if (projectId) {
+      // First find all presence records for the user
+      const presences = await this.prisma.userPresence.findMany({
+        where: { userId },
+        select: { id: true },
+      });
+
+      // Delete each presence record by ID
+      for (const presence of presences) {
+        try {
+          await this.prisma.userPresence.delete({
+            where: { id: presence.id },
+          });
+        } catch (error) {
+          // Ignore not found errors
+          if (!(error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025')) {
+            throw error;
+          }
+        }
+      }
+    } else {
+      // Remove all presences for the user
+      await this.prisma.userPresence.deleteMany({
+        where: { userId },
+      });
     }
   }
 }
