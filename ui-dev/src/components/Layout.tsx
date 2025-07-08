@@ -1,10 +1,10 @@
 import { ReactNode } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Folder, Clock, Users, MessageSquare, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 const navigation = [
@@ -13,6 +13,7 @@ const navigation = [
   { name: 'History', href: '/history', icon: Clock },
   { name: 'Friends', href: '/friends', icon: Users },
   { name: 'Chat', href: '/chat', icon: MessageSquare },
+  { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export default function Layout({ children }: LayoutProps) {
@@ -49,14 +50,20 @@ export default function Layout({ children }: LayoutProps) {
         <div className="p-4 border-t border-music-border">
           <NavLink
             to="/settings"
-            className="flex items-center p-3 rounded-lg text-music-text-muted hover:bg-music-primary/10 hover:text-music-primary transition-colors"
+            className={({ isActive }) =>
+              cn(
+                'flex items-center p-3 rounded-lg text-music-text-muted hover:bg-music-primary/10 hover:text-music-primary transition-colors',
+                'group',
+                isActive && 'bg-music-primary/10 text-music-primary font-medium'
+              )
+            }
           >
-            <Settings className="h-6 w-6" aria-hidden="true" />
+            <Settings className="h-6 w-6 flex-shrink-0" />
             <span className="ml-3 hidden md:inline">Settings</span>
           </NavLink>
         </div>
       </div>
-      
+
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-music-card border-b border-music-border h-16 flex items-center px-6">
@@ -64,11 +71,13 @@ export default function Layout({ children }: LayoutProps) {
             {/* Search bar or page title can go here */}
           </div>
           <div className="flex items-center space-x-4">
-            {/* User profile and notifications can go here */}
+            {/* User menu and notifications can go here */}
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-music-bg to-music-card/50 p-6">
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto p-6">
+          <Outlet />
           {children}
         </main>
       </div>

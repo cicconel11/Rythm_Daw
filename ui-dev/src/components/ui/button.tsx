@@ -29,24 +29,29 @@ export const buttonVariants = cva(
   }
 );
 
-// Simplified Button component without complex types
-export function Button({ 
+import { forwardRef } from 'react';
+
+// Button component with proper ref forwarding
+export const Button = forwardRef<HTMLButtonElement, any>(({ 
   className = '', 
   variant = 'default', 
   size = 'default',
   asChild = false,
   type = 'button',
   ...props 
-}: any) {
+}, ref) => {
   const Comp = asChild ? Slot : 'button';
   return (
     <Comp
       className={cn(buttonVariants({ variant, size }), className)}
       type={type}
+      ref={ref}
       {...props}
     />
   );
-}
+});
+
+Button.displayName = 'Button';
 
 // Export types for better type checking in other components
 export type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
