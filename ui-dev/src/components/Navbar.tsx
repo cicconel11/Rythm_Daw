@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useStore, type Tab } from '@/store';
 import { cn } from '@/lib/utils';
-import { LayoutDashboard, File, Clock, Users, MessageSquare, Settings } from 'lucide-react';
+import { LayoutDashboard, File, Clock, Users, MessageSquare, Settings, Shield } from 'lucide-react';
+import useAuth from '@/hooks/useAuth';
 
 type NavItem = {
   id: string;
@@ -15,14 +16,18 @@ const navItems: NavItem[] = [
   { id: 'history', label: 'History', icon: <Clock className="h-5 w-5" /> },
   { id: 'friends', label: 'Friends', icon: <Users className="h-5 w-5" /> },
   { id: 'chat', label: 'Chat', icon: <MessageSquare className="h-5 w-5" /> },
+  { id: 'admin', label: 'Admin', icon: <Shield className="h-5 w-5" /> },
+  { id: 'settings', label: 'Settings', icon: <Settings className="h-5 w-5" /> },
 ];
 
 export default function Navbar() {
   const { activeTab, setActiveTab } = useStore();
+  const { isAdmin } = useAuth();
   
   // Helper function to safely set the active tab
   const handleTabClick = (tabId: string) => {
-    if (['dashboard', 'files', 'history', 'friends', 'chat', 'settings'].includes(tabId)) {
+    const validTabs = ['dashboard', 'files', 'history', 'friends', 'chat', 'settings', 'admin'];
+    if (validTabs.includes(tabId)) {
       setActiveTab(tabId as Tab);
     }
   };
@@ -45,23 +50,28 @@ export default function Navbar() {
       
       <nav className="flex-1 overflow-y-auto py-4">
         <ul className="space-y-1 px-2">
-          {navItems.map((item) => (
-            <li key={item.id}>
-              <button
-                onClick={() => handleTabClick(item.id)}
-                className={cn(
-                  'w-full flex items-center px-4 py-3 rounded-md text-sm font-medium transition-colors',
-                  activeTab === item.id
-                    ? 'bg-purple-500/20 text-purple-400'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white',
-                  isCollapsed ? 'justify-center' : 'space-x-3'
-                )}
-              >
-                <span className="flex-shrink-0">{item.icon}</span>
-                {!isCollapsed && <span>{item.label}</span>}
-              </button>
-            </li>
-          ))}
+          {navItems.map((item) => {
+            // Skip admin item if user is not an admin
+            if (item.id === 'admin' && !isAdmin) return null;
+            
+            return (
+              <li key={item.id}>
+                <button
+                  onClick={() => handleTabClick(item.id)}
+                  className={cn(
+                    'w-full flex items-center space-x-3 px-4 py-3 rounded-md text-sm font-medium transition-colors',
+                    activeTab === item.id
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+                    item.id === 'admin' ? 'text-purple-400' : ''
+                  )}
+                >
+                  {item.icon}
+                  {!isCollapsed && <span>{item.label}</span>}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </nav>
       

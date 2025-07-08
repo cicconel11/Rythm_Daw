@@ -35,7 +35,13 @@ export class TagsService {
         entityId,
       },
       include: {
-        tag: true,
+        tag: {
+          include: {
+            _count: {
+              select: { entityTags: true }
+            }
+          }
+        },
       },
     });
 
@@ -59,37 +65,90 @@ export class TagsService {
       ),
     );
 
-    // Create entity-tag relationships for new tags
-    await this.prisma.$transaction([
-      // Remove old tags
-      ...(tagsToRemove.length > 0
-        ? [
-            this.prisma.entityTag.deleteMany({
-              where: {
-                id: { in: tagsToRemove.map((t) => t.id) },
-              },
-            }),
-          ]
-        : []),
+    // Use a transaction to ensure data consistency
+    await this.prisma.$transaction(async (prisma) => {
+      // Remove old tags that are not in the new list
+      if (tagsToRemove.length > 0) {
+        await prisma.entityTag.deleteMany({
+          where: {
+            entityType,
+            entityId,
+            tagId: { in: tagsToRemove.map((t) => t.id) },
+          },
+        });
+      }
 
       // Add new tags
-      ...(newTags.length > 0
-        ? [
-            this.prisma.entityTag.createMany({
-              data: newTags.map((tag) => ({
-                entityType,
-                entityId,
-                tagId: tag.id,
-                createdById: userId,
-              })),
-              skipDuplicates: true,
-            }),
-          ]
-        : []),
-    ]);
+      if (newTags.length > 0) {
+        // First, find existing entity tags to avoid duplicates
+        const existingEntityTags = await prisma.entityTag.findMany({
+          where: {
+            entityType,
+            entityId,
+            tagId: { in: newTags.map((tag) => tag.id) },
+          },
+          select: { tagId: true },
+        });
+
+        const existingTagIds = new Set(existingEntityTags.map((et) => et.tagId));
+        const tagsToCreate = newTags.filter((tag) => !existingTagIds.has(tag.id));
+
+        if (tagsToCreate.length > 0) {
+          await prisma.entityTag.createMany({
+            data: tagsToCreate.map((tag) => ({
+              entityType,
+              entityId,
+              tagId: tag.id,
+              createdById: userId,
+            })),
+          });
+        }
+      }
+    });
 
     // Return all tags for the entity after update
-    return this.getEntityTags(entityType, entityId);
+    const result = await Promise.all(
+      existingTags.map(async (et) => {
+        const tag = await this.prisma.tag.findUnique({
+          where: { id: et.tagId },
+        });
+        
+        if (!tag) {
+          throw new NotFoundException(`Tag with ID ${et.tagId} not found`);
+        }
+        
+        return {
+          id: tag.id,
+          name: tag.name,
+          color: tag.color,
+          createdAt: et.createdAt,
+        };
+      })
+    );
+
+    const newTagResults = await Promise.all(
+      newTags.map(async (tag) => {
+        const entityTag = await this.prisma.entityTag.create({
+          data: {
+            entityType,
+            entityId,
+            tagId: tag.id,
+          },
+          include: {
+            tag: true,
+          },
+        });
+
+        return {
+          id: entityTag.tag.id,
+          name: entityTag.tag.name,
+          color: entityTag.tag.color,
+          createdAt: entityTag.createdAt,
+        };
+      }),
+    );
+
+    return [...result, ...newTagResults];
   }
 
   /**
@@ -106,16 +165,6 @@ export class TagsService {
       },
       include: {
         tag: true,
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
       },
     });
 
@@ -124,42 +173,41 @@ export class TagsService {
       name: et.tag.name,
       color: et.tag.color,
       createdAt: et.createdAt,
-      createdBy: et.createdBy,
     }));
   }
 
   /**
    * Get all tags with counts
-   * @param entityType Optional filter by entity type
+   * @param filter Optional filter by search and limit
    * @returns Array of tags with their usage counts
    */
-  async getAllTags(entityType?: string) {
-    const where: Prisma.EntityTagWhereInput = {};
-    if (entityType) {
-      where.entityType = entityType;
+  async findAll(filter?: { search?: string; limit?: number }) {
+    const where: Prisma.TagWhereInput = {};
+    
+    if (filter?.search) {
+      where.OR = [
+        { name: { contains: filter.search } },
+        { name: { contains: filter.search.toLowerCase() } },
+        { name: { contains: filter.search.toUpperCase() } },
+      ];
     }
-
+    
     const tags = await this.prisma.tag.findMany({
+      where,
       include: {
         _count: {
-          select: {
-            entities: {
-              where,
-            },
-          },
+          select: { entityTags: true },
         },
       },
-      orderBy: {
-        name: 'asc',
-      },
+      take: filter?.limit,
     });
-
+    
     return tags.map((tag) => ({
       id: tag.id,
       name: tag.name,
+      description: tag.description,
       color: tag.color,
-      count: tag._count.entities,
-      createdAt: tag.createdAt,
+      count: tag._count.entityTags,
     }));
   }
 
@@ -169,10 +217,14 @@ export class TagsService {
    * @param tags Array of tag names to filter by
    * @returns Array of entity IDs that have all the specified tags
    */
-  async findEntitiesByTags(entityType: string, tags: string[]) {
+  async findEntitiesByTags(entityType: string, tags: string[]): Promise<string[]> {
     if (!tags.length) return [];
 
-    const result = await this.prisma.$queryRaw`
+    interface QueryResult {
+      entityId: string;
+    }
+
+    const result = await this.prisma.$queryRaw<QueryResult[]>`
       SELECT "entityId"
       FROM "EntityTag" et
       JOIN "Tag" t ON et."tagId" = t.id
@@ -182,7 +234,7 @@ export class TagsService {
       HAVING COUNT(DISTINCT t.name) = ${tags.length}
     `;
 
-    return result.map((r: any) => r.entityId);
+    return result.map(r => r.entityId);
   }
 
   /**
@@ -194,9 +246,7 @@ export class TagsService {
     const tag = await this.prisma.tag.findUnique({
       where: { id: tagId },
       include: {
-        _count: {
-          select: { entities: true },
-        },
+        _count: { select: { entityTags: true } },
       },
     });
 
@@ -204,7 +254,7 @@ export class TagsService {
       throw new NotFoundException(`Tag with ID ${tagId} not found`);
     }
 
-    if (tag._count.entities > 0 && !force) {
+    if (tag._count.entityTags > 0 && !force) {
       throw new BadRequestException(
         `Cannot delete tag '${tag.name}' as it's still in use. Use force=true to delete anyway.`,
       );

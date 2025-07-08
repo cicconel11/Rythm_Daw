@@ -8,7 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TagsService = void 0;
 const common_1 = require("@nestjs/common");
@@ -29,7 +28,13 @@ let TagsService = class TagsService {
                 entityId,
             },
             include: {
-                tag: true,
+                tag: {
+                    include: {
+                        _count: {
+                            select: { entityTags: true }
+                        }
+                    }
+                },
             },
         });
         const existingTagNames = new Set(existingTags.map((et) => et.tag.name));
@@ -43,31 +48,72 @@ let TagsService = class TagsService {
             },
             update: {},
         })));
-        await this.prisma.$transaction([
-            ...(tagsToRemove.length > 0
-                ? [
-                    this.prisma.entityTag.deleteMany({
-                        where: {
-                            id: { in: tagsToRemove.map((t) => t.id) },
-                        },
-                    }),
-                ]
-                : []),
-            ...(newTags.length > 0
-                ? [
-                    this.prisma.entityTag.createMany({
-                        data: newTags.map((tag) => ({
+        await this.prisma.$transaction(async (prisma) => {
+            if (tagsToRemove.length > 0) {
+                await prisma.entityTag.deleteMany({
+                    where: {
+                        entityType,
+                        entityId,
+                        tagId: { in: tagsToRemove.map((t) => t.id) },
+                    },
+                });
+            }
+            if (newTags.length > 0) {
+                const existingEntityTags = await prisma.entityTag.findMany({
+                    where: {
+                        entityType,
+                        entityId,
+                        tagId: { in: newTags.map((tag) => tag.id) },
+                    },
+                    select: { tagId: true },
+                });
+                const existingTagIds = new Set(existingEntityTags.map((et) => et.tagId));
+                const tagsToCreate = newTags.filter((tag) => !existingTagIds.has(tag.id));
+                if (tagsToCreate.length > 0) {
+                    await prisma.entityTag.createMany({
+                        data: tagsToCreate.map((tag) => ({
                             entityType,
                             entityId,
                             tagId: tag.id,
                             createdById: userId,
                         })),
-                        skipDuplicates: true,
-                    }),
-                ]
-                : []),
-        ]);
-        return this.getEntityTags(entityType, entityId);
+                    });
+                }
+            }
+        });
+        const result = await Promise.all(existingTags.map(async (et) => {
+            const tag = await this.prisma.tag.findUnique({
+                where: { id: et.tagId },
+            });
+            if (!tag) {
+                throw new common_1.NotFoundException(`Tag with ID ${et.tagId} not found`);
+            }
+            return {
+                id: tag.id,
+                name: tag.name,
+                color: tag.color,
+                createdAt: et.createdAt,
+            };
+        }));
+        const newTagResults = await Promise.all(newTags.map(async (tag) => {
+            const entityTag = await this.prisma.entityTag.create({
+                data: {
+                    entityType,
+                    entityId,
+                    tagId: tag.id,
+                },
+                include: {
+                    tag: true,
+                },
+            });
+            return {
+                id: entityTag.tag.id,
+                name: entityTag.tag.name,
+                color: entityTag.tag.color,
+                createdAt: entityTag.createdAt,
+            };
+        }));
+        return [...result, ...newTagResults];
     }
     async getEntityTags(entityType, entityId) {
         const entityTags = await this.prisma.entityTag.findMany({
@@ -77,16 +123,6 @@ let TagsService = class TagsService {
             },
             include: {
                 tag: true,
-                createdBy: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
-            orderBy: {
-                createdAt: 'desc',
             },
         });
         return entityTags.map((et) => ({
@@ -94,34 +130,32 @@ let TagsService = class TagsService {
             name: et.tag.name,
             color: et.tag.color,
             createdAt: et.createdAt,
-            createdBy: et.createdBy,
         }));
     }
-    async getAllTags(entityType) {
+    async findAll(filter) {
         const where = {};
-        if (entityType) {
-            where.entityType = entityType;
+        if (filter?.search) {
+            where.OR = [
+                { name: { contains: filter.search } },
+                { name: { contains: filter.search.toLowerCase() } },
+                { name: { contains: filter.search.toUpperCase() } },
+            ];
         }
         const tags = await this.prisma.tag.findMany({
+            where,
             include: {
                 _count: {
-                    select: {
-                        entities: {
-                            where,
-                        },
-                    },
+                    select: { entityTags: true },
                 },
             },
-            orderBy: {
-                name: 'asc',
-            },
+            take: filter?.limit,
         });
         return tags.map((tag) => ({
             id: tag.id,
             name: tag.name,
+            description: tag.description,
             color: tag.color,
-            count: tag._count.entities,
-            createdAt: tag.createdAt,
+            count: tag._count.entityTags,
         }));
     }
     async findEntitiesByTags(entityType, tags) {
@@ -136,21 +170,19 @@ let TagsService = class TagsService {
       GROUP BY "entityId"
       HAVING COUNT(DISTINCT t.name) = ${tags.length}
     `;
-        return result.map((r) => r.entityId);
+        return result.map(r => r.entityId);
     }
     async deleteTag(tagId, force = false) {
         const tag = await this.prisma.tag.findUnique({
             where: { id: tagId },
             include: {
-                _count: {
-                    select: { entities: true },
-                },
+                _count: { select: { entityTags: true } },
             },
         });
         if (!tag) {
             throw new common_1.NotFoundException(`Tag with ID ${tagId} not found`);
         }
-        if (tag._count.entities > 0 && !force) {
+        if (tag._count.entityTags > 0 && !force) {
             throw new common_1.BadRequestException(`Cannot delete tag '${tag.name}' as it's still in use. Use force=true to delete anyway.`);
         }
         await this.prisma.$transaction([
@@ -165,7 +197,7 @@ let TagsService = class TagsService {
 };
 TagsService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], TagsService);
 exports.TagsService = TagsService;
 //# sourceMappingURL=tags.service.js.map

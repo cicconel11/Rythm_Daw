@@ -9,7 +9,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var InventoryService_1;
-var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InventoryService = void 0;
 const common_1 = require("@nestjs/common");
@@ -27,57 +26,70 @@ let InventoryService = InventoryService_1 = class InventoryService {
         const { plugins, inventoryHash } = dto;
         return this.prisma.$transaction(async (prisma) => {
             const upsertedPlugins = await Promise.all(plugins.map((plugin) => prisma.plugin.upsert({
-                where: { uid: plugin.uid },
+                where: { id: plugin.uid },
                 update: {
                     name: plugin.name,
-                    vendor: plugin.vendor,
                     version: plugin.version,
-                    lastSeen: new Date(),
+                    updatedAt: new Date(),
                 },
                 create: {
-                    uid: plugin.uid,
+                    id: plugin.uid,
                     name: plugin.name,
-                    vendor: plugin.vendor,
                     version: plugin.version,
-                    lastSeen: new Date(),
+                    description: plugin.vendor,
                 },
             })));
-            const currentUserPlugins = await prisma.userPlugins.findMany({
+            const currentUserPlugins = await prisma.userPlugin.findMany({
                 where: { userId },
-                select: { pluginUid: true },
+                select: { pluginId: true },
             });
-            const currentPluginUids = new Set(currentUserPlugins.map((up) => up.pluginUid));
+            const currentPluginUids = new Set(currentUserPlugins.map((up) => up.pluginId));
             const newPluginUids = new Set(plugins.map((p) => p.uid));
             const pluginsToAdd = [...newPluginUids].filter((uid) => !currentPluginUids.has(uid));
             const pluginsToRemove = [...currentPluginUids].filter((uid) => !newPluginUids.has(uid));
-            await Promise.all([
-                pluginsToAdd.length > 0 &&
-                    prisma.userPlugins.createMany({
-                        data: pluginsToAdd.map((pluginUid) => ({
-                            userId,
-                            pluginUid,
-                            isActive: true,
-                            lastSynced: new Date(),
-                        })),
-                        skipDuplicates: true,
-                    }),
-                pluginsToRemove.length > 0 &&
-                    prisma.userPlugins.deleteMany({
-                        where: {
-                            userId,
-                            pluginUid: { in: [...pluginsToRemove] },
-                        },
-                    }),
-                prisma.userPlugins.updateMany({
+            const updatePromises = [];
+            if (pluginsToAdd.length > 0) {
+                const existingUserPlugins = await prisma.userPlugin.findMany({
                     where: {
                         userId,
-                        pluginUid: { in: [...newPluginUids] },
+                        pluginId: { in: [...pluginsToAdd] },
+                    },
+                    select: {
+                        pluginId: true,
+                    },
+                });
+                const existingPluginIds = new Set(existingUserPlugins.map(up => up.pluginId));
+                const pluginsToCreate = pluginsToAdd.filter(pluginId => !existingPluginIds.has(pluginId));
+                if (pluginsToCreate.length > 0) {
+                    updatePromises.push(prisma.userPlugin.createMany({
+                        data: pluginsToCreate.map((pluginId) => ({
+                            userId,
+                            pluginId,
+                            isActive: true,
+                        }))
+                    }));
+                }
+            }
+            if (pluginsToRemove.length > 0) {
+                updatePromises.push(prisma.userPlugin.deleteMany({
+                    where: {
+                        userId,
+                        pluginId: { in: [...pluginsToRemove] },
+                    },
+                }));
+            }
+            if (newPluginUids.size > 0) {
+                updatePromises.push(prisma.userPlugin.updateMany({
+                    where: {
+                        userId,
+                        pluginId: { in: [...newPluginUids] },
                     },
                     data: {
-                        lastSynced: new Date(),
+                        updatedAt: new Date(),
                     },
-                }),
-            ]);
+                }));
+            }
+            await Promise.all(updatePromises);
             await prisma.user.update({
                 where: { id: userId },
                 data: {
@@ -85,7 +97,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
                     lastInventorySync: new Date(),
                 },
             });
-            const updatedInventory = await prisma.userPlugins.findMany({
+            const updatedInventory = await prisma.userPlugin.findMany({
                 where: { userId },
                 include: {
                     plugin: true,
@@ -99,7 +111,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
                 inventory: updatedInventory.map((up) => ({
                     ...up.plugin,
                     isActive: up.isActive,
-                    lastSynced: up.lastSynced,
+                    lastSynced: up.updatedAt,
                 })),
             };
             this.inventoryGateway.broadcastInventoryUpdate(userId, eventData);
@@ -109,7 +121,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
         });
     }
     async getUserInventory(userId) {
-        return this.prisma.userPlugins.findMany({
+        return this.prisma.userPlugin.findMany({
             where: { userId },
             include: {
                 plugin: true,
@@ -119,7 +131,9 @@ let InventoryService = InventoryService_1 = class InventoryService {
 };
 InventoryService = InventoryService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object, inventory_gateway_1.InventoryGateway, typeof (_b = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        inventory_gateway_1.InventoryGateway,
+        event_emitter_1.EventEmitter2])
 ], InventoryService);
 exports.InventoryService = InventoryService;
 //# sourceMappingURL=inventory.service.js.map

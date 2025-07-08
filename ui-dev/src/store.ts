@@ -54,7 +54,7 @@ interface Channel {
   avatar?: string;
 }
 
-export type Tab = 'dashboard' | 'files' | 'history' | 'friends' | 'chat' | 'settings';
+export type Tab = 'dashboard' | 'files' | 'history' | 'friends' | 'chat' | 'settings' | 'admin';
 
 interface AppState {
   // ... (previous state remains the same)

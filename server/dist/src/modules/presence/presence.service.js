@@ -9,10 +9,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var PresenceService_1;
-var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PresenceService = void 0;
 const common_1 = require("@nestjs/common");
+const client_1 = require("@prisma/client");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const schedule_1 = require("@nestjs/schedule");
 const event_emitter_1 = require("@nestjs/event-emitter");
@@ -30,31 +30,31 @@ let PresenceService = PresenceService_1 = class PresenceService {
     async updateHeartbeat(userId, dto) {
         const now = new Date();
         const expiresAt = new Date(now.getTime() + this.HEARTBEAT_TIMEOUT_MS);
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+            },
+        });
+        const where = {
+            id: userId,
+        };
         const presence = await this.prisma.userPresence.upsert({
-            where: { userId },
+            where,
             update: {
                 status: dto.status,
                 lastSeen: now,
                 expiresAt,
-                projectId: dto.projectId,
-                sessionId: dto.sessionId,
+                projectId: dto.projectId || null,
             },
             create: {
                 userId,
                 status: dto.status,
                 lastSeen: now,
                 expiresAt,
-                projectId: dto.projectId,
-                sessionId: dto.sessionId,
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
+                projectId: dto.projectId || null,
             },
         });
         this.eventEmitter.emit('presence.updated', {
@@ -68,13 +68,13 @@ let PresenceService = PresenceService_1 = class PresenceService {
                 projectId: dto.projectId,
                 userId,
                 status: dto.status,
-                user: presence.user,
+                user: user,
             });
         }
         return presence;
     }
     async getUserPresence(userId) {
-        return this.prisma.userPresence.findUnique({
+        const presences = await this.prisma.userPresence.findMany({
             where: { userId },
             include: {
                 user: {
@@ -86,6 +86,9 @@ let PresenceService = PresenceService_1 = class PresenceService {
                 },
             },
         });
+        return presences.length > 0
+            ? presences.sort((a, b) => b.lastSeen.getTime() - a.lastSeen.getTime())[0]
+            : null;
     }
     async getProjectPresence(projectId) {
         return this.prisma.userPresence.findMany({
@@ -129,6 +132,31 @@ let PresenceService = PresenceService_1 = class PresenceService {
             throw error;
         }
     }
+    async removePresence(userId, projectId) {
+        if (projectId) {
+            const presences = await this.prisma.userPresence.findMany({
+                where: { userId },
+                select: { id: true },
+            });
+            for (const presence of presences) {
+                try {
+                    await this.prisma.userPresence.delete({
+                        where: { id: presence.id },
+                    });
+                }
+                catch (error) {
+                    if (!(error instanceof client_1.Prisma.PrismaClientKnownRequestError && error.code === 'P2025')) {
+                        throw error;
+                    }
+                }
+            }
+        }
+        else {
+            await this.prisma.userPresence.deleteMany({
+                where: { userId },
+            });
+        }
+    }
 };
 __decorate([
     (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_30_SECONDS),
@@ -138,7 +166,8 @@ __decorate([
 ], PresenceService.prototype, "cleanupStalePresence", null);
 PresenceService = PresenceService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object, typeof (_b = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        event_emitter_1.EventEmitter2])
 ], PresenceService);
 exports.PresenceService = PresenceService;
 //# sourceMappingURL=presence.service.js.map

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, type S3ClientConfig } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import { exec } from 'child_process';
+import { Readable } from 'stream';
 
 const execAsync = promisify(exec);
 
@@ -36,14 +37,20 @@ const MAX_DIRECT_SIZE = 100 * 1024 * 1024; // 100MB
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 const CLAMSCAN_CMD = process.env.CLAMSCAN_CMD || 'clamscan';
 
-// Initialize S3 client
-const s3Client = new S3Client({
+// Initialize S3 client with proper type safety
+const s3Config: S3ClientConfig = {
   region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
-});
+};
+
+// Only add credentials if they are provided
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+  s3Config.credentials = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  };
+}
+
+const s3Client = new S3Client(s3Config);
 
 // In-memory stores (in production, use Redis or database)
 const peerConnections = new Map<string, PeerConnection>();
@@ -243,11 +250,28 @@ export class FileShare {
         
         const { Body } = await s3Client.send(command);
         const writeStream = fs.createWriteStream(filePath);
-        await new Promise((resolve, reject) => {
-          Body!.pipe(writeStream)
-            .on('error', reject)
-            .on('close', resolve);
-        });
+        
+        const handleStream = (stream: any) => {
+          return new Promise((resolve, reject) => {
+            stream.pipe(writeStream)
+              .on('error', reject)
+              .on('close', resolve);
+          });
+        };
+
+        if (Body instanceof Readable) {
+          await handleStream(Body);
+        } else if (Body instanceof Uint8Array || typeof Body === 'string') {
+          writeStream.write(Body);
+          writeStream.end();
+          await new Promise((resolve) => writeStream.on('close', resolve));
+        } else if (Body && typeof (Body as any).transformToWebStream === 'function') {
+          // Handle web streams
+          const webStream = (Body as any).transformToWebStream();
+          await handleStream(Readable.fromWeb(webStream as any));
+        } else {
+          throw new Error('Unsupported file type');
+        }
       }
       
       // Run virus scan

@@ -100,7 +100,7 @@ export class EncryptionService implements OnModuleInit {
   /**
    * Encrypts an object by converting it to JSON first
    */
-  encryptObject<T extends object>(obj: T): string {
+  encryptObject<T extends object>(obj: T | null): string | null {
     if (!obj) return null;
     return this.encrypt(JSON.stringify(obj));
   }
@@ -108,8 +108,8 @@ export class EncryptionService implements OnModuleInit {
   /**
    * Decrypts and parses an encrypted JSON object
    */
-  decryptObject<T extends object>(encrypted: string): T {
+  decryptObject<T>(encrypted: string | null): T | null {
     if (!encrypted) return null;
-    return JSON.parse(this.decrypt(encrypted));
+    return JSON.parse(this.decrypt(encrypted)) as T;
   }
 }

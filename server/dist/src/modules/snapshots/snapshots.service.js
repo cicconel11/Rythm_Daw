@@ -1,15 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var SnapshotsService_1;
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SnapshotsService = void 0;
 const common_1 = require("@nestjs/common");
@@ -18,17 +40,24 @@ const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const config_1 = require("@nestjs/config");
 const uuid_1 = require("uuid");
+const crypto = __importStar(require("crypto"));
 let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
     constructor(prisma, configService) {
         this.prisma = prisma;
         this.configService = configService;
         this.logger = new common_1.Logger(SnapshotsService_1.name);
         this.presignedUrlExpiration = 3600;
+        const awsRegion = this.configService.get('AWS_REGION');
+        const awsAccessKeyId = this.configService.get('AWS_ACCESS_KEY_ID');
+        const awsSecretAccessKey = this.configService.get('AWS_SECRET_ACCESS_KEY');
+        if (!awsRegion || !awsAccessKeyId || !awsSecretAccessKey) {
+            throw new Error('AWS configuration is missing. Please set AWS_REGION, AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY environment variables.');
+        }
         this.s3Client = new client_s3_1.S3Client({
-            region: this.configService.get('AWS_REGION'),
+            region: awsRegion,
             credentials: {
-                accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-                secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+                accessKeyId: awsAccessKeyId,
+                secretAccessKey: awsSecretAccessKey,
             },
         });
         this.bucketName = this.configService.get('S3_SNAPSHOTS_BUCKET') || 'rhythm-snapshots';
@@ -38,13 +67,12 @@ let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
         const snapshotId = (0, uuid_1.v4)();
         const project = await this.prisma.project.findUnique({
             where: { id: projectId },
-            select: { id: true, members: { where: { userId } } },
         });
         if (!project) {
             throw new common_1.NotFoundException('Project not found');
         }
-        if (project.members.length === 0) {
-            throw new common_1.BadRequestException('You do not have permission to create snapshots for this project');
+        if (!project.isPublic) {
+            throw new common_1.BadRequestException('This project is not public');
         }
         let fileMetadata = [];
         if (file) {
@@ -52,7 +80,7 @@ let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
             await this.uploadToS3(file.buffer, fileKey, file.mimetype);
             fileMetadata = [{
                     path: 'snapshot.zip',
-                    hash: this.generateFileHash(file.buffer),
+                    hash: crypto.createHash('sha256').update(file.buffer).digest('hex'),
                     mimeType: file.mimetype,
                     size: file.size,
                 }];
@@ -62,10 +90,8 @@ let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
                 id: snapshotId,
                 name: snapshotData.name,
                 description: snapshotData.description,
-                metadata: snapshotData.metadata,
+                data: { files: fileMetadata },
                 projectId,
-                createdById: userId,
-                files: fileMetadata,
             },
         });
         return snapshot;
@@ -73,29 +99,43 @@ let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
     async getProjectSnapshots(projectId, userId) {
         const project = await this.prisma.project.findUnique({
             where: { id: projectId },
-            select: { id: true, members: { where: { userId } } },
         });
-        if (!project || project.members.length === 0) {
-            throw new common_1.NotFoundException('Project not found or access denied');
+        if (!project) {
+            throw new common_1.NotFoundException('Project not found');
+        }
+        if (!project.isPublic) {
+            throw new common_1.BadRequestException('This project is not public');
         }
         const snapshots = await this.prisma.snapshot.findMany({
             where: { projectId },
             orderBy: { createdAt: 'desc' },
             include: {
-                createdBy: {
+                project: {
                     select: {
                         id: true,
                         name: true,
-                        email: true,
+                        description: true,
+                        isPublic: true,
+                        createdAt: true,
+                        updatedAt: true,
                     },
                 },
             },
         });
         const snapshotsWithUrls = await Promise.all(snapshots.map(async (snapshot) => {
-            const files = await Promise.all(snapshot.files.map(async (file) => ({
-                ...file,
-                downloadUrl: await this.generateDownloadUrl(projectId, snapshot.id, file.path),
-            })));
+            const files = [];
+            try {
+                const snapshotData = snapshot.data;
+                if (snapshotData?.files?.length) {
+                    files.push(...await Promise.all(snapshotData.files.map(async (file) => ({
+                        ...file,
+                        downloadUrl: await this.generateDownloadUrl(projectId, snapshot.id, file.path),
+                    }))));
+                }
+            }
+            catch (error) {
+                this.logger.error('Error processing snapshot files', error);
+            }
             return {
                 ...snapshot,
                 files,
@@ -106,34 +146,53 @@ let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
     async getSnapshotById(projectId, snapshotId, userId) {
         const project = await this.prisma.project.findUnique({
             where: { id: projectId },
-            select: { id: true, members: { where: { userId } } },
         });
-        if (!project || project.members.length === 0) {
-            throw new common_1.NotFoundException('Project not found or access denied');
+        if (!project) {
+            throw new common_1.NotFoundException('Project not found');
+        }
+        if (!project.isPublic) {
+            throw new common_1.BadRequestException('This project is not public');
         }
         const snapshot = await this.prisma.snapshot.findUnique({
             where: { id: snapshotId, projectId },
-            include: {
-                createdBy: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
         });
         if (!snapshot) {
             throw new common_1.NotFoundException('Snapshot not found');
         }
-        const files = await Promise.all(snapshot.files.map(async (file) => ({
-            ...file,
-            downloadUrl: await this.generateDownloadUrl(projectId, snapshotId, file.path),
-        })));
+        let files = [];
+        try {
+            const snapshotData = snapshot.data;
+            if (snapshotData?.files?.length) {
+                files = await Promise.all(snapshotData.files.map(async (file) => ({
+                    ...file,
+                    downloadUrl: await this.generateDownloadUrl(projectId, snapshotId, file.path),
+                })));
+            }
+        }
+        catch (error) {
+            this.logger.error('Error processing snapshot files', error);
+        }
         return {
             ...snapshot,
             files,
         };
+    }
+    generateFileHash(buffer) {
+        return crypto.createHash('sha256').update(buffer).digest('hex');
+    }
+    async generateDownloadUrl(projectId, snapshotId, filePath) {
+        try {
+            const fileKey = `snapshots/${projectId}/${snapshotId}/${filePath}`;
+            const command = new client_s3_1.GetObjectCommand({
+                Bucket: this.bucketName,
+                Key: fileKey,
+            });
+            return (0, s3_request_presigner_1.getSignedUrl)(this.s3Client, command, { expiresIn: this.presignedUrlExpiration });
+        }
+        catch (error) {
+            this.logger.error(`Error generating download URL for ${filePath}`, error);
+            throw new common_1.InternalServerErrorException('Failed to generate download URL');
+        }
     }
     async uploadToS3(buffer, key, contentType) {
         try {
@@ -151,23 +210,6 @@ let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
             throw new common_1.InternalServerErrorException('Failed to upload file');
         }
     }
-    async generateDownloadUrl(projectId, snapshotId, filePath) {
-        try {
-            const key = `snapshots/${projectId}/${snapshotId}/${filePath}`;
-            const command = new client_s3_1.GetObjectCommand({
-                Bucket: this.bucketName,
-                Key: key,
-            });
-            return (0, s3_request_presigner_1.getSignedUrl)(this.s3Client, command, { expiresIn: this.presignedUrlExpiration });
-        }
-        catch (error) {
-            this.logger.error('Error generating download URL', error);
-            return '';
-        }
-    }
-    generateFileHash(buffer) {
-        return require('crypto').createHash('sha256').update(buffer).digest('hex');
-    }
     async streamToBuffer(stream) {
         return new Promise((resolve, reject) => {
             const chunks = [];
@@ -179,7 +221,8 @@ let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
 };
 SnapshotsService = SnapshotsService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof prisma_service_1.PrismaService !== "undefined" && prisma_service_1.PrismaService) === "function" ? _a : Object, config_1.ConfigService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        config_1.ConfigService])
 ], SnapshotsService);
 exports.SnapshotsService = SnapshotsService;
 //# sourceMappingURL=snapshots.service.js.map
