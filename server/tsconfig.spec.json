@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "module": "commonjs",
-    "types": ["jest", "node"]
+    "types": ["node", "jest", "ws"]
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules"]

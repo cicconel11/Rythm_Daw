@@ -51,19 +51,22 @@ export async function createTestingApp(overrides: TestingOverrides = {}): Promis
   // Clear all mocks before each test
   jest.clearAllMocks();
 
-  const moduleFixture = await Test.createTestingModule({
+  // Apply overrides to mock Prisma client
+  Object.assign(mockPrismaClient, overrides.prisma || {});
+  
+  // Apply overrides to mock AWS S3 service
+  Object.assign(mockAwsS3Service, overrides.awsS3 || {});
+
+  // Create testing module with WebSocket adapter
+  const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
   })
     .overrideProvider(PrismaService)
-    .useValue({
-      ...mockPrismaClient,
-      ...overrides.prisma,
-    })
+    .useValue(mockPrismaClient)
     .overrideProvider(AwsS3Service)
-    .useValue({
-      ...mockAwsS3Service,
-      ...overrides.awsS3,
-    })
+    .useValue(mockAwsS3Service)
+    .overrideProvider('IO_SERVER')
+    .useValue(null) // Disable the default WebSocket server
     .compile();
 
   // Store references to mocks for easier access in tests
