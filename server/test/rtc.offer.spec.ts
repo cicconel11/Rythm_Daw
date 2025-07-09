@@ -1,8 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { AppModule } from '../src/app.module';
+import * as request from 'supertest';
+import { createTestingApp } from './utils/create-testing-module';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { Test } from '@nestjs/testing';
+import { AppModule } from '../src/app.module';
 
 describe('RtcController (e2e)', () => {
   let app: INestApplication;
@@ -11,12 +12,27 @@ describe('RtcController (e2e)', () => {
   let userId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    const moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useValue({
+        user: {
+          findUnique: jest.fn().mockResolvedValue({
+            id: 1,
+            email: 'test@example.com',
+            name: 'Test User',
+          }),
+        },
+      })
+      .overrideProvider('AwsS3Service')
+      .useValue({
+        getPresignedUrl: jest.fn().mockResolvedValue('http://mock-presigned-url'),
+      })
+      .compile();
 
     app = moduleFixture.createNestApplication();
-    prisma = app.get<PrismaService>(PrismaService);
+    prisma = moduleFixture.get<PrismaService>(PrismaService);
     
     await app.init();
     

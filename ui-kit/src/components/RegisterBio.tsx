@@ -1,5 +1,8 @@
 
 import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
@@ -7,16 +10,42 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 
 interface RegisterBioProps {
-  onCreateAccount: (bio: string) => void;
+  onSuccess: () => void;
 }
 
-export function RegisterBio({ onCreateAccount }: RegisterBioProps) {
+export function RegisterBio({ onSuccess }: RegisterBioProps) {
+  const navigate = useNavigate();
   const [bio, setBio] = useState('');
   const maxLength = 140;
 
+  const { mutate: updateBio, isPending } = useMutation({
+    mutationFn: async (bio: string) => {
+      const response = await fetch('/api/users/me', {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ bio })
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update bio');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      onSuccess();
+      navigate('/onboard/scan');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to save bio');
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreateAccount(bio);
+    updateBio(bio);
   };
 
   return (
@@ -50,11 +79,12 @@ export function RegisterBio({ onCreateAccount }: RegisterBioProps) {
                 </span>
               </div>
             </div>
-            <Button 
+            <Button
               type="submit"
-              className="w-full bg-[#7E4FFF] hover:bg-[#6B3FE6] text-white font-semibold"
+              className="w-full bg-gradient-to-r from-[#7E4FFF] to-[#6B3FE6] text-white hover:opacity-90 transition-opacity"
+              disabled={!bio.trim() || isPending}
             >
-              Create Account
+              {isPending ? 'Saving...' : 'Create Account'}
             </Button>
           </form>
         </CardContent>

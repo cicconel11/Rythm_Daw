@@ -7,10 +7,10 @@
 		"uuid": "^11.1.0"
 	},
 	"scripts": {
-		"dev:web": "pnpm --filter server dev",
-		"dev:plugin": "pnpm --filter ui-dev... dev",
-		"dev": "concurrently -n web,plugin -c cyan,magenta \"pnpm dev:web\" \"pnpm dev:plugin\"",
-		"db:generate": "pnpm exec prisma generate --schema=./server/prisma/schema.prisma",
+		"db:generate": "pnpm --filter server exec prisma generate",
+		"dev:api": "pnpm --filter server dev",
+		"dev:web": "pnpm --filter ui-dev dev",
+		"dev": "concurrently -n api,web -c magenta,cyan \"pnpm dev:api\" \"pnpm dev:web\"",
 		"db:migrate": "pnpm exec prisma migrate dev --schema=./server/prisma/schema.prisma && ./scripts/restart-api.sh",
 		"postinstall": "pnpm db:generate"
 	},

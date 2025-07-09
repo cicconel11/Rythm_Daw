@@ -1,20 +1,59 @@
 
 import React from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Download } from 'lucide-react';
 
 interface OnboardScanProps {
-  onDownload: () => void;
-  onSkip: () => void;
+  onSuccess: () => void;
 }
 
-export function OnboardScan({ onDownload, onSkip }: OnboardScanProps) {
+export function OnboardScan({ onSuccess }: OnboardScanProps) {
+  const navigate = useNavigate();
+  
+  const { mutate: downloadApp, isPending } = useMutation({
+    mutationFn: async () => {
+      const os = detectOS();
+      const response = await fetch(`/api/download?os=${os}`);
+      if (!response.ok) {
+        throw new Error('Failed to download app');
+      }
+      
+      // Create a blob from the response and trigger download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `RHYTHM-${os}.dmg`; // Will be adjusted based on OS
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+      
+      return os;
+    },
+    onSuccess: (os) => {
+      toast.success(`Downloading RHYTHM for ${os}...`);
+      onSuccess();
+      navigate('/onboard/device');
+    },
+    onError: () => {
+      toast.error('Failed to start download. Please try again.');
+    }
+  });
+  
+  const handleSkip = () => {
+    onSuccess();
+    navigate('/onboard/device');
+  };
   const detectOS = () => {
     const userAgent = navigator.userAgent;
-    if (userAgent.includes('Mac')) return 'macOS';
-    if (userAgent.includes('Windows')) return 'Windows';
-    return 'your OS';
+    if (userAgent.includes('Mac')) return 'mac';
+    if (userAgent.includes('Windows')) return 'windows';
+    return 'linux';
   };
 
   return (
@@ -50,21 +89,21 @@ export function OnboardScan({ onDownload, onSkip }: OnboardScanProps) {
           
           <div className="space-y-4">
             <Button 
-              onClick={onDownload}
-              className="bg-[#7E4FFF] hover:bg-[#6B3FE6] text-white px-8 py-4 text-lg font-semibold"
+              onClick={() => downloadApp()}
+              disabled={isPending}
+              className="bg-gradient-to-r from-[#7E4FFF] to-[#6B3FE6] text-white hover:opacity-90 transition-opacity"
             >
-              <Download className="w-5 h-5 mr-2" />
-              Download for {detectOS()}
+              <Download className="mr-2 h-4 w-4" />
+              {isPending ? 'Preparing download...' : `Download for ${detectOS()}`}
             </Button>
-            
-            <p className="text-gray-500">
-              <button 
-                onClick={onSkip}
-                className="text-[#7E4FFF] hover:text-[#6B3FE6] underline"
-              >
-                I'll install later → Dashboard
-              </button>
-            </p>
+            <Button 
+              variant="ghost" 
+              onClick={handleSkip}
+              disabled={isPending}
+              className="text-gray-400 hover:text-white"
+            >
+              Skip for now
+            </Button>
           </div>
         </CardContent>
       </Card>

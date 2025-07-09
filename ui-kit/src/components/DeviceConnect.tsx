@@ -1,29 +1,91 @@
 
 import React, { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Progress } from './ui/progress';
 
 interface DeviceConnectProps {
-  onConnected: () => void;
+  onSuccess: () => void;
 }
 
-export function DeviceConnect({ onConnected }: DeviceConnectProps) {
-  const [code] = useState('ABC 123');
+export function DeviceConnect({ onSuccess }: DeviceConnectProps) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [code, setCode] = useState('');
   const [progress, setProgress] = useState(0);
-
+  
+  // Generate a random pairing code
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          onConnected();
-          return 100;
-        }
-        return prev + 10;
+    setCode(Math.random().toString(36).substring(2, 8).toUpperCase());
+  }, []);
+  
+  // Mutation for device pairing
+  const { mutate: pairDevice, isPending } = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/plugins/pair', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ code })
       });
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [onConnected]);
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to pair device');
+      }
+      
+      // Long polling for pairing completion
+      return new Promise((resolve, reject) => {
+        const checkStatus = async () => {
+          try {
+            const statusResponse = await fetch(`/api/plugins/pair/status?code=${code}`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            
+            if (!statusResponse.ok) throw new Error('Status check failed');
+            
+            const data = await statusResponse.json();
+            
+            if (data.status === 'paired') {
+              resolve(data);
+            } else if (data.status === 'pending') {
+              setProgress(prev => Math.min(prev + 10, 90)); // Cap at 90% until fully paired
+              setTimeout(checkStatus, 2000); // Check again after 2 seconds
+            } else {
+              reject(new Error('Pairing failed'));
+            }
+          } catch (error) {
+            reject(error);
+          }
+        };
+        
+        checkStatus();
+      });
+    },
+    onSuccess: () => {
+      setProgress(100);
+      onSuccess();
+      queryClient.invalidateQueries({ queryKey: ['devices'] });
+      setTimeout(() => navigate('/dashboard'), 1000);
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to pair device');
+      setProgress(0);
+    }
+  });
+  
+  // Start pairing process when component mounts
+  useEffect(() => {
+    if (code) {
+      pairDevice();
+    }
+  }, [code, pairDevice]);
 
   return (
     <div className="min-h-screen bg-[#0D1126] bg-gradient-to-br from-[#0D1126] via-[#141B33] to-[#0D1126] flex items-center justify-center p-6">
@@ -53,12 +115,20 @@ export function DeviceConnect({ onConnected }: DeviceConnectProps) {
             </div>
           </div>
           
-          <div className="space-y-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-400">Waiting for connection...</span>
-              <span className="text-[#7E4FFF]">{progress}%</span>
+          <div className="w-full max-w-md mx-auto">
+            <div className="flex justify-between text-sm text-gray-400 mb-1">
+              <span>{isPending ? 'Waiting for device...' : 'Ready to pair'}</span>
+              <span>{progress}%</span>
             </div>
             <Progress value={progress} className="h-2" />
+            {!isPending && (
+              <button 
+                onClick={() => pairDevice()}
+                className="mt-4 text-sm text-[#7E4FFF] hover:underline"
+              >
+                Retry connection
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
