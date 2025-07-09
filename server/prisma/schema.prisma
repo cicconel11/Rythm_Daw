@@ -15,6 +15,7 @@ model User {
   bio              String?
   avatarUrl        String?
   password         String
+  refreshToken     String?        @db.Text
   isApproved       Boolean        @default(true)
   inventoryHash    String?
   lastLoginAt      DateTime?
