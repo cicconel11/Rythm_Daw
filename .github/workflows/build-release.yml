@@ -1,0 +1,154 @@
+name: Build & Release Plugins
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            plugin: AU
+            preset: mac-au
+          - os: windows-latest
+            plugin: VST3
+            preset: universal
+          - os: ubuntu-latest
+            plugin: VST3
+            preset: universal
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up CMake
+        uses: jridgewell/setup-cmake@v1
+
+      - name: Build Plugin
+        run: |
+          cmake --preset ${{ matrix.preset }}
+          cmake --build . --config Release
+        env:
+          CMAKE_BUILD_TYPE: Release
+
+      - name: Package Plugin
+        run: |
+          if [ ${{ matrix.os }} == "macos-latest" ]; then
+            # Create DMG for AU
+            hdiutil create -volname "Rythm_Daw_AU" \
+              -srcfolder "build/Release/Rythm_Daw.component" \
+              -format UDZO "Rythm_Daw-${{ github.ref_name }}-AU.dmg"
+          else
+            # Create ZIP for VST3
+            zip -r "Rythm_Daw-${{ github.ref_name }}-VST3.zip" build/Release/Rythm_Daw.vst3
+          fi
+
+      - name: Notarize AU (macOS only)
+        if: matrix.os == 'macos-latest'
+        run: |
+          # Notarize the DMG
+          xcrun altool --notarize-app --primary-bundle-id "com.rhythmdaw.plugin" \
+            --username "$APPLE_ID" --password "$APPLE_ID_PASSWORD" \
+            --file "Rythm_Daw-${{ github.ref_name }}-AU.dmg"
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+
+      - name: Sign VST3 (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          signtool sign /f "${{ secrets.CERT_FILE }}" \
+            /p "${{ secrets.CERT_PASSWORD }}" \
+            /t "http://timestamp.digicert.com" \
+            "Rythm_Daw-${{ github.ref_name }}-VST3.zip"
+        env:
+          CERT_FILE: ${{ secrets.CERT_FILE }}
+          CERT_PASSWORD: ${{ secrets.CERT_PASSWORD }}
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: |
+            if [ ${{ matrix.os }} == "macos-latest" ]; then
+              echo "Rythm_Daw-${{ github.ref_name }}-AU.dmg"
+            else
+              echo "Rythm_Daw-${{ github.ref_name }}-VST3.zip"
+            fi
+          asset_name: |
+            if [ ${{ matrix.os }} == "macos-latest" ]; then
+              echo "Rythm_Daw-${{ github.ref_name }}-AU.dmg"
+            else
+              echo "Rythm_Daw-${{ github.ref_name }}-VST3.zip"
+            fi
+          asset_content_type: |
+            if [ ${{ matrix.os }} == "macos-latest" ]; then
+              echo "application/x-apple-diskimage"
+            else
+              echo "application/zip"
+            fi
+
+      - name: Generate and Upload artifacts.json
+        if: matrix.os == 'macos-latest'  # Only run on macOS job
+        run: |
+          # Get SHA-256 checksums
+          au_checksum=$(shasum -a 256 "Rythm_Daw-${{ github.ref_name }}-AU.dmg" | cut -d' ' -f1)
+          vst3_checksum=$(shasum -a 256 "Rythm_Daw-${{ github.ref_name }}-VST3.zip" | cut -d' ' -f1)
+          
+          # Create artifacts.json
+          echo '{
+            "au": {
+              "url": "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Rythm_Daw-${{ github.ref_name }}-AU.dmg",
+              "sha256": "$au_checksum"
+            },
+            "vst3": {
+              "url": "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Rythm_Daw-${{ github.ref_name }}-VST3.zip",
+              "sha256": "$vst3_checksum"
+            }
+          }' > artifacts.json
+
+          # Upload artifacts.json
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            "${{ steps.create_release.outputs.upload_url }}?name=artifacts.json" \
+            --data-binary @artifacts.json
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            Rythm DAW Plugin Release ${{ github.ref_name }}
+            
+            - Audio Unit (AU) for macOS
+            - VST3 for Windows, macOS, and Linux
+          draft: false
+          prerelease: false
+
+      - name: Update Download Links
+        run: |
+          au_url="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Rythm_Daw-${{ github.ref_name }}-AU.dmg"
+          vst3_url="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Rythm_Daw-${{ github.ref_name }}-VST3.zip"
+          
+          echo "{"au": "$au_url", "vst3": "$vst3_url"}" > website/public/latest-downloads.json
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add website/public/latest-downloads.json
+          git commit -m "chore: update download links for v${{ github.ref_name }}"
+          git push origin main
