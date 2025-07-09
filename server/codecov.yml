@@ -1,0 +1,33 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 80%
+        threshold: 1%
+    patch:
+      default:
+        target: 80%
+        threshold: 1%
+
+comment:
+  layout: "reach, diff, flags, files, footer"
+  behavior: default
+  require_changes: true
+  require_base: yes
+  require_head: yes
+  show_critical_paths: true
+
+codecov:
+  max_report_age: off
+  require_ci_to_pass: yes
+  notify:
+    after_n_builds: 3
+  branch: main
+  
+ignore:
+  - "**/*.spec.ts"
+  - "**/*.test.ts"
+  - "**/*.d.ts"
+  - "**/test/**"
+  - "**/__tests__/**"
+  - "**/__mocks__/**"
