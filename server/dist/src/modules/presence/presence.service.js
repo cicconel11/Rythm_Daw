@@ -39,22 +39,34 @@ let PresenceService = PresenceService_1 = class PresenceService {
             },
         });
         const where = {
-            id: userId,
+            userId_projectId: {
+                userId,
+                projectId: dto.projectId || 'global',
+            },
         };
         const presence = await this.prisma.userPresence.upsert({
             where,
             update: {
-                status: dto.status,
-                lastSeen: now,
+                status: dto.status || 'online',
                 expiresAt,
-                projectId: dto.projectId || null,
+                lastSeen: now,
+                updatedAt: now,
             },
             create: {
                 userId,
-                status: dto.status,
-                lastSeen: now,
+                projectId: dto.projectId || 'global',
+                status: dto.status || 'online',
                 expiresAt,
-                projectId: dto.projectId || null,
+                lastSeen: now,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
             },
         });
         this.eventEmitter.emit('presence.updated', {

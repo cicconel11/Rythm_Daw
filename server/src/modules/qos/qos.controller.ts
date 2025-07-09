@@ -46,7 +46,13 @@ export class QosController {
     @Body() dto: WebRtcMetricDto,
     @GetUser() user: JwtPayload,
   ) {
-    await this.qosService.recordWebRtcMetrics(dto, user?.sub);
+    // Ensure the user ID from the token is used
+    const metricWithUserId = {
+      ...dto,
+      userId: user?.sub || dto.userId
+    };
+    
+    await this.qosService.recordWebRtcMetrics(metricWithUserId);
     return { success: true, message: 'Metrics accepted for processing' };
   }
 

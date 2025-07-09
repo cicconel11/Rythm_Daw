@@ -39,7 +39,8 @@ let InventoryService = InventoryService_1 = class InventoryService {
                     description: plugin.vendor,
                 },
             })));
-            const currentUserPlugins = await prisma.userPlugin.findMany({
+            const userPlugin = prisma.userPlugin;
+            const currentUserPlugins = await userPlugin.findMany({
                 where: { userId },
                 select: { pluginId: true },
             });
@@ -49,7 +50,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
             const pluginsToRemove = [...currentPluginUids].filter((uid) => !newPluginUids.has(uid));
             const updatePromises = [];
             if (pluginsToAdd.length > 0) {
-                const existingUserPlugins = await prisma.userPlugin.findMany({
+                const existingUserPlugins = await userPlugin.findMany({
                     where: {
                         userId,
                         pluginId: { in: [...pluginsToAdd] },
@@ -61,7 +62,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
                 const existingPluginIds = new Set(existingUserPlugins.map(up => up.pluginId));
                 const pluginsToCreate = pluginsToAdd.filter(pluginId => !existingPluginIds.has(pluginId));
                 if (pluginsToCreate.length > 0) {
-                    updatePromises.push(prisma.userPlugin.createMany({
+                    updatePromises.push(userPlugin.createMany({
                         data: pluginsToCreate.map((pluginId) => ({
                             userId,
                             pluginId,
@@ -71,7 +72,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
                 }
             }
             if (pluginsToRemove.length > 0) {
-                updatePromises.push(prisma.userPlugin.deleteMany({
+                updatePromises.push(userPlugin.deleteMany({
                     where: {
                         userId,
                         pluginId: { in: [...pluginsToRemove] },
@@ -79,7 +80,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
                 }));
             }
             if (newPluginUids.size > 0) {
-                updatePromises.push(prisma.userPlugin.updateMany({
+                updatePromises.push(userPlugin.updateMany({
                     where: {
                         userId,
                         pluginId: { in: [...newPluginUids] },

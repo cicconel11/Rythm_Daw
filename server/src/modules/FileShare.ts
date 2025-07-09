@@ -310,15 +310,17 @@ export class FileShare {
 }
 
 // Express middleware for file uploads
-import multer from 'multer';
-const upload = multer({ 
+import multer, { Multer } from 'multer';
+import { RequestHandler } from 'express';
+
+const upload: Multer = multer({ 
   dest: UPLOAD_DIR,
   limits: {
     fileSize: 1024 * 1024 * 1024, // 1GB max
   },
 });
 
-export const uploadMiddleware = upload.single('file');
+export const uploadMiddleware: RequestHandler = upload.single('file');
 
 // Example Express routes:
 /*

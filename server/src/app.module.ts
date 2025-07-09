@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { FilesModule } from './modules/files/files.module';
+import { RtcModule } from './modules/rtc/rtc.module';
 
 @Module({
   imports: [
@@ -11,6 +13,8 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     PrismaModule,
     AuthModule,
+    FilesModule,
+    RtcModule,
   ],
   controllers: [],
   providers: [],

@@ -39,8 +39,11 @@ export class InventoryService {
         ),
       );
 
-      // 2. Get current user plugins
-      const currentUserPlugins = await prisma.userPlugin.findMany({
+      // Get the Prisma userPlugin delegate
+      const userPlugin = prisma.userPlugin;
+
+      // 2. Get current user plugins using the userPlugin delegate
+      const currentUserPlugins = await userPlugin.findMany({
         where: { userId },
         select: { pluginId: true },
       });
@@ -58,7 +61,7 @@ export class InventoryService {
       // Add new plugins
       if (pluginsToAdd.length > 0) {
         // First, find existing user plugins to avoid duplicates
-        const existingUserPlugins = await prisma.userPlugin.findMany({
+        const existingUserPlugins = await userPlugin.findMany({
           where: {
             userId,
             pluginId: { in: [...pluginsToAdd] },
@@ -73,7 +76,7 @@ export class InventoryService {
         
         if (pluginsToCreate.length > 0) {
           updatePromises.push(
-            prisma.userPlugin.createMany({
+            userPlugin.createMany({
               data: pluginsToCreate.map((pluginId) => ({
                 userId,
                 pluginId,
@@ -87,7 +90,7 @@ export class InventoryService {
       // Remove old plugins
       if (pluginsToRemove.length > 0) {
         updatePromises.push(
-          prisma.userPlugin.deleteMany({
+          userPlugin.deleteMany({
             where: {
               userId,
               pluginId: { in: [...pluginsToRemove] },
@@ -99,7 +102,7 @@ export class InventoryService {
       // Update lastSynced for existing plugins
       if (newPluginUids.size > 0) {
         updatePromises.push(
-          prisma.userPlugin.updateMany({
+          userPlugin.updateMany({
             where: {
               userId,
               pluginId: { in: [...newPluginUids] },

@@ -75,6 +75,7 @@ export class ActivityLoggerService implements OnModuleInit {
 
     try {
       // Create activity data
+      // Build activity data with optional fields
       const activityData: any = {
         action,
         entityId,
@@ -82,6 +83,7 @@ export class ActivityLoggerService implements OnModuleInit {
         metadata: metadata as Prisma.InputJsonValue,
         ...(ipAddress && { ipAddress }),
         ...(userAgent && { userAgent }),
+        // userId is optional, only include if provided
         ...(userId && { userId }),
         ...(projectId && { projectId }),
       };
