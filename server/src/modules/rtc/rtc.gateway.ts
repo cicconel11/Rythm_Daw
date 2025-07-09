@@ -55,6 +55,7 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (userSockets) {
         userSockets.add(client.id);
         this.socketToUser.set(client.id, userId);
+        client.emit('connection-success', { userId });
       } else {
         this.logger.warn(`Failed to find user sockets for user ${userId}`);
       }
