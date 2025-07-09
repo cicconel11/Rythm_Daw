@@ -1,22 +1,28 @@
 {
-	"dependencies": {
-		"@types/node": "^20.11.0",
-		"@types/react-window": "^1.8.8",
-		"@types/uuid": "^10.0.0",
-		"react-window": "^1.8.11",
-		"uuid": "^11.1.0"
-	},
-	"scripts": {
-		"db:generate": "pnpm --filter server exec prisma generate",
-		"dev:api": "pnpm --filter server dev",
-		"dev:web": "pnpm --filter ui-dev dev",
-		"dev": "concurrently -n api,web -c magenta,cyan \"pnpm dev:api\" \"pnpm dev:web\"",
-		"db:migrate": "pnpm exec prisma migrate dev --schema=./server/prisma/schema.prisma && ./scripts/restart-api.sh",
-		"postinstall": "pnpm db:generate"
-	},
-	"devDependencies": {
-		"concurrently": "^9.2.0",
-		"prisma": "^6.11.1",
-		"typescript": "^5.4.0"
-	}
+  "dependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react-window": "^1.8.8",
+    "@types/uuid": "^10.0.0",
+    "react-window": "^1.8.11",
+    "uuid": "^11.1.0",
+    "ws": "^7.5.9"
+  },
+  "scripts": {
+    "db:generate": "pnpm --filter server exec prisma generate",
+    "dev:api": "pnpm --filter server dev",
+    "dev:web": "pnpm --filter ui-dev dev",
+    "dev": "concurrently -n api,web -c magenta,cyan \"pnpm dev:api\" \"pnpm dev:web\"",
+    "db:migrate": "pnpm exec prisma migrate dev --schema=./server/prisma/schema.prisma && ./scripts/restart-api.sh",
+    "postinstall": "npx npm-force-resolutions && pnpm db:generate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "prisma": "^6.11.1",
+    "typescript": "^5.4.0"
+  },
+  "resolutions": {
+    "engine.io": "6.5.4",
+    "engine.io-client": "6.5.4",
+    "ws": "7.5.9"
+  }
 }

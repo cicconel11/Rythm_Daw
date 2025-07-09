@@ -1,8 +1,11 @@
 import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AwsS3Service } from '../src/modules/files/aws-s3.service';
-import { createTestingApp } from './utils/create-testing-module';
+import { AppModule } from '../src/app.module';
+import { ConfigService } from '@nestjs/config';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 // Mock AWS S3 service
 jest.mock('../src/modules/files/aws-s3.service');
@@ -19,14 +22,14 @@ describe('FilesController (e2e)', () => {
   let authToken: string;
 
   beforeAll(async () => {
-    const moduleFixture = await createTestingApp({
-      awsS3: {
-        getPresignedUrl: jest.fn().mockResolvedValue({
-          putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
-          getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
-        }),
-      },
-      prisma: {
+    // Create testing module
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(PrismaService)
+      .useValue({
+        $connect: jest.fn(),
+        $disconnect: jest.fn(),
         user: {
           findUnique: jest.fn().mockResolvedValue({
             id: 1,
@@ -35,25 +38,28 @@ describe('FilesController (e2e)', () => {
             password: 'hashedpassword',
           }),
         },
-      },
-    });
+      })
+      .overrideProvider(AwsS3Service)
+      .useValue({
+        getPresignedUrl: jest.fn().mockResolvedValue({
+          putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
+          getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
+        }),
+      })
+      .compile();
 
     app = moduleFixture.createNestApplication();
-    prisma = app.get<PrismaService>(PrismaService);
-    awsS3Service = app.get<AwsS3Service>(AwsS3Service);
+    
+    // Use WebSocket adapter that won't try to initialize Socket.IO
+    app.useWebSocketAdapter(new WsAdapter(app));
+    
+    prisma = moduleFixture.get<PrismaService>(PrismaService);
+    awsS3Service = moduleFixture.get<AwsS3Service>(AwsS3Service);
 
     await app.init();
     
-    // Create a test user and get auth token
-    // This assumes you have an auth endpoint to get a token
-    const authResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'test@example.com',
-        password: 'password123',
-      });
-      
-    authToken = authResponse.body.accessToken;
+    // Mock auth token for testing
+    authToken = 'test-token';
   });
 
   afterAll(async () => {

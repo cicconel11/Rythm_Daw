@@ -8,6 +8,8 @@ import { AwsS3Service } from '../src/modules/files/aws-s3.service';
 import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { AppModule } from '../src/app.module';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 // Mock AWS S3 service
 const mockAwsS3Service = {
@@ -31,8 +33,20 @@ describe('RTC and File Upload Integration', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [FilesModule, RtcModule],
+      imports: [AppModule],
     })
+      .overrideProvider(PrismaService)
+      .useValue({
+        $connect: jest.fn(),
+        $disconnect: jest.fn(),
+        user: {
+          findUnique: jest.fn().mockResolvedValue({
+            id: 'test-user-id',
+            email: 'test@example.com',
+            name: 'Test User',
+          }),
+        },
+      })
       .overrideProvider(AwsS3Service)
       .useValue(mockAwsS3Service)
       .overrideProvider(JwtService)
@@ -40,12 +54,17 @@ describe('RTC and File Upload Integration', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    
+    // Use WebSocket adapter that won't try to initialize Socket.IO
+    app.useWebSocketAdapter(new WsAdapter(app));
+    
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     
+    // Get the PrismaService instance from the testing module
     prisma = moduleFixture.get<PrismaService>(PrismaService);
-    rtcGateway = moduleFixture.get<RtcGateway>(RtcGateway);
     
-    // Initialize WebSocket server
+    // Get the RtcGateway instance and mock its server
+    rtcGateway = moduleFixture.get<RtcGateway>(RtcGateway);
     rtcGateway.server = {
       to: jest.fn().mockReturnThis(),
       emit: jest.fn(),

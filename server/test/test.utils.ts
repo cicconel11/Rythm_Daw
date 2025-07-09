@@ -5,7 +5,7 @@ import { AppModule } from '../src/app.module';
 import { mockPrismaService, mockAwsS3Service, mockConfigService } from './test.setup';
 import { AwsS3Service } from '../src/modules/files/aws-s3.service';
 import { ConfigService } from '@nestjs/config';
-import { TestWebSocketAdapter } from './test-websocket.adapter';
+import { WsAdapter } from '../src/ws/ws-adapter';
 
 export const createTestApp = async (): Promise<{
   app: INestApplication;
@@ -24,14 +24,14 @@ export const createTestApp = async (): Promise<{
 
   const app = moduleFixture.createNestApplication();
   
-  // Use test WebSocket adapter
-  const webSocketAdapter = new TestWebSocketAdapter(app);
-  app.useWebSocketAdapter(webSocketAdapter);
+  // Use our WebSocket adapter with ws engine
+  const wsAdapter = new WsAdapter(app);
+  app.useWebSocketAdapter(wsAdapter);
   
   await app.init();
   
-  // Store WebSocket server reference for tests
-  (app as any).webSocketServer = webSocketAdapter.getServer();
+  // Update CORS for WebSocket if needed
+  wsAdapter.updateCors(app, '*');
 
   return { app, moduleFixture };
 };
