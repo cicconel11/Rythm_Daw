@@ -14,6 +14,7 @@ import { AuthService } from '../auth/auth.service';
 import { WsThrottlerGuard } from './guards/ws-throttler.guard';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { ConfigService } from '@nestjs/config';
+import { PresenceService } from '../presence/presence.service';
 
 interface WebSocketClient extends WebSocket {
   id: string;
@@ -47,7 +48,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly presenceService: PresenceService
   ) {
     // Setup heartbeat to detect dead connections
     this.heartbeatInterval = setInterval(() => this.checkHeartbeat(), this.HEARTBEAT_INTERVAL);
@@ -114,6 +116,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(client: WebSocketClient) {
     this.logger.log(`Client disconnected: ${client.id}`);
+    
+    // Remove client from presence tracking
+    if (client.userId) {
+      try {
+        await this.presenceService.removeUserPresence(client.userId);
+      } catch (error) {
+        this.logger.error(`Error removing user presence: ${error.message}`, error.stack);
+      }
+    }
+    
+    // Remove client from clients map
     this.clients.delete(client);
   }
 
@@ -207,6 +220,45 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.isAlive = false;
       client.ping(() => {});
     });
+  }
+
+  @SubscribeMessage('typing')
+  async handleTyping(
+    @ConnectedSocket() client: WebSocketClient,
+    @MessageBody() data: { isTyping: boolean },
+  ) {
+    try {
+      if (!client.userId || !client.projectId) {
+        throw new Error('Not authenticated');
+      }
+
+      // Broadcast typing status to other users in the same project
+      const broadcastPromises = Array.from(this.clients.values())
+        .filter(c => c.projectId === client.projectId && c.id !== client.id)
+        .map(recipient => 
+          recipient.sendMessage({
+            type: 'user_typing',
+            userId: client.userId,
+            isTyping: data.isTyping,
+            timestamp: new Date().toISOString(),
+          }).catch(err => {
+            this.logger.error(`Failed to send typing status to ${recipient.id}: ${err.message}`);
+            if (err.message.includes('not open')) {
+              this.clients.delete(recipient);
+            }
+          })
+        );
+
+      await Promise.all(broadcastPromises);
+      
+    } catch (error) {
+      this.logger.error(`Typing status error: ${error.message}`, error.stack);
+      await client.sendMessage({
+        type: 'error',
+        code: 'TYPING_STATUS_ERROR',
+        message: error.message,
+      });
+    }
   }
 
   async broadcastToProject(projectId: string, message: any) {

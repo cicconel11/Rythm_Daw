@@ -1,21 +1,20 @@
-import { OnModuleInit } from '@nestjs/common';
+import { OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WebRtcMetricDto } from './dto/webrtc-metric.dto';
 import { CrashReportDto } from './dto/crash-report.dto';
-import { EncryptionService } from './encryption.service';
-import { ConfigService } from '@nestjs/config';
-export declare class QosService implements OnModuleInit {
-    private prisma;
-    private encryptionService;
-    private configService;
+export declare class QosService implements OnModuleInit, OnModuleDestroy {
+    private readonly prisma;
     private readonly logger;
-    private readonly BATCH_SIZE;
     private webRtcMetricsQueue;
     private flushTimer;
+    private readonly BATCH_SIZE;
     private readonly FLUSH_INTERVAL;
-    constructor(prisma: PrismaService, encryptionService: EncryptionService, configService: ConfigService);
+    constructor(prisma: PrismaService);
     onModuleInit(): void;
-    recordWebRtcMetrics(metric: WebRtcMetricDto, userId?: string): Promise<void>;
+    onModuleDestroy(): Promise<void>;
+    private scheduleFlush;
+    recordWebRtcMetrics(metric: WebRtcMetricDto): Promise<void>;
+    private flushWebRtcMetrics;
     recordCrashReport(report: CrashReportDto, userId?: string): Promise<void>;
     getWebRtcMetrics(options: {
         userId?: string;
@@ -23,7 +22,8 @@ export declare class QosService implements OnModuleInit {
         startDate: Date;
         endDate: Date;
         limit?: number;
-    }): Promise<any>;
+        category?: string;
+    }): Promise<Array<Record<string, any>>>;
     getCrashReports(options: {
         userId?: string;
         projectId?: string;
@@ -32,8 +32,5 @@ export declare class QosService implements OnModuleInit {
         type?: string;
         limit?: number;
         includeSensitive?: boolean;
-    }): Promise<any>;
-    private flushWebRtcMetrics;
-    private scheduleFlush;
-    onModuleDestroy(): Promise<void>;
+    }): Promise<Array<Record<string, any>>>;
 }

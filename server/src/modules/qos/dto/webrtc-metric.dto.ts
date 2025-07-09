@@ -1,13 +1,41 @@
-import { IsNumber, IsOptional, IsString, IsUUID, IsIn } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsUUID, IsIn, IsEnum, IsDate, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+
+export enum MetricCategory {
+  CONNECTION = 'connection',
+  QUALITY = 'quality',
+  NETWORK = 'network',
+  MEDIA = 'media',
+  OTHER = 'other',
+}
 
 export class WebRtcMetricDto {
   @ApiProperty({
-    description: 'Peer connection ID',
-    example: 'pc_1234567890',
+    description: 'User ID',
+    example: 'user-123',
   })
   @IsString()
-  peerConnectionId: string;
+  @IsNotEmpty()
+  userId: string;
+
+  @ApiProperty({
+    description: 'Project ID',
+    example: 'project-456',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  projectId?: string;
+
+  @ApiProperty({
+    description: 'Peer connection ID',
+    example: 'pc_1234567890',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  peerConnectionId?: string;
 
   @ApiProperty({
     description: 'Round-trip time in milliseconds',
@@ -35,6 +63,21 @@ export class WebRtcMetricDto {
   @IsNumber()
   @IsOptional()
   packetLoss?: number;
+
+  @ApiProperty({
+    description: 'Metric category',
+    example: MetricCategory.CONNECTION,
+    enum: MetricCategory,
+  })
+  @IsEnum(MetricCategory)
+  category: MetricCategory;
+
+  @ApiProperty({
+    description: 'Metric value',
+    example: 1.0,
+  })
+  @IsNumber()
+  value: number;
 
   @ApiProperty({
     description: 'Network type',
@@ -68,6 +111,24 @@ export class WebRtcMetricDto {
   downlinkMbps?: number;
 
   @ApiProperty({
+    description: 'When the metric was created',
+    example: new Date().toISOString(),
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  createdAt?: Date;
+
+  @ApiProperty({
+    description: 'Additional metadata',
+    example: { key: 'value' },
+    required: false,
+  })
+  @IsOptional()
+  metadata?: Record<string, any>;
+
+  @ApiProperty({
     description: 'ICE candidate pair ID',
     example: 'ice-pair-123',
     required: false,
@@ -93,13 +154,4 @@ export class WebRtcMetricDto {
   @IsString()
   @IsOptional()
   remoteCandidateId?: string;
-
-  @ApiProperty({
-    description: 'Optional project ID',
-    example: 'proj_123',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  projectId?: string;
 }

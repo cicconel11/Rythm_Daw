@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QosController = void 0;
 const common_1 = require("@nestjs/common");
@@ -21,13 +20,16 @@ const get_user_decorator_1 = require("../../common/decorators/get-user.decorator
 const qos_service_1 = require("./qos.service");
 const webrtc_metric_dto_1 = require("./dto/webrtc-metric.dto");
 const crash_report_dto_1 = require("./dto/crash-report.dto");
-const express_1 = require("express");
 let QosController = class QosController {
     constructor(qosService) {
         this.qosService = qosService;
     }
     async recordWebRtcMetrics(dto, user) {
-        await this.qosService.recordWebRtcMetrics(dto, user?.sub);
+        const metricWithUserId = {
+            ...dto,
+            userId: user?.sub || dto.userId
+        };
+        await this.qosService.recordWebRtcMetrics(metricWithUserId);
         return { success: true, message: 'Metrics accepted for processing' };
     }
     async recordCrashReport(dto, user, req) {
@@ -111,7 +113,7 @@ __decorate([
     __param(1, (0, get_user_decorator_1.GetUser)()),
     __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [crash_report_dto_1.CrashReportDto, Object, typeof (_a = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _a : Object]),
+    __metadata("design:paramtypes", [crash_report_dto_1.CrashReportDto, Object, Object]),
     __metadata("design:returntype", Promise)
 ], QosController.prototype, "recordCrashReport", null);
 QosController = __decorate([

@@ -30,7 +30,10 @@
       "@test/*": ["test/*"],
       "@prisma/*": ["src/prisma/*"],
       "@auth/*": ["src/auth/*"],
-      "@common/*": ["src/common/*"]
+      "@common/*": ["src/common/*"],
+      "@modules/*": ["src/modules/*"],
+      "@modules/chat/*": ["src/modules/chat/*"],
+      "@modules/presence/*": ["src/modules/presence/*"]
     }
   },
   "include": [

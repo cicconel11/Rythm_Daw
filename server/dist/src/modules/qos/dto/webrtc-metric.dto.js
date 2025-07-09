@@ -9,17 +9,47 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WebRtcMetricDto = void 0;
+exports.WebRtcMetricDto = exports.MetricCategory = void 0;
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
+var MetricCategory;
+(function (MetricCategory) {
+    MetricCategory["CONNECTION"] = "connection";
+    MetricCategory["QUALITY"] = "quality";
+    MetricCategory["NETWORK"] = "network";
+    MetricCategory["MEDIA"] = "media";
+    MetricCategory["OTHER"] = "other";
+})(MetricCategory = exports.MetricCategory || (exports.MetricCategory = {}));
 class WebRtcMetricDto {
 }
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Peer connection ID',
-        example: 'pc_1234567890',
+        description: 'User ID',
+        example: 'user-123',
     }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], WebRtcMetricDto.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Project ID',
+        example: 'project-456',
+        required: false,
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], WebRtcMetricDto.prototype, "projectId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Peer connection ID',
+        example: 'pc_1234567890',
+        required: false,
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], WebRtcMetricDto.prototype, "peerConnectionId", void 0);
 __decorate([
@@ -52,6 +82,23 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], WebRtcMetricDto.prototype, "packetLoss", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Metric category',
+        example: MetricCategory.CONNECTION,
+        enum: MetricCategory,
+    }),
+    (0, class_validator_1.IsEnum)(MetricCategory),
+    __metadata("design:type", String)
+], WebRtcMetricDto.prototype, "category", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Metric value',
+        example: 1.0,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], WebRtcMetricDto.prototype, "value", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Network type',
@@ -88,6 +135,26 @@ __decorate([
 ], WebRtcMetricDto.prototype, "downlinkMbps", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'When the metric was created',
+        example: new Date().toISOString(),
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Date),
+    (0, class_validator_1.IsDate)(),
+    __metadata("design:type", Date)
+], WebRtcMetricDto.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Additional metadata',
+        example: { key: 'value' },
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Object)
+], WebRtcMetricDto.prototype, "metadata", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         description: 'ICE candidate pair ID',
         example: 'ice-pair-123',
         required: false,
@@ -116,15 +183,5 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], WebRtcMetricDto.prototype, "remoteCandidateId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Optional project ID',
-        example: 'proj_123',
-        required: false,
-    }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], WebRtcMetricDto.prototype, "projectId", void 0);
 exports.WebRtcMetricDto = WebRtcMetricDto;
 //# sourceMappingURL=webrtc-metric.dto.js.map

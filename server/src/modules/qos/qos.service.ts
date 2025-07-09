@@ -1,84 +1,225 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { WebRtcMetricDto } from './dto/webrtc-metric.dto';
+import { WebRtcMetricDto, MetricCategory } from './dto/webrtc-metric.dto';
 import { CrashReportDto } from './dto/crash-report.dto';
-import { EncryptionService } from './encryption.service';
-import { ConfigService } from '@nestjs/config';
+
+interface WebRtcMetricRecord {
+  userId: string;
+  projectId?: string | null;
+  category: MetricCategory;
+  value: number;
+  peerConnectionId?: string | null;
+  rttMs?: number | null;
+  jitterMs?: number | null;
+  packetLoss?: number | null;
+  networkType?: string | null;
+  effectiveType?: string | null;
+  downlinkMbps?: number | null;
+  iceCandidatePairId?: string | null;
+  localCandidateId?: string | null;
+  remoteCandidateId?: string | null;
+  metadata?: Record<string, any> | null;
+  createdAt: Date;
+}
 
 @Injectable()
-export class QosService implements OnModuleInit {
+export class QosService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(QosService.name);
+  private webRtcMetricsQueue: WebRtcMetricRecord[] = [];
+  private flushTimer: NodeJS.Timeout | null = null;
   private readonly BATCH_SIZE = 100;
-  private webRtcMetricsQueue: any[] = [];
-  private flushTimer: NodeJS.Timeout;
   private readonly FLUSH_INTERVAL = 5000; // 5 seconds
 
   constructor(
-    private prisma: PrismaService,
-    private encryptionService: EncryptionService,
-    private configService: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
-  onModuleInit() {
+  /**
+   * Initialize the service
+   */
+  onModuleInit(): void {
+    this.logger.log('QoS Service initialized');
     // Start the batch processing timer
     this.scheduleFlush();
   }
 
   /**
-   * Records WebRTC metrics
+   * Clean up resources when the module is destroyed
    */
-  async recordWebRtcMetrics(metric: WebRtcMetricDto, userId?: string) {
-    // Add to batch queue for processing
-    this.webRtcMetricsQueue.push({
-      ...metric,
-      userId,
-      timestamp: new Date(),
-    });
-
-    // Process immediately if batch size is reached
-    if (this.webRtcMetricsQueue.length >= this.BATCH_SIZE) {
-      await this.flushWebRtcMetrics();
+  async onModuleDestroy(): Promise<void> {
+    if (this.flushTimer) {
+      clearTimeout(this.flushTimer);
+      this.flushTimer = null;
+    }
+    
+    // Flush any remaining metrics before shutting down
+    if (this.webRtcMetricsQueue.length > 0) {
+      try {
+        await this.flushWebRtcMetrics();
+      } catch (error) {
+        this.logger.error('Error during final flush on shutdown:', error);
+      }
     }
   }
 
   /**
-   * Records a crash report with encrypted stack trace and context
+   * Schedule the next batch flush
    */
-  async recordCrashReport(report: CrashReportDto, userId?: string) {
-    const {
-      stack,
-      breadcrumbs,
-      context,
-      ...rest
-    } = report;
+  private scheduleFlush(): void {
+    if (this.flushTimer) {
+      clearTimeout(this.flushTimer);
+    }
 
+    this.flushTimer = setTimeout(async () => {
+      try {
+        await this.flushWebRtcMetrics();
+      } catch (error) {
+        this.logger.error('Error during scheduled flush:', error);
+      } finally {
+        // Only schedule next flush if there are more items in the queue
+        if (this.webRtcMetricsQueue.length > 0) {
+          this.scheduleFlush();
+        } else {
+          this.flushTimer = null;
+        }
+      }
+    }, this.FLUSH_INTERVAL);
+
+    // Don't keep the Node.js process alive just for this timer
+    if (this.flushTimer) {
+      this.flushTimer.unref();
+    }
+  }
+
+  /**
+   * Records WebRTC metrics
+   */
+  async recordWebRtcMetrics(metric: WebRtcMetricDto): Promise<void> {
     try {
-      const data: any = {
-        ...rest,
-        // Encrypt sensitive fields
-        stack: stack ? this.encryptionService.encrypt(stack) : null,
-        breadcrumbs: breadcrumbs 
-          ? this.encryptionService.encrypt(JSON.stringify(breadcrumbs)) 
-          : null,
-        context: context 
-          ? this.encryptionService.encrypt(JSON.stringify(context))
-          : null,
-        userId,
-        // Map timestamp to createdAt if needed, or remove if not in schema
-        createdAt: new Date(),
+      // Create a well-typed metric record
+      const metricRecord: WebRtcMetricRecord = {
+        userId: metric.userId,
+        projectId: metric.projectId ?? null,
+        category: metric.category,
+        value: metric.value,
+        peerConnectionId: metric.peerConnectionId ?? null,
+        rttMs: metric.rttMs ?? null,
+        jitterMs: metric.jitterMs ?? null,
+        packetLoss: metric.packetLoss ?? null,
+        networkType: metric.networkType ?? null,
+        effectiveType: metric.effectiveType ?? null,
+        downlinkMbps: metric.downlinkMbps ?? null,
+        iceCandidatePairId: metric.iceCandidatePairId ?? null,
+        localCandidateId: metric.localCandidateId ?? null,
+        remoteCandidateId: metric.remoteCandidateId ?? null,
+        metadata: metric.metadata ?? null,
+        createdAt: metric.createdAt || new Date(),
       };
 
-      // Remove any undefined values
-      Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
+      // Add to batch queue for processing
+      this.webRtcMetricsQueue.push(metricRecord);
 
-      await this.prisma.crashReport.create({
-        data,
-      });
+      // Process immediately if batch size is reached
+      if (this.webRtcMetricsQueue.length >= this.BATCH_SIZE) {
+        await this.flushWebRtcMetrics();
+      } else if (!this.flushTimer) {
+        this.scheduleFlush();
+      }
+    } catch (error) {
+      this.logger.error('Error recording WebRTC metric:', error);
+      throw error;
+    }
+  }
 
+  /**
+   * Flush queued WebRTC metrics to the database
+   */
+  private async flushWebRtcMetrics(): Promise<void> {
+    if (this.webRtcMetricsQueue.length === 0) {
+      return;
+    }
+
+    // Take a batch of metrics from the queue
+    const batch = this.webRtcMetricsQueue.splice(0, this.BATCH_SIZE);
+    
+    try {
+      // Prepare records for batch insert
+      const records = batch.map(metric => ({
+        userId: metric.userId,
+        projectId: metric.projectId,
+        metricType: metric.category,
+        value: metric.value,
+        peerConnectionId: metric.peerConnectionId,
+        rttMs: metric.rttMs,
+        jitterMs: metric.jitterMs,
+        packetLoss: metric.packetLoss,
+        networkType: metric.networkType,
+        effectiveType: metric.effectiveType,
+        downlinkMbps: metric.downlinkMbps,
+        iceCandidatePairId: metric.iceCandidatePairId,
+        localCandidateId: metric.localCandidateId,
+        remoteCandidateId: metric.remoteCandidateId,
+        timestamp: metric.createdAt,
+        metadata: metric.metadata ? JSON.parse(JSON.stringify(metric.metadata)) : null,
+      }));
+
+      // Insert records in a transaction
+      await this.prisma.$transaction([
+        this.prisma.webRtcMetric.createMany({
+          data: records
+        })
+      ]);
+
+      this.logger.debug(`Successfully flushed ${records.length} WebRTC metrics`);
+    } catch (error) {
+      // Re-queue the batch if there was an error
+      this.webRtcMetricsQueue.unshift(...batch);
+      this.logger.error('Error flushing WebRTC metrics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Records a crash report with stack trace and context
+   */
+  async recordCrashReport(report: CrashReportDto, userId?: string): Promise<void> {
+    if (!userId) {
+      throw new Error('User ID is required for crash reports');
+    }
+
+    try {
+      const data = {
+        error: report.message || report.name || 'Unknown error',
+        stackTrace: report.stack || 'No stack trace available',
+        stack: report.stack || null,
+        breadcrumbs: report.breadcrumbs ? JSON.stringify(report.breadcrumbs) : null,
+        context: report.context ? JSON.stringify({
+          ...report.context,
+          platform: report.platform,
+          os: report.os,
+          browser: report.browser,
+          userAgent: report.userAgent,
+          url: report.url,
+          memoryUsage: report.memoryUsage
+        }) : null,
+        userId: userId,
+        projectId: report.projectId || null,
+        metadata: {
+          type: report.type,
+          platform: report.platform,
+          os: report.os,
+          browser: report.browser,
+          userAgent: report.userAgent,
+          url: report.url,
+          memoryUsage: report.memoryUsage
+        }
+      };
+
+      await this.prisma.crashReport.create({ data });
       this.logger.log(`Crash report recorded for user ${userId || 'anonymous'}`);
     } catch (error) {
-      this.logger.error('Failed to record crash report', error.stack);
-      // Don't throw to prevent exposing internal errors to clients
+      this.logger.error('Error recording crash report:', error);
+      throw error;
     }
   }
 
@@ -91,32 +232,31 @@ export class QosService implements OnModuleInit {
     startDate: Date;
     endDate: Date;
     limit?: number;
-  }) {
-    const { userId, startDate, endDate, limit = 1000 } = options;
+    category?: string;
+  }): Promise<Array<Record<string, any>>> {
+    const { userId, projectId, startDate, endDate, limit = 1000, category } = options;
 
     const where: any = {
-      userId,
-      createdAt: {
+      timestamp: {
         gte: startDate,
         lte: endDate,
       },
     };
 
-    // Add projectId to metadata if it exists
-    if (options.projectId) {
-      where.metadata = {
-        path: ['projectId'],
-        equals: options.projectId,
-      };
-    }
+    if (userId) where.userId = userId;
+    if (projectId) where.projectId = projectId;
+    if (category) where.metricType = category;
 
-    return this.prisma.webRtcMetric.findMany({
-      where,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-    });
+    try {
+      return await this.prisma.webRtcMetric.findMany({
+        where,
+        take: limit,
+        orderBy: { timestamp: 'desc' },
+      });
+    } catch (error) {
+      this.logger.error('Error fetching WebRTC metrics:', error);
+      throw error;
+    }
   }
 
   /**
@@ -130,181 +270,79 @@ export class QosService implements OnModuleInit {
     type?: string;
     limit?: number;
     includeSensitive?: boolean;
-  }) {
+  }): Promise<Array<Record<string, any>>> {
     const { 
       userId, 
+      projectId, 
       startDate, 
       endDate, 
       type, 
-      limit = 100,
+      limit = 100, 
       includeSensitive = false 
     } = options;
 
     const where: any = {
-      userId,
-      createdAt: {
+      timestamp: {
         gte: startDate,
         lte: endDate,
       },
     };
 
-    // Add type filter if provided
-    if (type) {
-      where.error = {
-        contains: type,
-        mode: 'insensitive',
-      };
-    }
+    if (userId) where.userId = userId;
+    if (projectId) where.projectId = projectId;
+    if (type) where.type = type;
 
-    // Add projectId to metadata if it exists
-    if (options.projectId) {
-      where.metadata = {
-        path: ['projectId'],
-        equals: options.projectId,
-      };
-    }
-
-    const reports = await this.prisma.crashReport.findMany({
-      where,
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: limit,
-    });
-
-    // Decrypt sensitive fields if requested
-    if (includeSensitive) {
-      return reports.map(report => {
-        const decrypted: any = { ...report };
-        
-        // Decrypt stack trace if it exists in metadata
-        if (report.metadata && typeof report.metadata === 'object' && 'stack' in report.metadata) {
-          decrypted.stack = this.encryptionService.decrypt(report.metadata.stack as string);
-        }
-        
-        // Decrypt breadcrumbs if they exist in metadata
-        if (report.metadata && typeof report.metadata === 'object' && 'breadcrumbs' in report.metadata) {
-          decrypted.breadcrumbs = JSON.parse(
-            this.encryptionService.decrypt(report.metadata.breadcrumbs as string)
-          );
-        }
-        
-        // Decrypt context if it exists in metadata
-        if (report.metadata && typeof report.metadata === 'object' && 'context' in report.metadata) {
-          decrypted.context = JSON.parse(
-            this.encryptionService.decrypt(report.metadata.context as string)
-          );
-        }
-        
-        return decrypted;
-      });
-    }
-
-    return reports;
-  }
-
-  /**
-   * Flushes queued WebRTC metrics to the database
-   */
-  private async flushWebRtcMetrics() {
-    if (this.webRtcMetricsQueue.length === 0) return;
-
-    const batch = this.webRtcMetricsQueue.splice(0, this.BATCH_SIZE);
-    
     try {
-      // Process each metric type separately
-      const metricsByType = batch.reduce((acc, metric) => {
-        const metricType = metric.metricType || 'unknown';
-        if (!acc[metricType]) {
-          acc[metricType] = [];
+      const reports = await this.prisma.crashReport.findMany({
+        where,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      return reports.map(report => {
+        const result: any = {
+          id: report.id,
+          error: report.error,
+          stack: includeSensitive ? report.stack : (report.stack ? '[REDACTED]' : null),
+          stackTrace: includeSensitive ? report.stackTrace : (report.stackTrace ? '[REDACTED]' : null),
+          userId: report.userId,
+          projectId: report.projectId,
+          createdAt: report.createdAt
+        };
+
+        // Handle potentially sensitive data
+        if (includeSensitive) {
+          if (report.breadcrumbs) {
+            result.breadcrumbs = JSON.parse(report.breadcrumbs);
+          }
+          if (report.context) {
+            result.context = JSON.parse(report.context);
+          }
+          if (report.metadata) {
+            result.metadata = report.metadata;
+            // Extract common fields from metadata
+            if (typeof report.metadata === 'object' && report.metadata !== null) {
+              const meta = report.metadata as Record<string, any>;
+              result.type = meta.type;
+              result.platform = meta.platform;
+              result.os = meta.os;
+              result.browser = meta.browser;
+              result.userAgent = meta.userAgent;
+              result.url = meta.url;
+              result.memoryUsage = meta.memoryUsage;
+            }
+          }
+        } else {
+          result.breadcrumbs = report.breadcrumbs ? '[REDACTED]' : null;
+          result.context = report.context ? '[REDACTED]' : null;
+          result.metadata = report.metadata ? '[REDACTED]' : null;
         }
-        acc[metricType].push(metric);
-        return acc;
-      }, {} as Record<string, any[]>);
 
-      // Create metrics for each type
-      const createPromises = [];
-      
-      for (const [metricType, metrics] of Object.entries(metricsByType)) {
-        // Process metrics in chunks to avoid too many parameters
-        const chunkSize = 100;
-        for (let i = 0; i < (metrics as any[]).length; i += chunkSize) {
-          const chunk = (metrics as any[]).slice(i, i + chunkSize);
-          const createPromise = this.prisma.webRtcMetric.createMany({
-            data: chunk.map((m: any) => {
-              const metadata: Record<string, any> = {
-                ...(m.metadata || {}),
-                peerConnectionId: m.peerConnectionId,
-                rttMs: m.rttMs,
-                jitterMs: m.jitterMs,
-                packetLoss: m.packetLoss,
-                networkType: m.networkType,
-                effectiveType: m.effectiveType,
-                downlinkMbps: m.downlinkMbps,
-                iceCandidatePairId: m.iceCandidatePairId,
-                localCandidateId: m.localCandidateId,
-                remoteCandidateId: m.remoteCandidateId,
-              };
-              
-              // Add projectId to metadata if it exists
-              if (m.projectId) {
-                metadata.projectId = m.projectId;
-              }
-
-              return {
-                id: m.id || undefined, // Let Prisma generate ID if not provided
-                metricType,
-                value: m.value || 0,
-                metadata,
-                timestamp: m.timestamp || new Date(),
-                userId: m.userId,
-              };
-            })
-          });
-          createPromises.push(createPromise);
-        }
-      }
-
-      // Execute all create operations in parallel but don't use transaction
-      // as it might not be necessary for metrics collection
-      await Promise.all(createPromises);
-
-      this.logger.debug(`Flushed ${batch.length} WebRTC metrics to database`);
+        return result;
+      });
     } catch (error) {
-      this.logger.error('Failed to flush WebRTC metrics', error.stack);
-      // Requeue failed batch for next attempt
-      this.webRtcMetricsQueue.unshift(...batch);
-    }
-  }
-
-  /**
-   * Schedules the next flush of WebRTC metrics
-   */
-  private scheduleFlush() {
-    if (this.flushTimer) {
-      clearTimeout(this.flushTimer);
-    }
-    
-    this.flushTimer = setTimeout(async () => {
-      await this.flushWebRtcMetrics();
-      this.scheduleFlush();
-    }, this.FLUSH_INTERVAL);
-    
-    // Don't prevent Node.js from exiting
-    this.flushTimer.unref();
-  }
-
-  /**
-   * Clean up resources
-   */
-  async onModuleDestroy() {
-    if (this.flushTimer) {
-      clearTimeout(this.flushTimer);
-    }
-    
-    // Flush any remaining metrics
-    if (this.webRtcMetricsQueue.length > 0) {
-      await this.flushWebRtcMetrics();
+      this.logger.error('Error fetching crash reports:', error);
+      throw error;
     }
   }
 }
