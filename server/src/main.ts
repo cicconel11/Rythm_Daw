@@ -29,6 +29,12 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
+  // Configure WebSocket engine for test environment
+  if (process.env.NODE_ENV === 'test') {
+    const io = app.getHttpAdapter().getInstance().io;
+    io.engine.opts.wsEngine = 'ws';   // engine-io mock-friendly
+  }
+
   // Start the application
   const port = process.env.PORT || 3001;
   await app.listen(port);

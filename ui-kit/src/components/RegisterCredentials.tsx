@@ -1,25 +1,51 @@
 
 import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface RegisterCredentialsProps {
-  onContinue: (data: { email: string; password: string; displayName: string }) => void;
+  onSuccess: () => void;
 }
 
-export function RegisterCredentials({ onContinue }: RegisterCredentialsProps) {
+export function RegisterCredentials({ onSuccess }: RegisterCredentialsProps) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+
+  const { mutate: signup, isPending } = useMutation({
+    mutationFn: async (data: { email: string; password: string; displayName: string }) => {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Signup failed');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      onSuccess();
+      navigate('/onboard/bio');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create account');
+    }
+  });
 
   const isValid = email.includes('@') && password.length >= 8 && displayName.length >= 2;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isValid) {
-      onContinue({ email, password, displayName });
+      signup({ email, password, displayName });
     }
   };
 
@@ -71,12 +97,12 @@ export function RegisterCredentials({ onContinue }: RegisterCredentialsProps) {
                 required
               />
             </div>
-            <Button 
+            <Button
               type="submit"
-              disabled={!isValid}
-              className="w-full bg-[#7E4FFF] hover:bg-[#6B3FE6] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold"
+              className="w-full bg-gradient-to-r from-[#7E4FFF] to-[#6B3FE6] text-white hover:opacity-90 transition-opacity"
+              disabled={!isValid || isPending}
             >
-              Continue
+              {isPending ? 'Creating account...' : 'Continue'}
             </Button>
           </form>
         </CardContent>

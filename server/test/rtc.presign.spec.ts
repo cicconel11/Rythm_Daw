@@ -1,9 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AwsS3Service } from '../src/modules/files/aws-s3.service';
+import { createTestingApp } from './utils/create-testing-module';
 
 // Mock AWS S3 service
 jest.mock('../src/modules/files/aws-s3.service');
@@ -16,25 +15,33 @@ jest.mock('@nestjs/passport', () => ({
 describe('FilesController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let awsS3Service: AwsS3Service;
   let authToken: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(AwsS3Service)
-      .useValue({
+    const moduleFixture = await createTestingApp({
+      awsS3: {
         getPresignedUrl: jest.fn().mockResolvedValue({
           putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
           getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
         }),
-      })
-      .compile();
+      },
+      prisma: {
+        user: {
+          findUnique: jest.fn().mockResolvedValue({
+            id: 1,
+            email: 'test@example.com',
+            name: 'Test User',
+            password: 'hashedpassword',
+          }),
+        },
+      },
+    });
 
     app = moduleFixture.createNestApplication();
     prisma = app.get<PrismaService>(PrismaService);
-    
-    // Initialize app and authenticate
+    awsS3Service = app.get<AwsS3Service>(AwsS3Service);
+
     await app.init();
     
     // Create a test user and get auth token

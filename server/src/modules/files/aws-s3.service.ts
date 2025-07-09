@@ -12,7 +12,17 @@ export class AwsS3Service {
     const region = this.configService.get<string>('AWS_REGION');
     const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
     const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
-    const bucketName = this.configService.get<string>('S3_BUCKET_NAME');
+    const bucketName = this.configService.get<string>('S3_BUCKET');
+
+    // Allow unit tests to run without real credentials
+    if (process.env.NODE_ENV === 'test') {
+      this.s3Client = new S3Client({
+        region: region ?? 'us-east-1',
+        credentials: { accessKeyId: 'TEST', secretAccessKey: 'TEST' },
+      });
+      this.bucketName = bucketName ?? 'rhythm-test';
+      return;
+    }
 
     if (!region || !accessKeyId || !secretAccessKey || !bucketName) {
       throw new Error('Missing required AWS configuration');
