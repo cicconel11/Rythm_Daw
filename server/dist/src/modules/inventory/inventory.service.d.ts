@@ -16,31 +16,31 @@ export declare class InventoryService {
         inventory: {
             isActive: boolean;
             lastSynced: Date;
+            name: string;
+            description: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
-            description: string | null;
-            version: string;
             deletedAt: Date | null;
+            version: string;
         }[];
     }>;
     getUserInventory(userId: string): Promise<({
         plugin: {
+            name: string;
+            description: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
-            description: string | null;
-            version: string;
             deletedAt: Date | null;
+            version: string;
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         userId: string;
         pluginId: string;
         isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
     })[]>;
 }

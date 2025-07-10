@@ -36,42 +36,144 @@ exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../../prisma/prisma.service");
-const bcrypt = __importStar(require("bcryptjs"));
+const bcrypt = __importStar(require("bcrypt"));
+const config_1 = require("@nestjs/config");
 let AuthService = class AuthService {
-    constructor(jwtService, prisma) {
+    constructor(jwtService, prisma, configService) {
         this.jwtService = jwtService;
         this.prisma = prisma;
+        this.configService = configService;
+        this.authConfig = this.configService.get('auth');
     }
     async signup(email, password, name) {
-        const existingUser = await this.prisma.user.findUnique({
-            where: { email },
-        });
+        const existingUser = await this.prisma.user.findUnique({ where: { email } });
         if (existingUser) {
-            throw new common_1.UnauthorizedException('Email already in use');
+            throw new common_1.ConflictException('Email already in use');
         }
         const hashedPassword = await bcrypt.hash(password, 12);
-        const userName = name || email.split('@')[0];
         const user = await this.prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
-                name: userName,
-                isApproved: true,
+                name: name || email.split('@')[0],
             },
         });
-        const safeName = user.name || '';
-        const payload = {
-            sub: user.id,
-            email: user.email,
-            name: safeName
-        };
-        const accessToken = this.jwtService.sign(payload);
+        const tokens = await this.getTokens(user.id, user.email, user.name || '');
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
         return {
-            id: user.id,
-            email: user.email,
-            name: safeName,
-            accessToken,
+            ...tokens,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name || '',
+            },
         };
+    }
+    async login(user) {
+        const tokens = await this.getTokens(user.id, user.email, user.name || '');
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+        return {
+            ...tokens,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name || '',
+            },
+        };
+    }
+    async logout(userId) {
+        await this.prisma.user.updateMany({
+            where: {
+                id: userId,
+                refreshToken: { not: null },
+            },
+            data: { refreshToken: null },
+        });
+        return true;
+    }
+    async refreshTokens(userId, refreshToken) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+        if (!user?.refreshToken) {
+            await this.prisma.user.updateMany({
+                where: { id: userId },
+                data: { refreshToken: null },
+            });
+            throw new common_1.ForbiddenException('Access Denied - Token Reuse Detected');
+        }
+        const refreshTokenMatches = await bcrypt.compare(refreshToken, user.refreshToken);
+        if (!refreshTokenMatches) {
+            await this.prisma.user.updateMany({
+                where: { id: userId },
+                data: { refreshToken: null },
+            });
+            throw new common_1.ForbiddenException('Access Denied - Token Reuse Detected');
+        }
+        const tokens = await this.getTokens(user.id, user.email, user.name || '');
+        await this.updateRefreshToken(user.id, tokens.refreshToken);
+        return tokens;
+    }
+    async updateRefreshToken(userId, refreshToken) {
+        const hashedRefreshToken = await bcrypt.hash(refreshToken, this.authConfig.password.saltRounds);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { refreshToken: hashedRefreshToken },
+        });
+    }
+    async getTokens(userId, email, name) {
+        const [accessToken, refreshToken] = await Promise.all([
+            this.jwtService.signAsync({
+                sub: userId,
+                email,
+                name,
+            }, {
+                secret: this.configService.get('JWT_SECRET'),
+                expiresIn: '15m',
+            }),
+            this.jwtService.signAsync({
+                sub: userId,
+                email,
+                name,
+            }, {
+                secret: this.configService.get('JWT_REFRESH_SECRET'),
+                expiresIn: '7d',
+            }),
+        ]);
+        return {
+            accessToken,
+            refreshToken,
+            user: {
+                id: userId,
+                email,
+                name,
+            },
+        };
+    }
+    async validateUser(email, pass) {
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (user && (await bcrypt.compare(pass, user.password))) {
+            const { password, ...result } = user;
+            return result;
+        }
+        return null;
+    }
+    setRefreshTokenCookie(res, refreshToken) {
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: this.configService.get('NODE_ENV') === 'production',
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/',
+        });
+    }
+    clearRefreshTokenCookie(res) {
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: this.configService.get('NODE_ENV') === 'production',
+            sameSite: 'strict',
+            path: '/',
+        });
     }
     async verifyToken(token) {
         try {
@@ -88,7 +190,8 @@ let AuthService = class AuthService {
 AuthService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [jwt_1.JwtService,
-        prisma_service_1.PrismaService])
+        prisma_service_1.PrismaService,
+        config_1.ConfigService])
 ], AuthService);
 exports.AuthService = AuthService;
 //# sourceMappingURL=auth.service.js.map

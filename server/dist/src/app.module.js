@@ -11,6 +11,9 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const auth_module_1 = require("./modules/auth/auth.module");
 const prisma_module_1 = require("./prisma/prisma.module");
+const files_module_1 = require("./modules/files/files.module");
+const rtc_module_1 = require("./modules/rtc/rtc.module");
+const ws_adapter_1 = require("./ws/ws-adapter");
 let AppModule = class AppModule {
 };
 AppModule = __decorate([
@@ -22,9 +25,19 @@ AppModule = __decorate([
             }),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
+            files_module_1.FilesModule,
+            rtc_module_1.RtcModule,
         ],
         controllers: [],
-        providers: [],
+        providers: [
+            {
+                provide: ws_adapter_1.WsAdapter,
+                useFactory: (app) => {
+                    return new ws_adapter_1.WsAdapter(app);
+                },
+                inject: [common_2.INestApplication],
+            },
+        ],
     })
 ], AppModule);
 exports.AppModule = AppModule;

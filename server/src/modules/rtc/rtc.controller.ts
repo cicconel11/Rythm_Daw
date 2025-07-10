@@ -11,13 +11,13 @@ export class RtcController {
 
   @Post('offer')
   async handleOffer(@Body() dto: RtcOfferDto) {
-    const result = this.rtcGateway.emitToUser(dto.to, 'rtcOffer', dto);
+    const result = await this.rtcGateway.emitToUser(dto.to, 'rtcOffer', dto);
     return { success: result };
   }
 
   @Post('answer')
   async handleAnswer(@Body() dto: RtcAnswerDto) {
-    const result = this.rtcGateway.emitToUser(dto.to, 'rtcAnswer', dto);
+    const result = await this.rtcGateway.emitToUser(dto.to, 'rtcAnswer', dto);
     return { success: result };
   }
 }

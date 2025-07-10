@@ -16,43 +16,111 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const register_dto_1 = require("./dto/register.dto");
+const local_auth_guard_1 = require("./guards/local-auth.guard");
+const refresh_token_guard_1 = require("./guards/refresh-token.guard");
+const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    async signup(registerDto) {
+    async signup(registerDto, res) {
         try {
-            const { email, password, name } = registerDto;
-            return await this.authService.signup(email, password, name);
+            const result = await this.authService.signup(registerDto.email, registerDto.password, registerDto.name);
+            this.authService.setRefreshTokenCookie(res, result.refreshToken);
+            return {
+                accessToken: result.accessToken,
+                user: result.user
+            };
         }
         catch (error) {
-            throw new common_1.HttpException(error.message || 'Signup failed', error.status || common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new common_1.HttpException(error.message || 'Registration failed', common_1.HttpStatus.UNPROCESSABLE_ENTITY);
         }
     }
-    async register(registerDto) {
-        try {
-            const { email, password, name } = registerDto;
-            return await this.authService.signup(email, password, name);
+    async register(registerDto, res) {
+        return this.signup(registerDto, res);
+    }
+    async login(req, res) {
+        const result = await this.authService.login(req.user);
+        this.authService.setRefreshTokenCookie(res, result.refreshToken);
+        return {
+            accessToken: result.accessToken,
+            user: result.user,
+        };
+    }
+    async refreshToken(req, res) {
+        const userId = req.user.sub;
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
+            throw new common_1.HttpException('Refresh token is required', common_1.HttpStatus.BAD_REQUEST);
         }
-        catch (error) {
-            throw new common_1.HttpException(error.message || 'Registration failed', error.status || common_1.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        const tokens = await this.authService.refreshTokens(userId, refreshToken);
+        this.authService.setRefreshTokenCookie(res, tokens.refreshToken);
+        return {
+            accessToken: tokens.accessToken,
+            user: tokens.user
+        };
+    }
+    async logout(req, res) {
+        await this.authService.logout(req.user.id);
+        this.authService.clearRefreshTokenCookie(res);
+        return { message: 'Logged out successfully' };
+    }
+    getProfile(req) {
+        return req.user;
     }
 };
 __decorate([
     (0, common_1.Post)('signup'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
+    __metadata("design:paramtypes", [register_dto_1.RegisterDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "signup", null);
 __decorate([
     (0, common_1.Post)('register'),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
+    __metadata("design:paramtypes", [register_dto_1.RegisterDto, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
+__decorate([
+    (0, common_1.UseGuards)(local_auth_guard_1.LocalAuthGuard),
+    (0, common_1.Post)('login'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.UseGuards)(refresh_token_guard_1.RefreshTokenGuard),
+    (0, common_1.Post)('refresh'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "refreshToken", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('logout'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)({ passthrough: true })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "logout", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('profile'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "getProfile", null);
 AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     (0, common_1.UsePipes)(new common_1.ValidationPipe({ whitelist: true, transform: true })),

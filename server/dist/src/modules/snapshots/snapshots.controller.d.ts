@@ -12,12 +12,12 @@ export declare class SnapshotsController {
     constructor(snapshotsService: SnapshotsService);
     create(req: RequestWithUser, file: Express.Multer.File, createSnapshotDto: any): Promise<{
         name: string;
+        data: import("@prisma/client/runtime/library").JsonValue;
+        description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        data: import("@prisma/client/runtime/library").JsonValue;
         projectId: string;
-        description: string | null;
     }>;
     findAll(req: RequestWithUser, projectId: string): Promise<{
         files: {
@@ -26,19 +26,19 @@ export declare class SnapshotsController {
         }[];
         project: {
             name: string;
+            description: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             isPublic: boolean;
         };
         name: string;
+        data: import("@prisma/client/runtime/library").JsonValue;
+        description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        data: import("@prisma/client/runtime/library").JsonValue;
         projectId: string;
-        description: string | null;
     }[]>;
     findOne(req: RequestWithUser, projectId: string, snapshotId: string): Promise<{
         files: {
@@ -46,12 +46,12 @@ export declare class SnapshotsController {
             downloadUrl: string;
         }[];
         name: string;
+        data: import("@prisma/client/runtime/library").JsonValue;
+        description: string | null;
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        data: import("@prisma/client/runtime/library").JsonValue;
         projectId: string;
-        description: string | null;
     }>;
 }
 export {};

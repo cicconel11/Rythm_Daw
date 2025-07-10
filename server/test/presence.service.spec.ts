@@ -1,23 +1,21 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { PresenceService } from '../src/modules/presence/presence.service';
 
 describe('PresenceService', () => {
   let service: PresenceService;
   const mockDate = new Date('2023-01-01T00:00:00Z');
 
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.useFakeTimers();
     jest.setSystemTime(mockDate);
-
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [PresenceService],
-    }).compile();
-
-    service = module.get<PresenceService>(PresenceService);
+    service = new PresenceService();
   });
 
   afterEach(() => {
     jest.useRealTimers();
+    // Clean up any intervals to avoid memory leaks
+    if (service['cleanupInterval']) {
+      clearInterval(service['cleanupInterval']);
+    }
   });
 
   it('should be defined', () => {

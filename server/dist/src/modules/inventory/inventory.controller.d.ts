@@ -19,13 +19,13 @@ export declare class InventoryController {
         inventory: {
             isActive: boolean;
             lastSynced: Date;
+            name: string;
+            description: string | null;
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            name: string;
-            description: string | null;
-            version: string;
             deletedAt: Date | null;
+            version: string;
         }[];
     }>;
 }
