@@ -8,178 +8,59 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var PresenceService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PresenceService = void 0;
 const common_1 = require("@nestjs/common");
-const client_1 = require("@prisma/client");
-const prisma_service_1 = require("../../prisma/prisma.service");
 const schedule_1 = require("@nestjs/schedule");
-const event_emitter_1 = require("@nestjs/event-emitter");
-let PresenceService = PresenceService_1 = class PresenceService {
-    constructor(prisma, eventEmitter) {
-        this.prisma = prisma;
-        this.eventEmitter = eventEmitter;
-        this.logger = new common_1.Logger(PresenceService_1.name);
-        this.HEARTBEAT_TIMEOUT_MS = 15000;
-        this.STALE_PRESENCE_MS = 60000;
+let PresenceService = class PresenceService {
+    constructor() {
+        this.userPresence = new Map();
+        this.HEARTBEAT_INTERVAL = 25000;
+        this.cleanupInterval = setInterval(() => this.cleanupDisconnectedUsers(), this.HEARTBEAT_INTERVAL * 3);
     }
-    onModuleInit() {
-        this.logger.log('Presence service initialized');
+    onModuleDestroy() {
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+        }
     }
-    async updateHeartbeat(userId, dto) {
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + this.HEARTBEAT_TIMEOUT_MS);
-        const user = await this.prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-            },
-        });
-        const where = {
-            userId_projectId: {
-                userId,
-                projectId: dto.projectId || 'global',
-            },
-        };
-        const presence = await this.prisma.userPresence.upsert({
-            where,
-            update: {
-                status: dto.status || 'online',
-                expiresAt,
-                lastSeen: now,
-                updatedAt: now,
-            },
-            create: {
-                userId,
-                projectId: dto.projectId || 'global',
-                status: dto.status || 'online',
-                expiresAt,
-                lastSeen: now,
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
-        });
-        this.eventEmitter.emit('presence.updated', {
+    updateUserPresence(userId) {
+        this.userPresence.set(userId, {
             userId,
-            status: dto.status,
-            projectId: dto.projectId,
-            timestamp: now,
-        });
-        if (dto.projectId) {
-            this.eventEmitter.emit('project.presence', {
-                projectId: dto.projectId,
-                userId,
-                status: dto.status,
-                user: user,
-            });
-        }
-        return presence;
-    }
-    async getUserPresence(userId) {
-        const presences = await this.prisma.userPresence.findMany({
-            where: { userId },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
-        });
-        return presences.length > 0
-            ? presences.sort((a, b) => b.lastSeen.getTime() - a.lastSeen.getTime())[0]
-            : null;
-    }
-    async getProjectPresence(projectId) {
-        return this.prisma.userPresence.findMany({
-            where: {
-                projectId,
-                expiresAt: {
-                    gt: new Date(),
-                },
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-            },
-            orderBy: {
-                lastSeen: 'desc',
-            },
+            lastSeen: new Date(),
         });
     }
-    async cleanupStalePresence() {
-        const threshold = new Date(Date.now() - this.STALE_PRESENCE_MS);
-        try {
-            const result = await this.prisma.userPresence.deleteMany({
-                where: {
-                    expiresAt: {
-                        lt: threshold,
-                    },
-                },
-            });
-            if (result.count > 0) {
-                this.logger.log(`Cleaned up ${result.count} stale presence records`);
+    removeUserPresence(userId) {
+        this.userPresence.delete(userId);
+    }
+    isOnline(userId) {
+        const presence = this.userPresence.get(userId);
+        if (!presence)
+            return false;
+        const now = new Date();
+        const lastSeen = presence.lastSeen.getTime();
+        const timeDiff = now.getTime() - lastSeen;
+        return timeDiff < 30000;
+    }
+    cleanupDisconnectedUsers() {
+        const now = new Date();
+        const offlineThreshold = 30000;
+        for (const [userId, presence] of this.userPresence.entries()) {
+            const timeDiff = now.getTime() - presence.lastSeen.getTime();
+            if (timeDiff > offlineThreshold) {
+                this.userPresence.delete(userId);
             }
-            return result;
-        }
-        catch (error) {
-            this.logger.error('Failed to clean up stale presence', error);
-            throw error;
-        }
-    }
-    async removePresence(userId, projectId) {
-        if (projectId) {
-            const presences = await this.prisma.userPresence.findMany({
-                where: { userId },
-                select: { id: true },
-            });
-            for (const presence of presences) {
-                try {
-                    await this.prisma.userPresence.delete({
-                        where: { id: presence.id },
-                    });
-                }
-                catch (error) {
-                    if (!(error instanceof client_1.Prisma.PrismaClientKnownRequestError && error.code === 'P2025')) {
-                        throw error;
-                    }
-                }
-            }
-        }
-        else {
-            await this.prisma.userPresence.deleteMany({
-                where: { userId },
-            });
         }
     }
 };
 __decorate([
-    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_30_SECONDS),
+    (0, schedule_1.Interval)(30000),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], PresenceService.prototype, "cleanupStalePresence", null);
-PresenceService = PresenceService_1 = __decorate([
+    __metadata("design:returntype", void 0)
+], PresenceService.prototype, "cleanupDisconnectedUsers", null);
+PresenceService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        event_emitter_1.EventEmitter2])
+    __metadata("design:paramtypes", [])
 ], PresenceService);
 exports.PresenceService = PresenceService;
 //# sourceMappingURL=presence.service.js.map

@@ -1,0 +1,18 @@
+config:
+  target: "ws://localhost:3333/rtc"
+  phases:
+    - duration: 30
+      arrivalRate: 500
+      name: "WebSocket stress test"
+
+scenarios:
+  - flow:
+      - think: 1
+      - connect:
+          as: "client"
+      - emit:
+          event: "connection-success"
+          data: { userId: "test-user" }
+          expect: { event: "connection-success" }
+      - think: 1
+      - disconnect:

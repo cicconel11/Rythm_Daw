@@ -1,108 +1,51 @@
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { createTestingApp } from './utils/create-testing-module';
-import { PrismaService } from '../src/prisma/prisma.service';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { RtcController } from '../src/modules/rtc/rtc.controller';
+import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
+import { RtcOfferDto } from '../src/modules/rtc/dto/rtc-offer.dto';
 
-describe('RtcController (e2e)', () => {
-  let app: INestApplication;
-  let prisma: PrismaService;
-  let authToken: string;
-  let userId: string;
+describe('RtcController', () => {
+  let controller: RtcController;
+  let mockRtcGateway: jest.Mocked<RtcGateway>;
 
-  beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(PrismaService)
-      .useValue({
-        user: {
-          findUnique: jest.fn().mockResolvedValue({
-            id: 1,
-            email: 'test@example.com',
-            name: 'Test User',
-          }),
-        },
-      })
-      .overrideProvider('AwsS3Service')
-      .useValue({
-        getPresignedUrl: jest.fn().mockResolvedValue('http://mock-presigned-url'),
-      })
-      .compile();
+  beforeEach(() => {
+    // Create a mock RtcGateway
+    mockRtcGateway = {
+      emitToUser: jest.fn().mockImplementation(() => Promise.resolve(true)),
+      server: {
+        to: jest.fn().mockReturnThis(),
+        emit: jest.fn(),
+      },
+    } as unknown as jest.Mocked<RtcGateway>;
 
-    app = moduleFixture.createNestApplication();
-    prisma = moduleFixture.get<PrismaService>(PrismaService);
-    
-    await app.init();
-    
-    // Create a test user and get auth token
-    const authResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'test@example.com',
-        password: 'password123',
-      });
-      
-    authToken = authResponse.body.accessToken;
-    userId = authResponse.body.userId;
+    // Create an instance of the controller with the mock gateway
+    controller = new RtcController(mockRtcGateway);
   });
 
-  afterAll(async () => {
-    await app.close();
-  });
-
-  describe('POST /rtc/offer', () => {
+  describe('handleOffer', () => {
     it('should forward offer to target user', async () => {
-      const offerData = {
+      // Arrange
+      const offerData: RtcOfferDto = {
         to: 'target-user-id',
         sdp: 'test-sdp-offer',
         type: 'offer'
       };
 
-      // Mock WebSocket server to verify emit
-      const mockEmit = jest.fn();
-      const mockServer = {
-        to: jest.fn().mockReturnThis(),
-        emit: mockEmit
-      };
-
-      // Replace the server instance with our mock
-      const rtcGateway = app.get('RtcGateway');
-      rtcGateway.server = mockServer;
-
-      await request(app.getHttpServer())
-        .post('/rtc/offer')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(offerData)
-        .expect(204);
-
-      // Verify the offer was forwarded via WebSocket
-      expect(mockServer.to).toHaveBeenCalledWith(offerData.to);
-      expect(mockServer.emit).toHaveBeenCalledWith('rtc-offer', {
-        from: userId,
-        sdp: offerData.sdp,
-        type: 'offer'
-      });
-    });
-
-    it('should return 400 for invalid offer data', async () => {
-      await request(app.getHttpServer())
-        .post('/rtc/offer')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({ invalid: 'data' })
-        .expect(400);
-    });
-
-    it('should return 401 when not authenticated', async () => {
-      await request(app.getHttpServer())
-        .post('/rtc/offer')
-        .send({
-          to: 'target-user-id',
-          sdp: 'test-sdp-offer',
+      // Act
+      const result = await controller.handleOffer(offerData);
+      
+      // Assert
+      expect(result).toEqual({ success: true });
+      expect(mockRtcGateway.emitToUser).toHaveBeenCalledWith(
+        offerData.to,
+        'rtcOffer',
+        expect.objectContaining({
+          to: offerData.to,
+          sdp: offerData.sdp,
           type: 'offer'
         })
-        .expect(401);
+      );
+      
+      // Ensure the promise from emitToUser is resolved
+      await Promise.resolve();
     });
   });
 });

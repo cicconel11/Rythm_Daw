@@ -88,7 +88,7 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   emitToUser(userId: string, event: string, payload: any) {
-    if (!this.server || !('sockets' in this.server)) {
+    if (!this.server || !this.server.sockets || !this.server.sockets.sockets) {
       this.logger.warn('WebSocket server not properly initialized');
       return false;
     }
@@ -100,16 +100,21 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     let emitted = false;
-    for (const socketId of userSockets) {
-      const socket = this.server.sockets.sockets.get(socketId);
-      if (socket) {
-        socket.emit(event, payload);
-        emitted = true;
+    try {
+      for (const socketId of userSockets) {
+        const socket = this.server.sockets.sockets.get(socketId);
+        if (socket) {
+          socket.emit(event, payload);
+          emitted = true;
+        }
       }
-    }
 
-    if (!emitted) {
-      this.logger.warn(`Failed to emit to any socket for user ${userId}`);
+      if (!emitted) {
+        this.logger.warn(`Failed to emit to any socket for user ${userId}`);
+      }
+    } catch (error) {
+      this.logger.error(`Error emitting to user ${userId}: ${error.message}`, error.stack);
+      return false;
     }
 
     return emitted;

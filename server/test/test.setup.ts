@@ -4,12 +4,27 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AwsS3Service } from '../src/modules/files/aws-s3.service';
-import { TestWebSocketAdapter } from './test-websocket.adapter';
 
 // Mock PrismaService
-export const mockPrismaService = {
-  $connect: jest.fn(),
-  $disconnect: jest.fn(),
+interface MockPrismaService {
+  $connect: jest.Mock;
+  $disconnect: jest.Mock;
+  $on: jest.Mock;
+  $transaction: jest.Mock;
+  user: {
+    findUnique: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    findMany: jest.Mock;
+    delete: jest.Mock;
+  };
+}
+
+export const mockPrismaService: MockPrismaService = {
+  $connect: jest.fn().mockResolvedValue(undefined),
+  $disconnect: jest.fn().mockResolvedValue(undefined),
+  $on: jest.fn(),
+  $transaction: jest.fn((fn) => fn(mockPrismaService)),
   user: {
     findUnique: jest.fn(),
     create: jest.fn(),
@@ -19,28 +34,45 @@ export const mockPrismaService = {
   },
 };
 
+// Mock ConfigService
+interface MockConfigService {
+  get: jest.Mock;
+}
+
+export const mockConfigService: MockConfigService = {
+  get: jest.fn((key: string) => {
+    const config: Record<string, string> = {
+      JWT_SECRET: 'test-secret',
+      JWT_EXPIRES_IN: '3600s',
+      REFRESH_TOKEN_EXPIRES_IN: '7d',
+      NODE_ENV: 'test',
+      AWS_REGION: 'us-east-1',
+      AWS_ACCESS_KEY_ID: 'test-access-key-id',
+      AWS_SECRET_ACCESS_KEY: 'test-secret-access-key',
+      S3_BUCKET_NAME: 'test-bucket',
+    };
+    return config[key];
+  }),
+};
+
 // Mock AwsS3Service
-export const mockAwsS3Service = {
+interface MockAwsS3Service {
+  uploadFile: jest.Mock;
+  deleteFile: jest.Mock;
+  getFileUrl: jest.Mock;
+  getPresignedUrl: jest.Mock;
+}
+
+export const mockAwsS3Service: MockAwsS3Service = {
+  uploadFile: jest.fn(),
+  deleteFile: jest.fn(),
+  getFileUrl: jest.fn(),
   getPresignedUrl: jest.fn().mockResolvedValue({
     putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
     getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
   }),
 };
 
-// Mock ConfigService
-export const mockConfigService = {
-  get: jest.fn((key: string) => {
-    const config: { [key: string]: string } = {
-      'JWT_SECRET': 'test-secret',
-      'JWT_EXPIRES_IN': '1h',
-      'AWS_REGION': 'us-east-1',
-      'AWS_ACCESS_KEY_ID': 'test-access-key-id',
-      'AWS_SECRET_ACCESS_KEY': 'test-secret-access-key',
-      'S3_BUCKET_NAME': 'test-bucket',
-    };
-    return config[key];
-  }),
-};
 
 // Global test setup
 beforeAll(async () => {

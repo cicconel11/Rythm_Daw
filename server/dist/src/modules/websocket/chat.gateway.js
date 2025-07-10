@@ -21,10 +21,12 @@ const auth_service_1 = require("../auth/auth.service");
 const ws_throttler_guard_1 = require("./guards/ws-throttler.guard");
 const rate_limiter_flexible_1 = require("rate-limiter-flexible");
 const config_1 = require("@nestjs/config");
+const presence_service_1 = require("../presence/presence.service");
 let ChatGateway = class ChatGateway {
-    constructor(authService, configService) {
+    constructor(authService, configService, presenceService) {
         this.authService = authService;
         this.configService = configService;
+        this.presenceService = presenceService;
         this.logger = new common_1.Logger('ChatGateway');
         this.clients = new Map();
         this.rateLimiter = new rate_limiter_flexible_1.RateLimiterMemory({
@@ -90,6 +92,14 @@ let ChatGateway = class ChatGateway {
     }
     async handleDisconnect(client) {
         this.logger.log(`Client disconnected: ${client.id}`);
+        if (client.userId) {
+            try {
+                await this.presenceService.removeUserPresence(client.userId);
+            }
+            catch (error) {
+                this.logger.error(`Error removing user presence: ${error.message}`, error.stack);
+            }
+        }
         this.clients.delete(client);
     }
     async handleAuth(client, data) {
@@ -165,6 +175,35 @@ let ChatGateway = class ChatGateway {
             client.ping(() => { });
         });
     }
+    async handleTyping(client, data) {
+        try {
+            if (!client.userId || !client.projectId) {
+                throw new Error('Not authenticated');
+            }
+            const broadcastPromises = Array.from(this.clients.values())
+                .filter(c => c.projectId === client.projectId && c.id !== client.id)
+                .map(recipient => recipient.sendMessage({
+                type: 'user_typing',
+                userId: client.userId,
+                isTyping: data.isTyping,
+                timestamp: new Date().toISOString(),
+            }).catch(err => {
+                this.logger.error(`Failed to send typing status to ${recipient.id}: ${err.message}`);
+                if (err.message.includes('not open')) {
+                    this.clients.delete(recipient);
+                }
+            }));
+            await Promise.all(broadcastPromises);
+        }
+        catch (error) {
+            this.logger.error(`Typing status error: ${error.message}`, error.stack);
+            await client.sendMessage({
+                type: 'error',
+                code: 'TYPING_STATUS_ERROR',
+                message: error.message,
+            });
+        }
+    }
     async broadcastToProject(projectId, message) {
         const clients = Array.from(this.clients.values())
             .filter(client => client.projectId === projectId && client.readyState === ws_1.WebSocket.OPEN);
@@ -198,6 +237,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleMessage", null);
+__decorate([
+    (0, websockets_1.SubscribeMessage)('typing'),
+    __param(0, (0, websockets_1.ConnectedSocket)()),
+    __param(1, (0, websockets_1.MessageBody)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], ChatGateway.prototype, "handleTyping", null);
 ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         path: '/ws/chat',
@@ -209,7 +256,8 @@ ChatGateway = __decorate([
     }),
     (0, common_1.UseGuards)(jwt_ws_auth_guard_1.JwtWsAuthGuard, ws_throttler_guard_1.WsThrottlerGuard),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        presence_service_1.PresenceService])
 ], ChatGateway);
 exports.ChatGateway = ChatGateway;
 //# sourceMappingURL=chat.gateway.js.map
