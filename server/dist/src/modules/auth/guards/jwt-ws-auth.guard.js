@@ -34,8 +34,8 @@ let JwtWsAuthGuard = class JwtWsAuthGuard extends (0, passport_1.AuthGuard)('jwt
         return super.canActivate(context);
     }
 };
-JwtWsAuthGuard = __decorate([
+exports.JwtWsAuthGuard = JwtWsAuthGuard;
+exports.JwtWsAuthGuard = JwtWsAuthGuard = __decorate([
     (0, common_1.Injectable)()
 ], JwtWsAuthGuard);
-exports.JwtWsAuthGuard = JwtWsAuthGuard;
 //# sourceMappingURL=jwt-ws-auth.guard.js.map

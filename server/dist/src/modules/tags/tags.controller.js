@@ -39,6 +39,7 @@ let TagsController = class TagsController {
         return this.tagsService.deleteTag(tagId, force);
     }
 };
+exports.TagsController = TagsController;
 __decorate([
     (0, common_1.Put)(':entityType/:entityId'),
     (0, swagger_1.ApiOperation)({ summary: 'Update tags for an entity' }),
@@ -94,12 +95,11 @@ __decorate([
     __metadata("design:paramtypes", [String, Boolean]),
     __metadata("design:returntype", void 0)
 ], TagsController.prototype, "deleteTag", null);
-TagsController = __decorate([
+exports.TagsController = TagsController = __decorate([
     (0, swagger_1.ApiTags)('tags'),
     (0, common_1.Controller)('api/tags'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [tags_service_1.TagsService])
 ], TagsController);
-exports.TagsController = TagsController;
 //# sourceMappingURL=tags.controller.js.map

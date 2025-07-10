@@ -15,7 +15,8 @@ const inventory_gateway_1 = require("./inventory.gateway");
 const event_emitter_1 = require("@nestjs/event-emitter");
 let InventoryModule = class InventoryModule {
 };
-InventoryModule = __decorate([
+exports.InventoryModule = InventoryModule;
+exports.InventoryModule = InventoryModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
@@ -26,5 +27,4 @@ InventoryModule = __decorate([
         exports: [inventory_service_1.InventoryService, inventory_gateway_1.InventoryGateway],
     })
 ], InventoryModule);
-exports.InventoryModule = InventoryModule;
 //# sourceMappingURL=inventory.module.js.map

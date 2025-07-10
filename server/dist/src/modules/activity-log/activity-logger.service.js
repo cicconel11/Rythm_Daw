@@ -171,15 +171,15 @@ let ActivityLoggerService = ActivityLoggerService_1 = class ActivityLoggerServic
     `;
     }
 };
+exports.ActivityLoggerService = ActivityLoggerService;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", socket_io_1.Server)
 ], ActivityLoggerService.prototype, "server", void 0);
-ActivityLoggerService = ActivityLoggerService_1 = __decorate([
+exports.ActivityLoggerService = ActivityLoggerService = ActivityLoggerService_1 = __decorate([
     (0, common_1.Injectable)(),
     (0, websockets_1.WebSocketGateway)({ namespace: 'activity' }),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         event_emitter_1.EventEmitter2])
 ], ActivityLoggerService);
-exports.ActivityLoggerService = ActivityLoggerService;
 //# sourceMappingURL=activity-logger.service.js.map

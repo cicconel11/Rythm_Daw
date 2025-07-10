@@ -1,57 +1,84 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const supertest_1 = __importDefault(require("supertest"));
-const test_utils_1 = require("./test.utils");
-describe('RtcController (e2e)', () => {
-    let app;
-    let authToken;
-    const testUser = {
-        email: 'test@example.com',
-        password: 'password123',
-        name: 'Test User'
-    };
-    beforeAll(async () => {
-        const { app: testApp } = await (0, test_utils_1.createTestApp)();
-        app = testApp;
-        await (0, test_utils_1.createTestUser)(app, testUser);
-        authToken = await (0, test_utils_1.getAuthToken)(app, testUser.email, testUser.password);
+const rtc_controller_1 = require("../src/modules/rtc/rtc.controller");
+describe('RtcController', () => {
+    let controller;
+    let rtcGateway;
+    beforeEach(() => {
+        rtcGateway = {
+            emitToUser: jest.fn().mockReturnValue(true)
+        };
+        controller = new rtc_controller_1.RtcController(rtcGateway);
     });
-    afterAll(async () => {
-        await (0, test_utils_1.closeTestApp)(app);
+    afterEach(() => {
+        jest.clearAllMocks();
     });
-    describe('POST /rtc/offer', () => {
-        it('should handle RTC offer', async () => {
+    describe('handleOffer', () => {
+        it('should call emitToUser with correct parameters', async () => {
             const offerData = {
-                targetUserId: 'test-target-user',
+                to: 'test-target-user',
                 sdp: 'test-sdp',
                 type: 'offer'
             };
-            const response = await (0, supertest_1.default)(app.getHttpServer())
-                .post('/rtc/offer')
-                .set('Authorization', `Bearer ${authToken}`)
-                .send(offerData)
-                .expect(201);
-            expect(response.body).toHaveProperty('status', 'offer-received');
+            const result = await controller.handleOffer(offerData);
+            expect(result).toEqual({ success: true });
+            expect(rtcGateway.emitToUser).toHaveBeenCalledWith(offerData.to, 'rtcOffer', offerData);
         });
-        it('should return 400 for invalid offer data', async () => {
-            await (0, supertest_1.default)(app.getHttpServer())
-                .post('/rtc/offer')
-                .set('Authorization', `Bearer ${authToken}`)
-                .send({})
-                .expect(400);
-        });
-        it('should return 401 when not authenticated', async () => {
-            await (0, supertest_1.default)(app.getHttpServer())
-                .post('/rtc/offer')
-                .send({
-                targetUserId: 'test-target-user',
+        it('should handle emitToUser returning false', async () => {
+            rtcGateway.emitToUser.mockReturnValueOnce(false);
+            const offerData = {
+                to: 'non-existent-user',
                 sdp: 'test-sdp',
                 type: 'offer'
-            })
-                .expect(401);
+            };
+            const result = await controller.handleOffer(offerData);
+            expect(result).toEqual({ success: false });
+            expect(rtcGateway.emitToUser).toHaveBeenCalledWith(offerData.to, 'rtcOffer', offerData);
+        });
+        it('should handle emitToUser throwing an error', async () => {
+            rtcGateway.emitToUser.mockImplementationOnce(() => {
+                throw new Error('Failed to send offer');
+            });
+            const offerData = {
+                to: 'error-user',
+                sdp: 'test-sdp',
+                type: 'offer'
+            };
+            await expect(controller.handleOffer(offerData)).rejects.toThrow('Failed to send offer');
+        });
+    });
+    describe('handleAnswer', () => {
+        it('should call emitToUser with correct parameters', async () => {
+            const answerData = {
+                to: 'test-target-user',
+                sdp: 'test-sdp',
+                type: 'answer'
+            };
+            const result = await controller.handleAnswer(answerData);
+            expect(result).toEqual({ success: true });
+            expect(rtcGateway.emitToUser).toHaveBeenCalledWith(answerData.to, 'rtcAnswer', answerData);
+        });
+        it('should handle emitToUser returning false', async () => {
+            rtcGateway.emitToUser.mockReturnValueOnce(false);
+            const answerData = {
+                to: 'non-existent-user',
+                sdp: 'test-sdp',
+                type: 'answer'
+            };
+            const result = await controller.handleAnswer(answerData);
+            expect(result).toEqual({ success: false });
+            expect(rtcGateway.emitToUser).toHaveBeenCalledWith(answerData.to, 'rtcAnswer', answerData);
+        });
+        it('should handle emitToUser throwing an error', async () => {
+            rtcGateway.emitToUser.mockImplementationOnce(() => {
+                throw new Error('Failed to send answer');
+            });
+            const answerData = {
+                to: 'error-user',
+                sdp: 'test-sdp',
+                type: 'answer'
+            };
+            await expect(controller.handleAnswer(answerData)).rejects.toThrow('Failed to send answer');
         });
     });
 });

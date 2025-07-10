@@ -13,7 +13,8 @@ const tags_controller_1 = require("./tags.controller");
 const prisma_module_1 = require("../../prisma/prisma.module");
 let TagsModule = class TagsModule {
 };
-TagsModule = __decorate([
+exports.TagsModule = TagsModule;
+exports.TagsModule = TagsModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         controllers: [tags_controller_1.TagsController],
@@ -21,5 +22,4 @@ TagsModule = __decorate([
         exports: [tags_service_1.TagsService],
     })
 ], TagsModule);
-exports.TagsModule = TagsModule;
 //# sourceMappingURL=tags.module.js.map

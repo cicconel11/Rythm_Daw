@@ -14,6 +14,7 @@ const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class UpdateTagsDto {
 }
+exports.UpdateTagsDto = UpdateTagsDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Array of tag names to associate with the entity',
@@ -35,5 +36,4 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateTagsDto.prototype, "defaultColor", void 0);
-exports.UpdateTagsDto = UpdateTagsDto;
 //# sourceMappingURL=update-tags.dto.js.map

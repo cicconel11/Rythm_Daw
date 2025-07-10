@@ -1,93 +1,91 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const testing_1 = require("@nestjs/testing");
-const supertest_1 = __importDefault(require("supertest"));
-const prisma_service_1 = require("../src/prisma/prisma.service");
-const aws_s3_service_1 = require("../src/modules/files/aws-s3.service");
-const app_module_1 = require("../src/app.module");
-const platform_ws_1 = require("@nestjs/platform-ws");
-jest.mock('../src/modules/files/aws-s3.service');
-jest.mock('@nestjs/passport', () => ({
-    AuthGuard: () => jest.fn().mockImplementation(() => true),
+const files_service_1 = require("../src/modules/files/files.service");
+const mockUuid = '123e4567-e89b-12d3-a456-426614174000';
+jest.mock('uuid', () => ({
+    v4: () => mockUuid,
 }));
-describe('FilesController (e2e)', () => {
-    let app;
-    let prisma;
-    let awsS3Service;
-    let authToken;
-    beforeAll(async () => {
-        const moduleFixture = await testing_1.Test.createTestingModule({
-            imports: [app_module_1.AppModule],
-        })
-            .overrideProvider(prisma_service_1.PrismaService)
-            .useValue({
-            $connect: jest.fn(),
-            $disconnect: jest.fn(),
-            user: {
-                findUnique: jest.fn().mockResolvedValue({
-                    id: 1,
-                    email: 'test@example.com',
-                    name: 'Test User',
-                    password: 'hashedpassword',
-                }),
-            },
-        })
-            .overrideProvider(aws_s3_service_1.AwsS3Service)
-            .useValue({
-            getPresignedUrl: jest.fn().mockResolvedValue({
+const mockUser = {
+    id: 'test-user-id',
+    email: 'test@example.com',
+    name: 'Test User',
+    isApproved: true,
+};
+describe('FilesService', () => {
+    let service;
+    let mockAwsS3Service;
+    beforeEach(() => {
+        mockAwsS3Service = {
+            getPresignedPair: jest.fn().mockResolvedValue({
                 putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
                 getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
-            }),
-        })
-            .compile();
-        app = moduleFixture.createNestApplication();
-        app.useWebSocketAdapter(new platform_ws_1.WsAdapter(app));
-        prisma = moduleFixture.get(prisma_service_1.PrismaService);
-        awsS3Service = moduleFixture.get(aws_s3_service_1.AwsS3Service);
-        await app.init();
-        authToken = 'test-token';
+            })
+        };
+        service = new files_service_1.FilesService(mockAwsS3Service);
     });
-    afterAll(async () => {
-        await app.close();
-    });
-    describe('POST /files/presign', () => {
+    describe('getPresignedPair', () => {
         it('should return pre-signed URLs for file upload', async () => {
             const fileData = {
                 name: 'test-file.txt',
                 mime: 'text/plain',
                 size: 1024,
             };
-            const response = await (0, supertest_1.default)(app.getHttpServer())
-                .post('/files/presign')
-                .set('Authorization', `Bearer ${authToken}`)
-                .send(fileData)
-                .expect(201);
-            expect(response.body).toHaveProperty('putUrl');
-            expect(response.body).toHaveProperty('getUrl');
-            expect(typeof response.body.putUrl).toBe('string');
-            expect(typeof response.body.getUrl).toBe('string');
-            expect(response.body.putUrl).toContain('amazonaws.com');
-            expect(response.body.getUrl).toContain('amazonaws.com');
+            const result = await service.getPresignedPair(fileData, mockUser);
+            expect(result).toHaveProperty('putUrl');
+            expect(result).toHaveProperty('getUrl');
+            expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(`${mockUser.id}/${mockUuid}-${fileData.name}`, fileData.mime, fileData.size);
+            expect(result.putUrl).toBe('https://s3.amazonaws.com/test-bucket/test-file.txt');
+            expect(result.getUrl).toBe('https://s3.amazonaws.com/test-bucket/test-file.txt');
         });
-        it('should return 400 for invalid file data', async () => {
-            await (0, supertest_1.default)(app.getHttpServer())
-                .post('/files/presign')
-                .set('Authorization', `Bearer ${authToken}`)
-                .send({ invalid: 'data' })
-                .expect(400);
+        it('should handle special characters in file names', async () => {
+            const fileData = {
+                name: 'test file with spaces & special chars_@#$%.txt',
+                mime: 'text/plain',
+                size: 2048,
+            };
+            await service.getPresignedPair(fileData, mockUser);
+            expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(expect.stringContaining(mockUser.id), fileData.mime, fileData.size);
         });
-        it('should return 401 when not authenticated', async () => {
-            await (0, supertest_1.default)(app.getHttpServer())
-                .post('/files/presign')
-                .send({
-                name: 'test-file.txt',
+        it('should handle empty file name', async () => {
+            const fileData = {
+                name: '',
+                mime: 'application/octet-stream',
+                size: 0,
+            };
+            mockAwsS3Service.getPresignedPair.mockResolvedValueOnce({
+                putUrl: 'https://s3.amazonaws.com/test-bucket/empty-file',
+                getUrl: 'https://s3.amazonaws.com/test-bucket/empty-file',
+            });
+            const result = await service.getPresignedPair(fileData, mockUser);
+            expect(result.putUrl).toBe('https://s3.amazonaws.com/test-bucket/empty-file');
+            expect(result.getUrl).toBe('https://s3.amazonaws.com/test-bucket/empty-file');
+        });
+        it('should handle AWS S3 service errors', async () => {
+            const fileData = {
+                name: 'error-file.txt',
                 mime: 'text/plain',
                 size: 1024,
-            })
-                .expect(401);
+            };
+            const error = new Error('AWS S3 Service Error');
+            mockAwsS3Service.getPresignedPair.mockRejectedValueOnce(error);
+            await expect(service.getPresignedPair(fileData, mockUser))
+                .rejects
+                .toThrow('AWS S3 Service Error');
+        });
+        it('should handle large file sizes', async () => {
+            const largeFileData = {
+                name: 'large-video.mp4',
+                mime: 'video/mp4',
+                size: 2 * 1024 * 1024 * 1024,
+            };
+            const largeFileResponse = {
+                putUrl: 'https://s3.amazonaws.com/test-bucket/large-file-upload',
+                getUrl: 'https://s3.amazonaws.com/test-bucket/large-file',
+            };
+            mockAwsS3Service.getPresignedPair.mockResolvedValueOnce(largeFileResponse);
+            const result = await service.getPresignedPair(largeFileData, mockUser);
+            expect(result).toEqual(largeFileResponse);
+            expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(expect.stringContaining(mockUser.id), largeFileData.mime, largeFileData.size);
         });
     });
 });

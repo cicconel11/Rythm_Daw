@@ -26,7 +26,8 @@ let QosModule = class QosModule {
         await this.qosService.onModuleDestroy();
     }
 };
-QosModule = __decorate([
+exports.QosModule = QosModule;
+exports.QosModule = QosModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
@@ -38,5 +39,4 @@ QosModule = __decorate([
     }),
     __metadata("design:paramtypes", [qos_service_1.QosService])
 ], QosModule);
-exports.QosModule = QosModule;
 //# sourceMappingURL=qos.module.js.map

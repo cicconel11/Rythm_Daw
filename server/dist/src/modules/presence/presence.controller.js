@@ -27,6 +27,7 @@ let PresenceController = class PresenceController {
         await this.presenceService.updateHeartbeat(userId, dto);
     }
 };
+exports.PresenceController = PresenceController;
 __decorate([
     (0, common_1.Post)('heartbeat'),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
@@ -40,12 +41,11 @@ __decorate([
     __metadata("design:paramtypes", [Object, heartbeat_dto_1.HeartbeatDto]),
     __metadata("design:returntype", Promise)
 ], PresenceController.prototype, "heartbeat", null);
-PresenceController = __decorate([
+exports.PresenceController = PresenceController = __decorate([
     (0, swagger_1.ApiTags)('presence'),
     (0, common_1.Controller)('presence'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [presence_service_1.PresenceService])
 ], PresenceController);
-exports.PresenceController = PresenceController;
 //# sourceMappingURL=presence.controller.js.map

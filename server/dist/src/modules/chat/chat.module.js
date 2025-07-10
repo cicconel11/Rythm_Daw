@@ -14,12 +14,12 @@ const prisma_service_1 = require("../../prisma/prisma.service");
 const rtc_module_1 = require("../rtc/rtc.module");
 let ChatModule = class ChatModule {
 };
-ChatModule = __decorate([
+exports.ChatModule = ChatModule;
+exports.ChatModule = ChatModule = __decorate([
     (0, common_1.Module)({
         imports: [rtc_module_1.RtcModule],
         providers: [chat_gateway_1.ChatGateway, presence_service_1.PresenceService, prisma_service_1.PrismaService],
         exports: [chat_gateway_1.ChatGateway],
     })
 ], ChatModule);
-exports.ChatModule = ChatModule;
 //# sourceMappingURL=chat.module.js.map

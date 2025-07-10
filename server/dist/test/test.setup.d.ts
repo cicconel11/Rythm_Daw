@@ -1,17 +1,26 @@
-export declare const mockPrismaService: {
-    $connect: jest.Mock<any, any, any>;
-    $disconnect: jest.Mock<any, any, any>;
+interface MockPrismaService {
+    $connect: jest.Mock;
+    $disconnect: jest.Mock;
+    $on: jest.Mock;
+    $transaction: jest.Mock;
     user: {
-        findUnique: jest.Mock<any, any, any>;
-        create: jest.Mock<any, any, any>;
-        update: jest.Mock<any, any, any>;
-        findMany: jest.Mock<any, any, any>;
-        delete: jest.Mock<any, any, any>;
+        findUnique: jest.Mock;
+        create: jest.Mock;
+        update: jest.Mock;
+        findMany: jest.Mock;
+        delete: jest.Mock;
     };
-};
-export declare const mockAwsS3Service: {
-    getPresignedUrl: jest.Mock<any, any, any>;
-};
-export declare const mockConfigService: {
-    get: jest.Mock<string, [key: string], any>;
-};
+}
+export declare const mockPrismaService: MockPrismaService;
+interface MockConfigService {
+    get: jest.Mock;
+}
+export declare const mockConfigService: MockConfigService;
+interface MockAwsS3Service {
+    uploadFile: jest.Mock;
+    deleteFile: jest.Mock;
+    getFileUrl: jest.Mock;
+    getPresignedUrl: jest.Mock;
+}
+export declare const mockAwsS3Service: MockAwsS3Service;
+export {};

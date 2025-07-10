@@ -23,14 +23,15 @@ let RtcController = class RtcController {
         this.rtcGateway = rtcGateway;
     }
     async handleOffer(dto) {
-        const result = this.rtcGateway.emitToUser(dto.to, 'rtcOffer', dto);
+        const result = await this.rtcGateway.emitToUser(dto.to, 'rtcOffer', dto);
         return { success: result };
     }
     async handleAnswer(dto) {
-        const result = this.rtcGateway.emitToUser(dto.to, 'rtcAnswer', dto);
+        const result = await this.rtcGateway.emitToUser(dto.to, 'rtcAnswer', dto);
         return { success: result };
     }
 };
+exports.RtcController = RtcController;
 __decorate([
     (0, common_1.Post)('offer'),
     __param(0, (0, common_1.Body)()),
@@ -45,10 +46,9 @@ __decorate([
     __metadata("design:paramtypes", [rtc_answer_dto_1.RtcAnswerDto]),
     __metadata("design:returntype", Promise)
 ], RtcController.prototype, "handleAnswer", null);
-RtcController = __decorate([
+exports.RtcController = RtcController = __decorate([
     (0, common_1.Controller)('rtc'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [rtc_gateway_1.RtcGateway])
 ], RtcController);
-exports.RtcController = RtcController;
 //# sourceMappingURL=rtc.controller.js.map

@@ -22,9 +22,9 @@ let FilesService = class FilesService {
         return this.awsS3Service.getPresignedPair(key, dto.mime, dto.size);
     }
 };
-FilesService = __decorate([
+exports.FilesService = FilesService;
+exports.FilesService = FilesService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [aws_s3_service_1.AwsS3Service])
 ], FilesService);
-exports.FilesService = FilesService;
 //# sourceMappingURL=files.service.js.map

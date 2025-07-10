@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.makeIoServer = void 0;
+exports.makeIoServer = makeIoServer;
 const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const ws_1 = require("ws");
@@ -21,5 +21,4 @@ function makeIoServer() {
     io.wsServer = wss;
     return { io, http };
 }
-exports.makeIoServer = makeIoServer;
 //# sourceMappingURL=make-io-server.js.map

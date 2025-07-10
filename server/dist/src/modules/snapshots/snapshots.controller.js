@@ -50,6 +50,7 @@ let SnapshotsController = class SnapshotsController {
         return this.snapshotsService.getSnapshotById(projectId, snapshotId, userId);
     }
 };
+exports.SnapshotsController = SnapshotsController;
 __decorate([
     (0, common_1.Post)(),
     (0, swagger_1.ApiOperation)({ summary: 'Create a new project snapshot' }),
@@ -121,12 +122,11 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, String]),
     __metadata("design:returntype", Promise)
 ], SnapshotsController.prototype, "findOne", null);
-SnapshotsController = __decorate([
+exports.SnapshotsController = SnapshotsController = __decorate([
     (0, swagger_1.ApiTags)('snapshots'),
     (0, common_1.Controller)('api/snapshots'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [snapshots_service_1.SnapshotsService])
 ], SnapshotsController);
-exports.SnapshotsController = SnapshotsController;
 //# sourceMappingURL=snapshots.controller.js.map

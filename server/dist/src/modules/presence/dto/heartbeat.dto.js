@@ -17,9 +17,10 @@ var UserStatus;
     UserStatus["IN_DAW"] = "in-daw";
     UserStatus["RECORDING"] = "recording";
     UserStatus["IDLE"] = "idle";
-})(UserStatus = exports.UserStatus || (exports.UserStatus = {}));
+})(UserStatus || (exports.UserStatus = UserStatus = {}));
 class HeartbeatDto {
 }
+exports.HeartbeatDto = HeartbeatDto;
 __decorate([
     (0, class_validator_1.IsEnum)(UserStatus),
     __metadata("design:type", String)
@@ -34,5 +35,4 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], HeartbeatDto.prototype, "sessionId", void 0);
-exports.HeartbeatDto = HeartbeatDto;
 //# sourceMappingURL=heartbeat.dto.js.map

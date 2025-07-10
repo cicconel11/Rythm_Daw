@@ -12,12 +12,12 @@ const rtc_gateway_1 = require("./rtc.gateway");
 const rtc_controller_1 = require("./rtc.controller");
 let RtcModule = class RtcModule {
 };
-RtcModule = __decorate([
+exports.RtcModule = RtcModule;
+exports.RtcModule = RtcModule = __decorate([
     (0, common_1.Module)({
         controllers: [rtc_controller_1.RtcController],
         providers: [rtc_gateway_1.RtcGateway],
         exports: [rtc_gateway_1.RtcGateway],
     })
 ], RtcModule);
-exports.RtcModule = RtcModule;
 //# sourceMappingURL=rtc.module.js.map

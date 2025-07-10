@@ -217,6 +217,7 @@ let ChatGateway = class ChatGateway {
         this.clients.clear();
     }
 };
+exports.ChatGateway = ChatGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", ws_1.Server)
@@ -245,7 +246,7 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleTyping", null);
-ChatGateway = __decorate([
+exports.ChatGateway = ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         path: '/ws/chat',
         cors: {
@@ -259,5 +260,4 @@ ChatGateway = __decorate([
         config_1.ConfigService,
         presence_service_1.PresenceService])
 ], ChatGateway);
-exports.ChatGateway = ChatGateway;
 //# sourceMappingURL=chat.gateway.js.map

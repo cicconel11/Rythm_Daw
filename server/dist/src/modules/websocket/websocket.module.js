@@ -30,7 +30,8 @@ let WebSocketModule = class WebSocketModule {
         }
     }
 };
-WebSocketModule = __decorate([
+exports.WebSocketModule = WebSocketModule;
+exports.WebSocketModule = WebSocketModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule,
@@ -59,5 +60,4 @@ WebSocketModule = __decorate([
     }),
     __metadata("design:paramtypes", [chat_gateway_1.ChatGateway])
 ], WebSocketModule);
-exports.WebSocketModule = WebSocketModule;
 //# sourceMappingURL=websocket.module.js.map

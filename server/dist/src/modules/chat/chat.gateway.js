@@ -68,6 +68,7 @@ let ChatGateway = class ChatGateway {
         });
     }
 };
+exports.ChatGateway = ChatGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", socket_io_1.Server)
@@ -88,7 +89,7 @@ __decorate([
     __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", void 0)
 ], ChatGateway.prototype, "handleTyping", null);
-ChatGateway = __decorate([
+exports.ChatGateway = ChatGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: {
             origin: process.env.CORS_ORIGIN || '*',
@@ -101,5 +102,4 @@ ChatGateway = __decorate([
     __metadata("design:paramtypes", [presence_service_1.PresenceService,
         rtc_gateway_1.RtcGateway])
 ], ChatGateway);
-exports.ChatGateway = ChatGateway;
 //# sourceMappingURL=chat.gateway.js.map

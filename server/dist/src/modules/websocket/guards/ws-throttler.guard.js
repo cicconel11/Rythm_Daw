@@ -40,9 +40,9 @@ let WsThrottlerGuard = class WsThrottlerGuard {
         return client.id || 'unknown';
     }
 };
-WsThrottlerGuard = __decorate([
+exports.WsThrottlerGuard = WsThrottlerGuard;
+exports.WsThrottlerGuard = WsThrottlerGuard = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [])
 ], WsThrottlerGuard);
-exports.WsThrottlerGuard = WsThrottlerGuard;
 //# sourceMappingURL=ws-throttler.guard.js.map

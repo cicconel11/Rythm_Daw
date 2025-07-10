@@ -1,20 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const testing_1 = require("@nestjs/testing");
 const presence_service_1 = require("../src/modules/presence/presence.service");
 describe('PresenceService', () => {
     let service;
     const mockDate = new Date('2023-01-01T00:00:00Z');
-    beforeEach(async () => {
+    beforeEach(() => {
         jest.useFakeTimers();
         jest.setSystemTime(mockDate);
-        const module = await testing_1.Test.createTestingModule({
-            providers: [presence_service_1.PresenceService],
-        }).compile();
-        service = module.get(presence_service_1.PresenceService);
+        service = new presence_service_1.PresenceService();
     });
     afterEach(() => {
         jest.useRealTimers();
+        if (service['cleanupInterval']) {
+            clearInterval(service['cleanupInterval']);
+        }
     });
     it('should be defined', () => {
         expect(service).toBeDefined();
