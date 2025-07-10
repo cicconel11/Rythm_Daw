@@ -195,9 +195,9 @@ let TagsService = class TagsService {
         ]);
     }
 };
-TagsService = __decorate([
+exports.TagsService = TagsService;
+exports.TagsService = TagsService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], TagsService);
-exports.TagsService = TagsService;
 //# sourceMappingURL=tags.service.js.map

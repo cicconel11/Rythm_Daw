@@ -1,4 +1,3 @@
-/// <reference types="jest" />
 import { TestingModule } from '@nestjs/testing';
 interface PrismaOverrides {
     $connect?: jest.Mock;

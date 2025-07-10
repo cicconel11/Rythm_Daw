@@ -13,7 +13,8 @@ const prisma_module_1 = require("../../prisma/prisma.module");
 const event_emitter_1 = require("@nestjs/event-emitter");
 let ActivityLogModule = class ActivityLogModule {
 };
-ActivityLogModule = __decorate([
+exports.ActivityLogModule = ActivityLogModule;
+exports.ActivityLogModule = ActivityLogModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
@@ -23,5 +24,4 @@ ActivityLogModule = __decorate([
         exports: [activity_logger_service_1.ActivityLoggerService],
     })
 ], ActivityLogModule);
-exports.ActivityLogModule = ActivityLogModule;
 //# sourceMappingURL=activity-log.module.js.map

@@ -13,6 +13,7 @@ exports.FileMetaDto = void 0;
 const class_validator_1 = require("class-validator");
 class FileMetaDto {
 }
+exports.FileMetaDto = FileMetaDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -25,5 +26,4 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], FileMetaDto.prototype, "size", void 0);
-exports.FileMetaDto = FileMetaDto;
 //# sourceMappingURL=file-meta.dto.js.map

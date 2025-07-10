@@ -97,11 +97,12 @@ let PresenceGateway = class PresenceGateway {
         this.server.to(`project:${projectId}`).emit('presence-update', data);
     }
 };
+exports.PresenceGateway = PresenceGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", socket_io_1.Server)
 ], PresenceGateway.prototype, "server", void 0);
-PresenceGateway = __decorate([
+exports.PresenceGateway = PresenceGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         namespace: 'presence',
         cors: {
@@ -114,5 +115,4 @@ PresenceGateway = __decorate([
     (0, common_1.UseGuards)(ws_jwt_auth_guard_1.WsJwtAuthGuard),
     __metadata("design:paramtypes", [presence_service_1.PresenceService])
 ], PresenceGateway);
-exports.PresenceGateway = PresenceGateway;
 //# sourceMappingURL=presence.gateway.js.map

@@ -13,6 +13,7 @@ exports.CreateSnapshotDto = exports.FileMetadataDto = void 0;
 const class_validator_1 = require("class-validator");
 class FileMetadataDto {
 }
+exports.FileMetadataDto = FileMetadataDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
@@ -29,9 +30,9 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FileMetadataDto.prototype, "size", void 0);
-exports.FileMetadataDto = FileMetadataDto;
 class CreateSnapshotDto {
 }
+exports.CreateSnapshotDto = CreateSnapshotDto;
 __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
@@ -55,5 +56,4 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Array)
 ], CreateSnapshotDto.prototype, "files", void 0);
-exports.CreateSnapshotDto = CreateSnapshotDto;
 //# sourceMappingURL=create-snapshot.dto.js.map

@@ -14,6 +14,7 @@ const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 class EventContextDto {
 }
+exports.EventContextDto = EventContextDto;
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -97,9 +98,9 @@ __decorate([
     (0, class_validator_1.IsObject)(),
     __metadata("design:type", Object)
 ], EventContextDto.prototype, "traits", void 0);
-exports.EventContextDto = EventContextDto;
 class EventDto {
 }
+exports.EventDto = EventDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
@@ -151,12 +152,12 @@ __decorate([
     (0, class_transformer_1.Type)(() => EventContextDto),
     __metadata("design:type", EventContextDto)
 ], EventDto.prototype, "context", void 0);
-exports.EventDto = EventDto;
 class TrackEventsBulkDto {
     constructor() {
         this.debug = false;
     }
 }
+exports.TrackEventsBulkDto = TrackEventsBulkDto;
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_transformer_1.Type)(() => EventDto),
@@ -167,5 +168,4 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Boolean)
 ], TrackEventsBulkDto.prototype, "debug", void 0);
-exports.TrackEventsBulkDto = TrackEventsBulkDto;
 //# sourceMappingURL=track-event.dto.js.map

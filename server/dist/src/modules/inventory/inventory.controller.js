@@ -27,6 +27,7 @@ let InventoryController = class InventoryController {
         return this.inventoryService.syncUserInventory(userId, dto);
     }
 };
+exports.InventoryController = InventoryController;
 __decorate([
     (0, common_1.Post)('sync'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
@@ -40,12 +41,11 @@ __decorate([
     __metadata("design:paramtypes", [Object, sync_inventory_dto_1.SyncInventoryDto]),
     __metadata("design:returntype", Promise)
 ], InventoryController.prototype, "syncInventory", null);
-InventoryController = __decorate([
+exports.InventoryController = InventoryController = __decorate([
     (0, swagger_1.ApiTags)('inventory'),
     (0, common_1.Controller)('inventory'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     __metadata("design:paramtypes", [inventory_service_1.InventoryService])
 ], InventoryController);
-exports.InventoryController = InventoryController;
 //# sourceMappingURL=inventory.controller.js.map

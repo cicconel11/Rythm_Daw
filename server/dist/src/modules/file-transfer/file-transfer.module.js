@@ -12,7 +12,8 @@ const config_1 = require("@nestjs/config");
 const file_transfer_gateway_1 = require("./file-transfer.gateway");
 let FileTransferModule = class FileTransferModule {
 };
-FileTransferModule = __decorate([
+exports.FileTransferModule = FileTransferModule;
+exports.FileTransferModule = FileTransferModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule,
@@ -23,5 +24,4 @@ FileTransferModule = __decorate([
         exports: [file_transfer_gateway_1.FileTransferGateway],
     })
 ], FileTransferModule);
-exports.FileTransferModule = FileTransferModule;
 //# sourceMappingURL=file-transfer.module.js.map

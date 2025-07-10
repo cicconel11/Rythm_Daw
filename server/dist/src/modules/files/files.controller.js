@@ -27,6 +27,7 @@ let FilesController = class FilesController {
         return this.filesService.getPresignedPair(dto, user);
     }
 };
+exports.FilesController = FilesController;
 __decorate([
     (0, common_1.Post)('presign'),
     __param(0, (0, common_1.Body)()),
@@ -35,10 +36,9 @@ __decorate([
     __metadata("design:paramtypes", [file_meta_dto_1.FileMetaDto, user_entity_1.User]),
     __metadata("design:returntype", void 0)
 ], FilesController.prototype, "create", null);
-FilesController = __decorate([
+exports.FilesController = FilesController = __decorate([
     (0, common_1.Controller)('files'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [files_service_1.FilesService])
 ], FilesController);
-exports.FilesController = FilesController;
 //# sourceMappingURL=files.controller.js.map

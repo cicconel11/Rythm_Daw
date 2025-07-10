@@ -3,7 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handleDeviceToken = exports.handleDeviceCodeRequest = exports.authOptions = void 0;
+exports.authOptions = void 0;
+exports.handleDeviceCodeRequest = handleDeviceCodeRequest;
+exports.handleDeviceToken = handleDeviceToken;
 const next_auth_1 = __importDefault(require("next-auth"));
 const prisma_adapter_1 = require("@next-auth/prisma-adapter");
 const client_1 = require("@prisma/client");
@@ -93,7 +95,6 @@ async function handleDeviceCodeRequest(req, res) {
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
-exports.handleDeviceCodeRequest = handleDeviceCodeRequest;
 async function handleDeviceToken(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -133,5 +134,4 @@ async function handleDeviceToken(req, res) {
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
-exports.handleDeviceToken = handleDeviceToken;
 //# sourceMappingURL=AuthService.js.map

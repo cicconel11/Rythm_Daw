@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createMockServer = exports.createMockSocket = void 0;
+exports.createMockSocket = createMockSocket;
+exports.createMockServer = createMockServer;
 const events_1 = require("events");
 function generateUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -21,7 +22,6 @@ function createMockSocket(id = generateUUID()) {
     };
     return s;
 }
-exports.createMockSocket = createMockSocket;
 function createMockServer() {
     const server = new events_1.EventEmitter();
     server.sockets = {
@@ -31,5 +31,4 @@ function createMockServer() {
     };
     return server;
 }
-exports.createMockServer = createMockServer;
 //# sourceMappingURL=socket-mock.js.map

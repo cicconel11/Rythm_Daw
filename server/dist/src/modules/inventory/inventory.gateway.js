@@ -32,11 +32,12 @@ let InventoryGateway = class InventoryGateway {
         this.server.to(`user:${userId}`).emit('inventory-updates', data);
     }
 };
+exports.InventoryGateway = InventoryGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", socket_io_1.Server)
 ], InventoryGateway.prototype, "server", void 0);
-InventoryGateway = __decorate([
+exports.InventoryGateway = InventoryGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         namespace: 'inventory',
         cors: {
@@ -48,5 +49,4 @@ InventoryGateway = __decorate([
     }),
     (0, common_1.UseGuards)(ws_jwt_auth_guard_1.WsJwtAuthGuard)
 ], InventoryGateway);
-exports.InventoryGateway = InventoryGateway;
 //# sourceMappingURL=inventory.gateway.js.map

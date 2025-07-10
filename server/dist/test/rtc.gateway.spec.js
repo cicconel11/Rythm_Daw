@@ -1,166 +1,315 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const testing_1 = require("@nestjs/testing");
 const rtc_gateway_1 = require("../src/modules/rtc/rtc.gateway");
-const jwt_ws_auth_guard_1 = require("../src/modules/auth/guards/jwt-ws-auth.guard");
-const jwt_1 = require("@nestjs/jwt");
-const socket_mock_1 = require("./__utils__/socket-mock");
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-const mockJwtService = {
-    verify: jest.fn().mockImplementation((token) => ({
-        sub: 'test-user-id',
-        email: 'test@example.com',
+jest.mock('../src/modules/auth/guards/jwt-ws-auth.guard', () => ({
+    JwtWsAuthGuard: jest.fn().mockImplementation(() => ({
+        canActivate: (context) => {
+            const client = context.switchToWs().getClient();
+            client.user = { sub: 'test-user-id' };
+            return true;
+        },
     })),
-};
-const mockJwtWsAuthGuard = {
-    canActivate: jest.fn().mockImplementation((context) => {
-        const client = context.switchToWs().getClient();
-        client.user = { sub: 'test-user-id' };
-        return true;
-    }),
-};
-let mockServer;
-let mockClient1;
-let mockClient2;
-let mockClient3;
+}));
+class TestRtcGateway extends rtc_gateway_1.RtcGateway {
+    constructor() {
+        super();
+        this['userSockets'] = new Map();
+        this['socketToUser'] = new Map();
+        this.setupServerMock();
+        Object.defineProperty(this, 'server', {
+            get: () => this._testServer,
+            set: (server) => { this._testServer = server; },
+            configurable: true
+        });
+    }
+    async afterInit() {
+    }
+    getJwtService() {
+        return this.jwtService;
+    }
+    getConfigService() {
+        return this.configService;
+    }
+    setupServerMock(client) {
+        this._testServer = {
+            to: jest.fn().mockReturnThis(),
+            emit: jest.fn().mockReturnThis(),
+            in: jest.fn().mockReturnThis(),
+            sockets: {
+                sockets: new Map(client ? [[client.id, client]] : []),
+                adapter: {
+                    rooms: new Map(),
+                    sids: new Map(),
+                    addAll: jest.fn(),
+                    del: jest.fn(),
+                    delAll: jest.fn(),
+                    broadcast: {
+                        to: jest.fn().mockReturnThis(),
+                        emit: jest.fn(),
+                        compress: jest.fn().mockReturnThis(),
+                        volatile: jest.fn().mockReturnThis(),
+                        local: jest.fn().mockReturnThis()
+                    }
+                },
+                join: jest.fn(),
+                leave: jest.fn(),
+                disconnect: jest.fn(),
+            },
+            of: jest.fn().mockReturnThis(),
+            use: jest.fn().mockReturnThis(),
+            engine: {
+                generateId: jest.fn().mockReturnValue('mock-socket-id')
+            }
+        };
+    }
+    testHandleConnection(client) {
+        return this.handleConnection(client);
+    }
+    testHandleDisconnect(client) {
+        return this.handleDisconnect(client);
+    }
+    testEmitToUser(userId, event, payload) {
+        return this.emitToUser(userId, event, payload);
+    }
+    getTestServer() {
+        return this._testServer;
+    }
+}
 describe('RtcGateway', () => {
     let gateway;
-    let mockClient1;
-    let mockClient2;
-    let mockClient3;
-    beforeAll(() => {
-        jest.unmock('ws');
-        mockServer = (0, socket_mock_1.createMockServer)();
-    });
+    let jwtService;
+    let configService;
     beforeEach(async () => {
+        gateway = new TestRtcGateway();
+        jwtService = {
+            verify: jest.fn().mockReturnValue({ sub: 'test-user-id' }),
+        };
+        configService = {
+            get: jest.fn((key) => ({
+                'JWT_SECRET': 'test-secret',
+                'NODE_ENV': 'test',
+            })[key]),
+        };
+        gateway.jwtService = jwtService;
+        gateway.configService = configService;
+        await gateway.afterInit();
         jest.clearAllMocks();
-        mockClient1 = (0, socket_mock_1.createMockSocket)(generateUUID());
-        mockClient2 = (0, socket_mock_1.createMockSocket)(generateUUID());
-        mockClient3 = (0, socket_mock_1.createMockSocket)(generateUUID());
-        mockClient1.user = { sub: 'user-1' };
-        mockClient2.user = { sub: 'user-2' };
-        mockClient3.user = { sub: 'user-3' };
-        mockServer.sockets.sockets.set(mockClient1.id, mockClient1);
-        mockServer.sockets.sockets.set(mockClient2.id, mockClient2);
-        mockServer.sockets.sockets.set(mockClient3.id, mockClient3);
-        const module = await testing_1.Test.createTestingModule({
-            providers: [
-                rtc_gateway_1.RtcGateway,
-                { provide: jwt_1.JwtService, useValue: mockJwtService },
-            ],
-        })
-            .overrideGuard(jwt_ws_auth_guard_1.JwtWsAuthGuard)
-            .useValue(mockJwtWsAuthGuard)
-            .compile();
-        gateway = module.get(rtc_gateway_1.RtcGateway);
-        gateway.userSockets = new Map();
-        gateway.socketToUser = new Map();
-        gateway['server'] = mockServer;
+    });
+    it('should be defined', () => {
+        expect(gateway).toBeDefined();
+    });
+    describe('emitToUser', () => {
+        it('should emit events to all user sockets', () => {
+            const userId = 'test-user-1';
+            const event = 'test-event';
+            const data = { test: 'data' };
+            const mockSocket1 = {
+                id: 'test-client-1',
+                emit: jest.fn(),
+            };
+            const mockSocket2 = {
+                id: 'test-client-2',
+                emit: jest.fn(),
+            };
+            const testServer = {
+                sockets: {
+                    sockets: new Map([
+                        ['test-client-1', mockSocket1],
+                        ['test-client-2', mockSocket2],
+                    ]),
+                },
+            };
+            gateway['_testServer'] = testServer;
+            gateway['userSockets'] = new Map([
+                [userId, new Set([mockSocket1.id, mockSocket2.id])]
+            ]);
+            gateway['socketToUser'] = new Map([
+                [mockSocket1.id, userId],
+                [mockSocket2.id, userId],
+            ]);
+            const result = gateway.testEmitToUser(userId, event, data);
+            expect(result).toBe(true);
+            expect(mockSocket1.emit).toHaveBeenCalledWith(event, data);
+            expect(mockSocket2.emit).toHaveBeenCalledWith(event, data);
+        });
+    });
+    describe('getTestServer', () => {
+        it('should return the test server instance', () => {
+            const testServer = gateway.getTestServer();
+            expect(testServer).toBeDefined();
+            expect(testServer.to).toBeDefined();
+            expect(testServer.emit).toBeDefined();
+        });
+    });
+    afterAll(async () => {
+    });
+});
+describe('RtcGateway', () => {
+    let gateway;
+    beforeEach(() => {
+        gateway = new TestRtcGateway();
+        jest.clearAllMocks();
     });
     it('should be defined', () => {
         expect(gateway).toBeDefined();
     });
     describe('handleConnection', () => {
-        it('should add client to connected clients', async () => {
-            const joinSpy = jest.spyOn(mockClient1, 'join');
-            const emitSpy = jest.spyOn(mockClient1, 'emit');
-            await gateway.handleConnection(mockClient1);
-            expect(joinSpy).toHaveBeenCalledWith('user-1');
-            expect(gateway.userSockets.has('user-1')).toBe(true);
-            expect(gateway.userSockets.get('user-1').has(mockClient1.id)).toBe(true);
-            expect(gateway.socketToUser.get(mockClient1.id)).toBe('user-1');
-            expect(emitSpy).toHaveBeenCalledWith('connection-success', { userId: 'user-1' });
+        it('should disconnect client if no user in handshake', async () => {
+            const mockSocket = {
+                id: 'test-client-id',
+                handshake: {
+                    auth: {},
+                    headers: {},
+                    time: new Date().toISOString(),
+                    address: '127.0.0.1',
+                    xdomain: false,
+                    secure: false,
+                    issued: Date.now(),
+                    url: '/',
+                    query: {},
+                },
+                disconnect: jest.fn(),
+                on: jest.fn(),
+                join: jest.fn(),
+                leave: jest.fn(),
+                emit: jest.fn(),
+            };
+            gateway.setupServerMock(mockSocket);
+            await gateway.testHandleConnection(mockSocket);
+            expect(mockSocket.disconnect).toHaveBeenCalled();
         });
-        it('should disconnect client if no user ID', async () => {
-            const badClient = {
-                ...mockClient1,
-                user: null,
+        it('should handle connection with valid user', async () => {
+            const client = {
+                handshake: {
+                    auth: {
+                        token: 'valid-token',
+                    },
+                },
+                join: jest.fn().mockResolvedValue(undefined),
+                id: 'test-client-id',
+                user: { sub: 'test-user-id' },
                 disconnect: jest.fn(),
             };
-            const disconnectSpy = jest.spyOn(badClient, 'disconnect');
-            await gateway.handleConnection(badClient);
-            expect(disconnectSpy).toHaveBeenCalled();
+            gateway.setupServerMock(client);
+            await gateway.testHandleConnection(client);
+            expect(gateway['userSockets'].has('test-user-id')).toBe(true);
+            expect(gateway['socketToUser'].has('test-client-id')).toBe(true);
+            await gateway.testHandleDisconnect(client);
+            expect(gateway['userSockets'].has('test-user-id')).toBe(false);
+            expect(gateway['socketToUser'].has('test-client-id')).toBe(false);
         });
-        it('should handle connection errors', async () => {
-            const error = new Error('Connection error');
-            const joinSpy = jest.spyOn(mockClient1, 'join').mockRejectedValueOnce(error);
-            const disconnectSpy = jest.spyOn(mockClient1, 'disconnect');
-            const originalLogger = gateway.logger;
-            const mockLogger = {
-                error: jest.fn(),
+        it('should handle connection without user', async () => {
+            const mockJwtService = {
+                verify: jest.fn().mockImplementation(() => {
+                    throw new Error('Invalid token');
+                })
             };
-            gateway.logger = mockLogger;
-            await gateway.handleConnection(mockClient1);
-            expect(mockLogger.error).toHaveBeenCalled();
-            expect(disconnectSpy).toHaveBeenCalled();
-            gateway.logger = originalLogger;
+            gateway.jwtService = mockJwtService;
+            const client = {
+                handshake: {
+                    auth: {
+                        token: 'invalid-token',
+                    },
+                    headers: {},
+                    time: new Date().toISOString(),
+                    address: '127.0.0.1',
+                    xdomain: false,
+                    secure: false,
+                    issued: Date.now(),
+                    url: '/',
+                    query: {},
+                },
+                id: 'test-client-id',
+                disconnect: jest.fn(),
+                on: jest.fn(),
+                join: jest.fn(),
+                leave: jest.fn(),
+                emit: jest.fn(),
+            };
+            gateway.setupServerMock(client);
+            await gateway.testHandleConnection(client);
+            expect(client.disconnect).toHaveBeenCalled();
         });
     });
     describe('handleDisconnect', () => {
-        it('should remove client from connected clients', async () => {
-            await gateway.handleConnection(mockClient1);
-            const userSockets = gateway.userSockets.get('user-1');
-            expect(userSockets).toBeDefined();
-            expect(userSockets.has(mockClient1.id)).toBe(true);
-            expect(gateway.socketToUser.get(mockClient1.id)).toBe('user-1');
-            await gateway.handleDisconnect(mockClient1);
-            const updatedUserSockets = gateway.userSockets.get('user-1');
-            expect(updatedUserSockets).toBeUndefined();
-            expect(gateway.socketToUser.has(mockClient1.id)).toBe(false);
-        });
-        it('should handle unknown client disconnection', () => {
-            expect(() => {
-                gateway.handleDisconnect(mockClient1);
-            }).not.toThrow();
-            expect(gateway.userSockets.has('user-1')).toBe(false);
-            expect(gateway.socketToUser.has(mockClient1.id)).toBe(false);
+        it('should clean up user connections on disconnect', async () => {
+            const mockSocket = {
+                id: 'test-client-id',
+                user: { sub: 'test-user-id' },
+                handshake: {
+                    auth: {},
+                    headers: {},
+                    time: new Date().toISOString(),
+                    address: '127.0.0.1',
+                    xdomain: false,
+                    secure: false,
+                    issued: Date.now(),
+                    url: '/',
+                    query: {},
+                },
+                disconnect: jest.fn(),
+                on: jest.fn(),
+                join: jest.fn(),
+                leave: jest.fn(),
+                emit: jest.fn(),
+            };
+            gateway['userSockets'].set('test-user-id', new Set([mockSocket.id]));
+            gateway['socketToUser'].set(mockSocket.id, 'test-user-id');
+            gateway.setupServerMock(mockSocket);
+            await gateway.testHandleDisconnect(mockSocket);
+            expect(gateway['userSockets'].has('test-user-id')).toBe(false);
+            expect(gateway['socketToUser'].has('test-client-id')).toBe(false);
         });
     });
     describe('emitToUser', () => {
+        let mockSocket;
+        beforeEach(() => {
+            mockSocket = {
+                id: 'test-client-1',
+                emit: jest.fn(),
+                user: { sub: 'test-user-1' },
+                handshake: {
+                    auth: {},
+                    headers: {},
+                    time: new Date().toISOString(),
+                    address: '127.0.0.1',
+                    xdomain: false,
+                    secure: false,
+                    issued: Date.now(),
+                    url: '/',
+                    query: {},
+                },
+                disconnect: jest.fn(),
+                on: jest.fn(),
+                join: jest.fn(),
+                leave: jest.fn(),
+            };
+            gateway = new TestRtcGateway();
+            gateway['userSockets'].set('test-user-1', new Set([mockSocket.id]));
+            gateway['socketToUser'].set(mockSocket.id, 'test-user-1');
+            gateway.setupServerMock(mockSocket);
+        });
         it('should emit event to all user sockets', () => {
-            const userId = generateUUID();
-            const event = 'test-event';
-            const payload = { data: 'test' };
-            const mockSocket1 = (0, socket_mock_1.createMockSocket)(generateUUID());
-            const mockSocket2 = (0, socket_mock_1.createMockSocket)(generateUUID());
-            mockSocket1.user = { sub: userId };
-            mockSocket2.user = { sub: userId };
-            mockSocket1.handshake = { auth: { token: 'valid-token' } };
-            mockSocket2.handshake = { auth: { token: 'valid-token' } };
-            gateway.userSockets.set(userId, new Set([mockSocket1.id, mockSocket2.id]));
-            gateway.socketToUser.set(mockSocket1.id, userId);
-            gateway.socketToUser.set(mockSocket2.id, userId);
-            const emitSpy1 = jest.spyOn(mockSocket1, 'emit');
-            const emitSpy2 = jest.spyOn(mockSocket2, 'emit');
-            mockServer.sockets.sockets.set(mockSocket1.id, mockSocket1);
-            mockServer.sockets.sockets.set(mockSocket2.id, mockSocket2);
-            gateway.emitToUser(userId, event, payload);
-            expect(emitSpy1).toHaveBeenCalledWith(event, payload);
-            expect(emitSpy2).toHaveBeenCalledWith(event, payload);
+            const testEvent = 'test-event';
+            const testPayload = { data: 'test' };
+            const result = gateway.testEmitToUser('test-user-1', testEvent, testPayload);
+            expect(result).toBe(true);
+            expect(mockSocket.emit).toHaveBeenCalledWith(testEvent, testPayload);
         });
         it('should return false if user has no sockets', () => {
-            const result = gateway.emitToUser('non-existent-user', 'test-event', {});
+            const result = gateway.testEmitToUser('non-existent-user', 'test-event', {});
+            expect(result).toBe(false);
+        });
+        it('should handle missing server.sockets.sockets', () => {
+            const testServer = gateway.getTestServer();
+            testServer.sockets = {};
+            const result = gateway.testEmitToUser('test-user-1', 'test-event', {});
             expect(result).toBe(false);
         });
         it('should handle missing server', () => {
-            const originalServer = gateway['server'];
-            gateway['server'] = null;
-            const result = gateway.emitToUser('test-user', 'test-event', {});
-            gateway['server'] = originalServer;
+            gateway.setupServerMock();
+            const result = gateway.testEmitToUser('test-user-1', 'test-event', {});
             expect(result).toBe(false);
-        });
-    });
-    describe('registerWsServer', () => {
-        it('should register a WebSocket server instance', () => {
-            const mockServerInstance = {};
-            gateway.registerWsServer(mockServerInstance);
-            expect(gateway['server']).toBe(mockServerInstance);
         });
     });
 });

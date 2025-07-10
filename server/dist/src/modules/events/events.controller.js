@@ -26,6 +26,7 @@ let EventsController = class EventsController {
         return { success: true, message: 'Events accepted for processing' };
     }
 };
+exports.EventsController = EventsController;
 __decorate([
     (0, common_1.Post)('bulk'),
     (0, common_1.HttpCode)(common_1.HttpStatus.ACCEPTED),
@@ -72,10 +73,9 @@ __decorate([
     __metadata("design:paramtypes", [track_event_dto_1.TrackEventsBulkDto]),
     __metadata("design:returntype", Promise)
 ], EventsController.prototype, "trackBulk", null);
-EventsController = __decorate([
+exports.EventsController = EventsController = __decorate([
     (0, swagger_1.ApiTags)('Analytics'),
     (0, common_1.Controller)('v1/events'),
     __metadata("design:paramtypes", [events_service_1.EventsService])
 ], EventsController);
-exports.EventsController = EventsController;
 //# sourceMappingURL=events.controller.js.map

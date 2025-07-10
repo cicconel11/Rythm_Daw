@@ -72,9 +72,9 @@ let WsAdapter = WsAdapter_1 = class WsAdapter extends platform_socket_io_1.IoAda
         }
     }
 };
-WsAdapter = WsAdapter_1 = __decorate([
+exports.WsAdapter = WsAdapter;
+exports.WsAdapter = WsAdapter = WsAdapter_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [Object])
 ], WsAdapter);
-exports.WsAdapter = WsAdapter;
 //# sourceMappingURL=ws-adapter.js.map

@@ -264,9 +264,9 @@ let QosService = QosService_1 = class QosService {
         }
     }
 };
-QosService = QosService_1 = __decorate([
+exports.QosService = QosService;
+exports.QosService = QosService = QosService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], QosService);
-exports.QosService = QosService;
 //# sourceMappingURL=qos.service.js.map

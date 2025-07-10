@@ -14,6 +14,7 @@ const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class LogActivityDto {
 }
+exports.LogActivityDto = LogActivityDto;
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: 'The ID of the user who performed the action',
@@ -84,5 +85,4 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Object)
 ], LogActivityDto.prototype, "userAgent", void 0);
-exports.LogActivityDto = LogActivityDto;
 //# sourceMappingURL=log-activity.dto.js.map

@@ -52,15 +52,15 @@ let PresenceService = class PresenceService {
         }
     }
 };
+exports.PresenceService = PresenceService;
 __decorate([
     (0, schedule_1.Interval)(30000),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PresenceService.prototype, "cleanupDisconnectedUsers", null);
-PresenceService = __decorate([
+exports.PresenceService = PresenceService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [])
 ], PresenceService);
-exports.PresenceService = PresenceService;
 //# sourceMappingURL=presence.service.js.map

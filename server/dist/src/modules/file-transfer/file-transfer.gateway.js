@@ -112,6 +112,7 @@ let FileTransferGateway = FileTransferGateway_1 = class FileTransferGateway {
         }
     }
 };
+exports.FileTransferGateway = FileTransferGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", ws_1.Server)
@@ -152,7 +153,7 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], FileTransferGateway.prototype, "handleIceCandidate", null);
-FileTransferGateway = FileTransferGateway_1 = __decorate([
+exports.FileTransferGateway = FileTransferGateway = FileTransferGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
         path: '/ws/file-transfer',
         cors: {
@@ -164,5 +165,4 @@ FileTransferGateway = FileTransferGateway_1 = __decorate([
     }),
     __metadata("design:paramtypes", [config_1.ConfigService])
 ], FileTransferGateway);
-exports.FileTransferGateway = FileTransferGateway;
 //# sourceMappingURL=file-transfer.gateway.js.map

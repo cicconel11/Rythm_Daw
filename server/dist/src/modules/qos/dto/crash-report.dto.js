@@ -14,6 +14,7 @@ const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
 class CrashReportDto {
 }
+exports.CrashReportDto = CrashReportDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Type of the crash/error',
@@ -149,5 +150,4 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CrashReportDto.prototype, "projectId", void 0);
-exports.CrashReportDto = CrashReportDto;
 //# sourceMappingURL=crash-report.dto.js.map

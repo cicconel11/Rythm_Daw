@@ -14,7 +14,8 @@ const files_controller_1 = require("./files.controller");
 const aws_s3_service_1 = require("./aws-s3.service");
 let FilesModule = class FilesModule {
 };
-FilesModule = __decorate([
+exports.FilesModule = FilesModule;
+exports.FilesModule = FilesModule = __decorate([
     (0, common_1.Module)({
         imports: [config_1.ConfigModule],
         controllers: [files_controller_1.FilesController],
@@ -22,5 +23,4 @@ FilesModule = __decorate([
         exports: [files_service_1.FilesService],
     })
 ], FilesModule);
-exports.FilesModule = FilesModule;
 //# sourceMappingURL=files.module.js.map

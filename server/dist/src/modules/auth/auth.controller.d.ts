@@ -7,17 +7,17 @@ export declare class AuthController {
     signup(registerDto: RegisterDto, res: Response): Promise<{
         accessToken: string;
         user: {
-            id: string;
-            email: string;
-            name: string;
+            id: any;
+            email: any;
+            name: any;
         };
     }>;
     register(registerDto: RegisterDto, res: Response): Promise<{
         accessToken: string;
         user: {
-            id: string;
-            email: string;
-            name: string;
+            id: any;
+            email: any;
+            name: any;
         };
     }>;
     login(req: any, res: Response): Promise<{

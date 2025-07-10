@@ -17,6 +17,7 @@ class User {
         Object.assign(this, partial);
     }
 }
+exports.User = User;
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'The unique identifier of the user' }),
     __metadata("design:type", String)
@@ -33,5 +34,4 @@ __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Whether the user is approved', default: true }),
     __metadata("design:type", Boolean)
 ], User.prototype, "isApproved", void 0);
-exports.User = User;
 //# sourceMappingURL=user.entity.js.map

@@ -14,6 +14,7 @@ const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 class PluginDto {
 }
+exports.PluginDto = PluginDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
@@ -34,9 +35,9 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], PluginDto.prototype, "version", void 0);
-exports.PluginDto = PluginDto;
 class SyncInventoryDto {
 }
+exports.SyncInventoryDto = SyncInventoryDto;
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
@@ -48,5 +49,4 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], SyncInventoryDto.prototype, "inventoryHash", void 0);
-exports.SyncInventoryDto = SyncInventoryDto;
 //# sourceMappingURL=sync-inventory.dto.js.map

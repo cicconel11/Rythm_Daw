@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Server } from 'http';
 export declare class RealtimeChat {
     private jwtSecret;

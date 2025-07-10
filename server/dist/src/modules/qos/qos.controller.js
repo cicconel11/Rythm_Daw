@@ -41,6 +41,7 @@ let QosController = class QosController {
         return { success: true, message: 'Crash report submitted' };
     }
 };
+exports.QosController = QosController;
 __decorate([
     (0, common_1.Post)('webrtc'),
     (0, common_1.HttpCode)(common_1.HttpStatus.ACCEPTED),
@@ -116,12 +117,11 @@ __decorate([
     __metadata("design:paramtypes", [crash_report_dto_1.CrashReportDto, Object, Object]),
     __metadata("design:returntype", Promise)
 ], QosController.prototype, "recordCrashReport", null);
-QosController = __decorate([
+exports.QosController = QosController = __decorate([
     (0, swagger_1.ApiTags)('QoS'),
     (0, common_1.Controller)('api/qos'),
     (0, swagger_1.ApiBearerAuth)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [qos_service_1.QosService])
 ], QosController);
-exports.QosController = QosController;
 //# sourceMappingURL=qos.controller.js.map

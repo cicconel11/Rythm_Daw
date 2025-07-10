@@ -269,10 +269,10 @@ let EventsService = EventsService_1 = class EventsService {
         }
     }
 };
-EventsService = EventsService_1 = __decorate([
+exports.EventsService = EventsService;
+exports.EventsService = EventsService = EventsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         event_emitter_1.EventEmitter2])
 ], EventsService);
-exports.EventsService = EventsService;
 //# sourceMappingURL=events.service.js.map

@@ -31,9 +31,9 @@ export declare class AuthService {
     constructor(jwtService: JwtService, prisma: PrismaService, configService: ConfigService);
     signup(email: string, password: string, name?: string): Promise<{
         user: {
-            id: string;
-            email: string;
-            name: string;
+            id: any;
+            email: any;
+            name: any;
         };
         accessToken: string;
         refreshToken: string;

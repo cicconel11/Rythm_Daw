@@ -16,7 +16,8 @@ const rtc_module_1 = require("./modules/rtc/rtc.module");
 const ws_adapter_1 = require("./ws/ws-adapter");
 let AppModule = class AppModule {
 };
-AppModule = __decorate([
+exports.AppModule = AppModule;
+exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({
@@ -40,5 +41,4 @@ AppModule = __decorate([
         ],
     })
 ], AppModule);
-exports.AppModule = AppModule;
 //# sourceMappingURL=app.module.js.map

@@ -13,6 +13,7 @@ exports.AuthResponseDto = exports.AuthCredentialsDto = void 0;
 const class_validator_1 = require("class-validator");
 class AuthCredentialsDto {
 }
+exports.AuthCredentialsDto = AuthCredentialsDto;
 __decorate([
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
@@ -27,7 +28,6 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], AuthCredentialsDto.prototype, "name", void 0);
-exports.AuthCredentialsDto = AuthCredentialsDto;
 class AuthResponseDto {
 }
 exports.AuthResponseDto = AuthResponseDto;

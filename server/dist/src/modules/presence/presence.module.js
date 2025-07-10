@@ -16,7 +16,8 @@ const event_emitter_1 = require("@nestjs/event-emitter");
 const schedule_1 = require("@nestjs/schedule");
 let PresenceModule = class PresenceModule {
 };
-PresenceModule = __decorate([
+exports.PresenceModule = PresenceModule;
+exports.PresenceModule = PresenceModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
@@ -28,5 +29,4 @@ PresenceModule = __decorate([
         exports: [presence_service_1.PresenceService, presence_gateway_1.PresenceGateway],
     })
 ], PresenceModule);
-exports.PresenceModule = PresenceModule;
 //# sourceMappingURL=presence.module.js.map

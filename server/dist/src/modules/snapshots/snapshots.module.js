@@ -14,7 +14,8 @@ const prisma_module_1 = require("../../prisma/prisma.module");
 const config_1 = require("@nestjs/config");
 let SnapshotsModule = class SnapshotsModule {
 };
-SnapshotsModule = __decorate([
+exports.SnapshotsModule = SnapshotsModule;
+exports.SnapshotsModule = SnapshotsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
@@ -25,5 +26,4 @@ SnapshotsModule = __decorate([
         exports: [snapshots_service_1.SnapshotsService],
     })
 ], SnapshotsModule);
-exports.SnapshotsModule = SnapshotsModule;
 //# sourceMappingURL=snapshots.module.js.map

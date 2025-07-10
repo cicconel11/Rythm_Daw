@@ -72,7 +72,7 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
         this.logger.log(`Client disconnected: ${client.id} (User: ${userId})`);
     }
     emitToUser(userId, event, payload) {
-        if (!this.server || !('sockets' in this.server)) {
+        if (!this.server || !this.server.sockets || !this.server.sockets.sockets) {
             this.logger.warn('WebSocket server not properly initialized');
             return false;
         }
@@ -82,24 +82,31 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
             return false;
         }
         let emitted = false;
-        for (const socketId of userSockets) {
-            const socket = this.server.sockets.sockets.get(socketId);
-            if (socket) {
-                socket.emit(event, payload);
-                emitted = true;
+        try {
+            for (const socketId of userSockets) {
+                const socket = this.server.sockets.sockets.get(socketId);
+                if (socket) {
+                    socket.emit(event, payload);
+                    emitted = true;
+                }
+            }
+            if (!emitted) {
+                this.logger.warn(`Failed to emit to any socket for user ${userId}`);
             }
         }
-        if (!emitted) {
-            this.logger.warn(`Failed to emit to any socket for user ${userId}`);
+        catch (error) {
+            this.logger.error(`Error emitting to user ${userId}: ${error.message}`, error.stack);
+            return false;
         }
         return emitted;
     }
 };
+exports.RtcGateway = RtcGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
     __metadata("design:type", socket_io_1.Server)
 ], RtcGateway.prototype, "server", void 0);
-RtcGateway = RtcGateway_1 = __decorate([
+exports.RtcGateway = RtcGateway = RtcGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
         namespace: 'rtc',
         cors: {
@@ -111,5 +118,4 @@ RtcGateway = RtcGateway_1 = __decorate([
     }),
     (0, common_1.UseGuards)(jwt_ws_auth_guard_1.JwtWsAuthGuard)
 ], RtcGateway);
-exports.RtcGateway = RtcGateway;
 //# sourceMappingURL=rtc.gateway.js.map

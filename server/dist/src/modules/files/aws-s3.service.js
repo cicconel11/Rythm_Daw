@@ -59,9 +59,9 @@ let AwsS3Service = class AwsS3Service {
         return { putUrl, getUrl };
     }
 };
-AwsS3Service = __decorate([
+exports.AwsS3Service = AwsS3Service;
+exports.AwsS3Service = AwsS3Service = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [config_1.ConfigService])
 ], AwsS3Service);
-exports.AwsS3Service = AwsS3Service;
 //# sourceMappingURL=aws-s3.service.js.map

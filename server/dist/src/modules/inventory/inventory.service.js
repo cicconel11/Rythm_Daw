@@ -130,11 +130,11 @@ let InventoryService = InventoryService_1 = class InventoryService {
         });
     }
 };
-InventoryService = InventoryService_1 = __decorate([
+exports.InventoryService = InventoryService;
+exports.InventoryService = InventoryService = InventoryService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         inventory_gateway_1.InventoryGateway,
         event_emitter_1.EventEmitter2])
 ], InventoryService);
-exports.InventoryService = InventoryService;
 //# sourceMappingURL=inventory.service.js.map

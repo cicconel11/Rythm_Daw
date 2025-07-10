@@ -20,9 +20,10 @@ var MetricCategory;
     MetricCategory["NETWORK"] = "network";
     MetricCategory["MEDIA"] = "media";
     MetricCategory["OTHER"] = "other";
-})(MetricCategory = exports.MetricCategory || (exports.MetricCategory = {}));
+})(MetricCategory || (exports.MetricCategory = MetricCategory = {}));
 class WebRtcMetricDto {
 }
+exports.WebRtcMetricDto = WebRtcMetricDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'User ID',
@@ -183,5 +184,4 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], WebRtcMetricDto.prototype, "remoteCandidateId", void 0);
-exports.WebRtcMetricDto = WebRtcMetricDto;
 //# sourceMappingURL=webrtc-metric.dto.js.map

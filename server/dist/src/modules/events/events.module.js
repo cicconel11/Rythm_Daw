@@ -14,7 +14,8 @@ const events_controller_1 = require("./events.controller");
 const events_service_1 = require("./events.service");
 let EventsModule = class EventsModule {
 };
-EventsModule = __decorate([
+exports.EventsModule = EventsModule;
+exports.EventsModule = EventsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
@@ -30,5 +31,4 @@ EventsModule = __decorate([
         exports: [events_service_1.EventsService],
     })
 ], EventsModule);
-exports.EventsModule = EventsModule;
 //# sourceMappingURL=events.module.js.map

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createTestingApp = void 0;
+exports.createTestingApp = createTestingApp;
 const testing_1 = require("@nestjs/testing");
 const prisma_service_1 = require("../../src/prisma/prisma.service");
 const app_module_1 = require("../../src/app.module");
@@ -39,5 +39,4 @@ async function createTestingApp(overrides = {}) {
     global.awsS3Mock = awsS3;
     return moduleFixture;
 }
-exports.createTestingApp = createTestingApp;
 //# sourceMappingURL=create-testing-module.js.map

@@ -43,10 +43,10 @@ let WsJwtGuard = class WsJwtGuard extends (0, passport_1.AuthGuard)('ws-jwt') {
         return type === 'Bearer' ? token : undefined;
     }
 };
-WsJwtGuard = __decorate([
+exports.WsJwtGuard = WsJwtGuard;
+exports.WsJwtGuard = WsJwtGuard = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [jwt_1.JwtService,
         config_1.ConfigService])
 ], WsJwtGuard);
-exports.WsJwtGuard = WsJwtGuard;
 //# sourceMappingURL=ws-jwt.guard.js.map

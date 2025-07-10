@@ -11,8 +11,8 @@ const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 let RefreshTokenGuard = class RefreshTokenGuard extends (0, passport_1.AuthGuard)('jwt-refresh') {
 };
-RefreshTokenGuard = __decorate([
+exports.RefreshTokenGuard = RefreshTokenGuard;
+exports.RefreshTokenGuard = RefreshTokenGuard = __decorate([
     (0, common_1.Injectable)()
 ], RefreshTokenGuard);
-exports.RefreshTokenGuard = RefreshTokenGuard;
 //# sourceMappingURL=refresh-token.guard.js.map
