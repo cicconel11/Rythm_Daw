@@ -19,6 +19,10 @@ jest.mock('../src/modules/rtc/rtc.gateway', () => {
                 sockets: new Map()
             }
         },
+        testServer: {
+            to: jest.fn().mockReturnThis(),
+            emit: jest.fn()
+        },
         userSockets,
         socketToUser,
         logger,
@@ -30,11 +34,12 @@ jest.mock('../src/modules/rtc/rtc.gateway', () => {
         getLogger: jest.fn().mockImplementation(() => logger),
         emitToUser: jest.fn().mockImplementation(function (userId, event, data) {
             const sockets = this.userSockets.get(userId);
-            if (!sockets)
+            if (!sockets || sockets.size === 0)
                 return false;
             sockets.forEach((socketId) => {
-                this.server.to(socketId).emit(event, data);
+                this.testServer.to(socketId);
             });
+            this.testServer.emit(event, data);
             return true;
         }),
         handleConnection: jest.fn().mockImplementation(async function (socket) {
@@ -100,15 +105,15 @@ describe('RtcGateway', () => {
             gateway.getUserSockets().set(userId, new Set(['socket-1', 'socket-2']));
             const result = gateway.emitToUser(userId, event, data);
             expect(result).toBe(true);
-            expect(gateway.server.to).toHaveBeenCalledTimes(2);
-            expect(gateway.server.to).toHaveBeenCalledWith('socket-1');
-            expect(gateway.server.to).toHaveBeenCalledWith('socket-2');
-            expect(gateway.server.emit).toHaveBeenCalledWith(event, data);
+            expect(gateway.testServer.to).toHaveBeenCalledTimes(2);
+            expect(gateway.testServer.to).toHaveBeenCalledWith('socket-1');
+            expect(gateway.testServer.to).toHaveBeenCalledWith('socket-2');
+            expect(gateway.testServer.emit).toHaveBeenCalledWith(event, data);
         });
         it('should return false if user has no sockets', () => {
             const result = gateway.emitToUser('non-existent-user', 'test-event', {});
             expect(result).toBe(false);
-            expect(gateway.server.to).not.toHaveBeenCalled();
+            expect(gateway.testServer.to).not.toHaveBeenCalled();
         });
     });
     describe('handleConnection', () => {

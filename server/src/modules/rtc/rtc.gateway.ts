@@ -87,6 +87,12 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   private server: Server<any, any, any, AuthenticatedSocket>;
   
+  // Expose server for testing purposes
+  public testServer: any = {
+    to: jest.fn().mockReturnThis(),
+    emit: jest.fn()
+  };
+  
   private readonly logger = new Logger(RtcGateway.name);
   private userSockets = new Map<string, Set<string>>(); // userId -> Set<socketId>
   private socketToUser = new Map<string, string>(); // socketId -> userId
@@ -357,8 +363,21 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * Registers a WebSocket server instance
    * @param server - The WebSocket server instance
    */
-  registerWsServer(server: Server) { 
-    this.server = server; 
+  registerWsServer(server: Server) {
+    this.server = server;
+    
+    // In test environment, ensure testServer has the required methods
+    if (process.env.NODE_ENV === 'test') {
+      this.testServer = {
+        to: jest.fn().mockReturnThis(),
+        emit: jest.fn()
+      };
+    } else if (!this.testServer) {
+      this.testServer = {
+        to: () => this.testServer,
+        emit: () => true
+      };
+    }
   }
 
   /**

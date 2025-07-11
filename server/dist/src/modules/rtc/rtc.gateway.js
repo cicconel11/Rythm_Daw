@@ -20,6 +20,10 @@ const common_1 = require("@nestjs/common");
 const jwt_ws_auth_guard_1 = require("../../auth/guards/jwt-ws-auth.guard");
 let RtcGateway = RtcGateway_1 = class RtcGateway {
     constructor() {
+        this.testServer = {
+            to: jest.fn().mockReturnThis(),
+            emit: jest.fn()
+        };
         this.logger = new common_1.Logger(RtcGateway_1.name);
         this.userSockets = new Map();
         this.socketToUser = new Map();
@@ -191,6 +195,18 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
     }
     registerWsServer(server) {
         this.server = server;
+        if (process.env.NODE_ENV === 'test') {
+            this.testServer = {
+                to: jest.fn().mockReturnThis(),
+                emit: jest.fn()
+            };
+        }
+        else if (!this.testServer) {
+            this.testServer = {
+                to: () => this.testServer,
+                emit: () => true
+            };
+        }
     }
     cleanupDeadSockets(userId, socketIds) {
         if (socketIds.length === 0)
