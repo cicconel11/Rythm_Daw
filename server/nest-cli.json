@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "tsConfigPath": "tsconfig.app.json",
+    "deleteOutDir": true
+  },
+  "watchAssets": [
+    "src/**/*",
+    "!src/**/*.spec.ts",
+    "!test/**/*"
+  ]
+}
