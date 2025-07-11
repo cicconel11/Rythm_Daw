@@ -12,9 +12,9 @@ export declare class SnapshotsService {
     createSnapshot(userId: string, dto: CreateSnapshotDto, file?: Express.Multer.File): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
         name: string;
         description: string | null;
+        updatedAt: Date;
         data: string;
         projectId: string;
     }>;
@@ -26,16 +26,16 @@ export declare class SnapshotsService {
         project: {
             id: string;
             createdAt: Date;
-            updatedAt: Date;
             name: string;
             description: string | null;
+            updatedAt: Date;
             isPublic: boolean;
         };
         id: string;
         createdAt: Date;
-        updatedAt: Date;
         name: string;
         description: string | null;
+        updatedAt: Date;
         data: string;
         projectId: string;
     }[]>;
@@ -46,9 +46,9 @@ export declare class SnapshotsService {
         }[];
         id: string;
         createdAt: Date;
-        updatedAt: Date;
         name: string;
         description: string | null;
+        updatedAt: Date;
         data: string;
         projectId: string;
     }>;

@@ -13,9 +13,9 @@ export declare class SnapshotsController {
     create(req: RequestWithUser, file: Express.Multer.File, createSnapshotDto: any): Promise<{
         id: string;
         createdAt: Date;
-        updatedAt: Date;
         name: string;
         description: string | null;
+        updatedAt: Date;
         data: string;
         projectId: string;
     }>;
@@ -27,16 +27,16 @@ export declare class SnapshotsController {
         project: {
             id: string;
             createdAt: Date;
-            updatedAt: Date;
             name: string;
             description: string | null;
+            updatedAt: Date;
             isPublic: boolean;
         };
         id: string;
         createdAt: Date;
-        updatedAt: Date;
         name: string;
         description: string | null;
+        updatedAt: Date;
         data: string;
         projectId: string;
     }[]>;
@@ -47,9 +47,9 @@ export declare class SnapshotsController {
         }[];
         id: string;
         createdAt: Date;
-        updatedAt: Date;
         name: string;
         description: string | null;
+        updatedAt: Date;
         data: string;
         projectId: string;
     }>;

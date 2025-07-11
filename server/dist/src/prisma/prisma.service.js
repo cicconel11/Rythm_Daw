@@ -16,6 +16,13 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
     async onModuleDestroy() {
         await this.$disconnect();
     }
+    async modelExists(table) {
+        const rows = await this.$queryRaw `
+      SELECT name FROM sqlite_master
+      WHERE type = 'table' AND name = ${table}
+    `;
+        return rows.length > 0;
+    }
 };
 exports.PrismaService = PrismaService;
 exports.PrismaService = PrismaService = __decorate([

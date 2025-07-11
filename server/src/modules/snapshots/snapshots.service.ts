@@ -79,7 +79,7 @@ export class SnapshotsService {
         id: snapshotId,
         name: snapshotData.name,
         description: snapshotData.description,
-        data: { files: fileMetadata } as unknown as Prisma.InputJsonValue,
+        data: JSON.stringify({ files: fileMetadata }),
         projectId,
       },
     });

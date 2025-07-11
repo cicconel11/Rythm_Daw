@@ -10,4 +10,12 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleDestroy() {
     await this.$disconnect();
   }
+
+  async modelExists(table: string): Promise<boolean> {
+    const rows = await this.$queryRaw<Array<{ name: string }>>`
+      SELECT name FROM sqlite_master
+      WHERE type = 'table' AND name = ${table}
+    `;
+    return rows.length > 0;
+  }
 }
