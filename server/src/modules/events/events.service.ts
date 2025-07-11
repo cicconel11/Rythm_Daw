@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TrackEventsBulkDto } from './dto/track-event.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 // Define the ActivityLog type manually since we can't use Prisma generated types
 interface ActivityLog {
@@ -163,17 +163,13 @@ export class EventsService implements OnModuleInit {
     if (events.length === 0) return;
 
     try {
-      await tx.$transaction(async (prismaTx: any) => {
-        const txClient = prismaTx as TransactionClient;
-        for (const event of events) {
-          if (!event.userId) {
-            this.logger.warn('Skipping event - userId is required');
-            continue;
-          }
-          await this.createActivityLog(txClient, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
-          await this.createActivityLog(tx, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
+      for (const event of events) {
+        if (!event.userId) {
+          this.logger.warn('Skipping event - userId is required');
+          continue;
         }
-      });
+        await this.createActivityLog(tx, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
+      }
       this.logger.log(`Processed ${events.length} events synchronously`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -245,30 +241,37 @@ export class EventsService implements OnModuleInit {
    * Create an activity log entry from a track event
    */
   private async createActivityLog(
-    tx: TransactionClient,
-    type: string,
+    tx: Prisma.TransactionClient,
     userId: string,
-    projectId?: string,
+    type: string,
     entityType?: string,
     entityId?: string,
+    projectId?: string,
     properties: Record<string, any> = {},
     context: EventContext = {},
     timestamp?: string | Date
   ): Promise<ActivityLog> {
-    const metadata = JSON.stringify({
+    // Create metadata object with properties and optional projectId
+    const metadataObj = {
       ...properties,
       ...(projectId ? { projectId } : {})
-    });
+    };
+
+    // Convert to JSON string, or empty object if no properties
+    const metadataStr = Object.keys(metadataObj).length > 0 
+      ? JSON.stringify(metadataObj)
+      : '{}';
 
     const activityData = {
       userId,
       action: type,
       entityType: entityType || 'event',
       entityId: entityId || uuidv4(),
-      metadata,
-      createdAt: timestamp ? new Date(timestamp) : new Date(),
+      metadata: metadataStr, // Always a non-null string
+      ...(timestamp ? { createdAt: new Date(timestamp) } : {}),
       ...(context?.ip && { ipAddress: context.ip }),
       ...(context?.userAgent && { userAgent: context.userAgent }),
+      ...(projectId ? { projectId } : {}), // Include projectId directly if provided
     };
 
     try {
@@ -341,29 +344,14 @@ export class EventsService implements OnModuleInit {
       });
 
       // Get counts by action type using raw query with type assertion
-      type ByTypeResult = Array<{ action: string; count: bigint }>;
-      const prismaClient = this.prisma as unknown as {
-        $queryRaw: (query: TemplateStringsArray, ...values: any[]) => Promise<ByTypeResult>;
-      };
-      
-      const byTypeResult = await prismaClient.$queryRaw`
-        SELECT action, COUNT(*) as count
-        FROM "ActivityLog"
-        WHERE "userId" = ${userId}
-          AND "createdAt" >= ${startDate}
-          AND "createdAt" <= ${endDate}
-        GROUP BY action
-      `;
+      interface ByTypeItem {
+        action: string;
+        count: bigint;
+      }
 
-      type ByTypeItem = { action: string; count: bigint };
-      const byType = byTypeResult.reduce((acc: Record<string, number>, item: ByTypeItem) => {
-        acc[item.action] = Number(item.count);
-        return acc;
-      }, {});
-
-      // Get counts by user (if applicable)
-      const byUserResult = await this.prisma.activityLog.groupBy({
-        by: ['userId'],
+      // Use Prisma's built-in methods for type safety
+      const byTypeResult = await this.prisma.activityLog.groupBy({
+        by: ['action'],
         where: {
           userId,
           createdAt: {
@@ -373,30 +361,75 @@ export class EventsService implements OnModuleInit {
         },
         _count: true,
       });
+      
+      // Transform the result to match the expected format
+      const byType = byTypeResult.reduce(
+        (acc: Record<string, number>, item: { action: string; _count: number }) => {
+          if (item.action) {
+            acc[item.action] = Number(item._count);
+          }
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
-      const byUser = byUserResult.reduce<Record<string, number>>((acc: Record<string, number>, item: { userId: string; _count: number }) => {
-        acc[item.userId] = item._count;
-        return acc;
-      }, {});
+      // Get counts by user (if applicable)
+      type UserCountResult = { userId: string; count: bigint };
+      const byUserResult: UserCountResult[] = await this.prisma.$queryRaw`
+        SELECT 
+          "userId",
+          COUNT(*)::bigint as "count"
+        FROM "ActivityLog"
+        WHERE "userId" IS NOT NULL
+          AND "createdAt" >= ${startDate.toISOString()}::timestamptz
+          AND "createdAt" <= ${endDate.toISOString()}::timestamptz
+        GROUP BY "userId"
+      `;
+
+      const byUser = byUserResult.reduce<Record<string, number>>(
+        (acc: Record<string, number>, item: { userId: string; count: bigint }) => {
+          acc[item.userId] = Number(item.count);
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+
+      // Get daily counts with proper typing
+      type DailyCount = { day: Date; count: bigint };
+      const byDayResult: DailyCount[] = await this.prisma.$queryRaw`
+        SELECT 
+          DATE_TRUNC('day', "createdAt" AT TIME ZONE 'UTC') as "day",
+          COUNT(*)::bigint as "count"
+        FROM "ActivityLog"
+        WHERE "userId" = ${userId}
+          AND "createdAt" >= ${startDate.toISOString()}::timestamptz
+          AND "createdAt" <= ${endDate.toISOString()}::timestamptz
+        GROUP BY DATE_TRUNC('day', "createdAt" AT TIME ZONE 'UTC')
+        ORDER BY "day" ASC
+      `;
 
       // Get counts by project (if projectId exists in the metadata)
       let byProject: Record<string, number> = {};
       
       try {
-        type ByProjectResult = Array<{ projectId: string | null; count: bigint }>;
-        const prismaProjectClient = this.prisma as unknown as {
-          $queryRaw: (query: TemplateStringsArray, ...values: any[]) => Promise<ByProjectResult>;
-        };
+        interface ByProjectResult {
+          projectId: string | null;
+          count: bigint;
+        }
         
-        const byProjectResult = await prismaProjectClient.$queryRaw`
+        interface ByProjectResult {
+          projectId: string | null;
+          count: bigint;
+        }
+        
+        const byProjectResult: ByProjectResult[] = await this.prisma.$queryRaw`
           SELECT 
-            json_extract(metadata, '$.projectId') as projectId,
-            COUNT(*) as count
+            json_extract(metadata, '$.projectId') as "projectId",
+            COUNT(*)::bigint as "count"
           FROM "ActivityLog"
           WHERE "userId" = ${userId}
-            AND "createdAt" >= ${startDate}
-            AND "createdAt" <= ${endDate}
-            AND json_extract(metadata, '$.projectId') IS NOT NULL
+            AND "createdAt" >= ${startDate.toISOString()}::timestamptz
+            AND "createdAt" <= ${endDate.toISOString()}::timestamptz
           GROUP BY json_extract(metadata, '$.projectId')
         `;
 
@@ -405,7 +438,7 @@ export class EventsService implements OnModuleInit {
           .reduce<Record<string, number>>((acc: Record<string, number>, item: { projectId: string; count: bigint }) => {
             acc[item.projectId] = Number(item.count);
             return acc;
-          }, {});
+          }, {} as Record<string, number>);
       } catch (error) {
         // Project grouping is optional if metadata.projectId doesn't exist
         this.logger.warn('Could not group by project', error);

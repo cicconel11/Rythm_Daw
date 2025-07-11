@@ -30,6 +30,7 @@ declare module 'socket.io' {
 }
 export declare class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private server;
+    testServer: any;
     private readonly logger;
     private userSockets;
     private socketToUser;

@@ -62,17 +62,13 @@ let EventsService = EventsService_1 = class EventsService {
         if (events.length === 0)
             return;
         try {
-            await tx.$transaction(async (prismaTx) => {
-                const txClient = prismaTx;
-                for (const event of events) {
-                    if (!event.userId) {
-                        this.logger.warn('Skipping event - userId is required');
-                        continue;
-                    }
-                    await this.createActivityLog(txClient, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
-                    await this.createActivityLog(tx, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
+            for (const event of events) {
+                if (!event.userId) {
+                    this.logger.warn('Skipping event - userId is required');
+                    continue;
                 }
-            });
+                await this.createActivityLog(tx, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
+            }
             this.logger.log(`Processed ${events.length} events synchronously`);
         }
         catch (error) {
@@ -126,20 +122,24 @@ let EventsService = EventsService_1 = class EventsService {
             }
         }
     }
-    async createActivityLog(tx, type, userId, projectId, entityType, entityId, properties = {}, context = {}, timestamp) {
-        const metadata = JSON.stringify({
+    async createActivityLog(tx, userId, type, entityType, entityId, projectId, properties = {}, context = {}, timestamp) {
+        const metadataObj = {
             ...properties,
             ...(projectId ? { projectId } : {})
-        });
+        };
+        const metadataStr = Object.keys(metadataObj).length > 0
+            ? JSON.stringify(metadataObj)
+            : '{}';
         const activityData = {
             userId,
             action: type,
             entityType: entityType || 'event',
             entityId: entityId || (0, uuid_1.v4)(),
-            metadata,
-            createdAt: timestamp ? new Date(timestamp) : new Date(),
+            metadata: metadataStr,
+            ...(timestamp ? { createdAt: new Date(timestamp) } : {}),
             ...(context?.ip && { ipAddress: context.ip }),
             ...(context?.userAgent && { userAgent: context.userAgent }),
+            ...(projectId ? { projectId } : {}),
         };
         try {
             return await tx.activityLog.create({
@@ -197,21 +197,8 @@ let EventsService = EventsService_1 = class EventsService {
                 },
                 distinct: ['createdAt'],
             });
-            const prismaClient = this.prisma;
-            const byTypeResult = await prismaClient.$queryRaw `
-        SELECT action, COUNT(*) as count
-        FROM "ActivityLog"
-        WHERE "userId" = ${userId}
-          AND "createdAt" >= ${startDate}
-          AND "createdAt" <= ${endDate}
-        GROUP BY action
-      `;
-            const byType = byTypeResult.reduce((acc, item) => {
-                acc[item.action] = Number(item.count);
-                return acc;
-            }, {});
-            const byUserResult = await this.prisma.activityLog.groupBy({
-                by: ['userId'],
+            const byTypeResult = await this.prisma.activityLog.groupBy({
+                by: ['action'],
                 where: {
                     userId,
                     createdAt: {
@@ -221,22 +208,47 @@ let EventsService = EventsService_1 = class EventsService {
                 },
                 _count: true,
             });
-            const byUser = byUserResult.reduce((acc, item) => {
-                acc[item.userId] = item._count;
+            const byType = byTypeResult.reduce((acc, item) => {
+                if (item.action) {
+                    acc[item.action] = Number(item._count);
+                }
                 return acc;
             }, {});
+            const byUserResult = await this.prisma.$queryRaw `
+        SELECT 
+          "userId",
+          COUNT(*)::bigint as "count"
+        FROM "ActivityLog"
+        WHERE "userId" IS NOT NULL
+          AND "createdAt" >= ${startDate.toISOString()}::timestamptz
+          AND "createdAt" <= ${endDate.toISOString()}::timestamptz
+        GROUP BY "userId"
+      `;
+            const byUser = byUserResult.reduce((acc, item) => {
+                acc[item.userId] = Number(item.count);
+                return acc;
+            }, {});
+            const byDayResult = await this.prisma.$queryRaw `
+        SELECT 
+          DATE_TRUNC('day', "createdAt" AT TIME ZONE 'UTC') as "day",
+          COUNT(*)::bigint as "count"
+        FROM "ActivityLog"
+        WHERE "userId" = ${userId}
+          AND "createdAt" >= ${startDate.toISOString()}::timestamptz
+          AND "createdAt" <= ${endDate.toISOString()}::timestamptz
+        GROUP BY DATE_TRUNC('day', "createdAt" AT TIME ZONE 'UTC')
+        ORDER BY "day" ASC
+      `;
             let byProject = {};
             try {
-                const prismaProjectClient = this.prisma;
-                const byProjectResult = await prismaProjectClient.$queryRaw `
+                const byProjectResult = await this.prisma.$queryRaw `
           SELECT 
-            json_extract(metadata, '$.projectId') as projectId,
-            COUNT(*) as count
+            json_extract(metadata, '$.projectId') as "projectId",
+            COUNT(*)::bigint as "count"
           FROM "ActivityLog"
           WHERE "userId" = ${userId}
-            AND "createdAt" >= ${startDate}
-            AND "createdAt" <= ${endDate}
-            AND json_extract(metadata, '$.projectId') IS NOT NULL
+            AND "createdAt" >= ${startDate.toISOString()}::timestamptz
+            AND "createdAt" <= ${endDate.toISOString()}::timestamptz
           GROUP BY json_extract(metadata, '$.projectId')
         `;
                 byProject = byProjectResult

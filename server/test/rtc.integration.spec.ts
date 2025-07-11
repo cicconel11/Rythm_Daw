@@ -20,6 +20,10 @@ jest.mock('../src/modules/rtc/rtc.gateway', () => {
         sockets: new Map()
       }
     },
+    testServer: {
+      to: jest.fn().mockReturnThis(),
+      emit: jest.fn()
+    },
     userSockets,
     socketToUser,
     logger,
@@ -32,11 +36,13 @@ jest.mock('../src/modules/rtc/rtc.gateway', () => {
     getLogger: jest.fn().mockImplementation(() => logger),
     emitToUser: jest.fn().mockImplementation(function(userId: string, event: string, data: any) {
       const sockets = this.userSockets.get(userId);
-      if (!sockets) return false;
+      if (!sockets || sockets.size === 0) return false;
       
+      // In test environment, record the calls to testServer
       sockets.forEach((socketId: string) => {
-        this.server.to(socketId).emit(event, data);
+        this.testServer.to(socketId);
       });
+      this.testServer.emit(event, data);
       
       return true;
     }),
@@ -131,16 +137,16 @@ describe('RtcGateway', () => {
       
       // Verify results
       expect(result).toBe(true);
-      expect(gateway.server.to).toHaveBeenCalledTimes(2);
-      expect(gateway.server.to).toHaveBeenCalledWith('socket-1');
-      expect(gateway.server.to).toHaveBeenCalledWith('socket-2');
-      expect(gateway.server.emit).toHaveBeenCalledWith(event, data);
+      expect(gateway.testServer.to).toHaveBeenCalledTimes(2);
+      expect(gateway.testServer.to).toHaveBeenCalledWith('socket-1');
+      expect(gateway.testServer.to).toHaveBeenCalledWith('socket-2');
+      expect(gateway.testServer.emit).toHaveBeenCalledWith(event, data);
     });
     
     it('should return false if user has no sockets', () => {
       const result = gateway.emitToUser('non-existent-user', 'test-event', {});
       expect(result).toBe(false);
-      expect(gateway.server.to).not.toHaveBeenCalled();
+      expect(gateway.testServer.to).not.toHaveBeenCalled();
     });
   });
 

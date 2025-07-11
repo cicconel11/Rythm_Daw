@@ -193,26 +193,21 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
         stackTrace: report.stack || 'No stack trace available',
         stack: report.stack || null,
         breadcrumbs: report.breadcrumbs ? JSON.stringify(report.breadcrumbs) : null,
-        context: report.context ? JSON.stringify({
-          ...report.context,
-          platform: report.platform,
-          os: report.os,
-          browser: report.browser,
-          userAgent: report.userAgent,
-          url: report.url,
-          memoryUsage: report.memoryUsage
-        }) : null,
-        userId: userId,
+        context: report.context ? JSON.stringify(report.context) : null,
+        userId: userId || 'anonymous',
         projectId: report.projectId || null,
-        metadata: {
-          type: report.type,
+        metadata: JSON.stringify({
+          type: report.type || 'unknown',
+          name: report.name,
+          message: report.message,
           platform: report.platform,
           os: report.os,
           browser: report.browser,
           userAgent: report.userAgent,
           url: report.url,
-          memoryUsage: report.memoryUsage
-        }
+          memoryUsage: report.memoryUsage,
+          ...report.context
+        })
       };
 
       await this.prisma.crashReport.create({ data });
