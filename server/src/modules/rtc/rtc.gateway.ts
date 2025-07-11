@@ -87,11 +87,8 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   private server: Server<any, any, any, AuthenticatedSocket>;
   
-  // Expose server for testing purposes
-  public testServer: any = {
-    to: jest.fn().mockReturnThis(),
-    emit: jest.fn()
-  };
+  // Will be set by tests if needed
+  public testServer?: any;
   
   private readonly logger = new Logger(RtcGateway.name);
   private userSockets = new Map<string, Set<string>>(); // userId -> Set<socketId>
@@ -364,20 +361,30 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param server - The WebSocket server instance
    */
   registerWsServer(server: Server) {
-    this.server = server;
-    
-    // In test environment, ensure testServer has the required methods
-    if (process.env.NODE_ENV === 'test') {
-      this.testServer = {
-        to: jest.fn().mockReturnThis(),
-        emit: jest.fn()
-      };
-    } else if (!this.testServer) {
-      this.testServer = {
-        to: () => this.testServer,
-        emit: () => true
-      };
-    }
+    this.server = server as unknown as Server<any, any, any, AuthenticatedSocket>;
+  }
+
+  /**
+   * Forwards to the server's to() method
+   * @param room - The room to send to
+   * @returns The server's to() method result
+   */
+  to(room: string) {
+    if (this.testServer) return this.testServer.to(room);
+    if (!this.server) throw new Error('WebSocket server not initialized');
+    return this.server.to(room);
+  }
+
+  /**
+   * Emits an event to all connected clients
+   * @param event - The event name
+   * @param args - Arguments to send with the event
+   * @returns The server's emit() method result
+   */
+  emit(event: string, ...args: any[]) {
+    if (this.testServer) return this.testServer.emit(event, ...args);
+    if (!this.server) throw new Error('WebSocket server not initialized');
+    return this.server.emit(event, ...args);
   }
 
   /**

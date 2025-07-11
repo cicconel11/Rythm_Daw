@@ -10,11 +10,11 @@ interface ActivityLog {
   action: string;
   entityType: string;
   entityId: string;
-  metadata: string; // Stored as JSON string
+  metadata: string | null; // Updated to allow null
   createdAt: Date;
   userId: string;
-  ipAddress?: string;
-  userAgent?: string;
+  ipAddress?: string | null;
+  userAgent?: string | null;
 }
 import type { } from 'node:timers';
 import { v4 as uuidv4 } from 'uuid';
@@ -22,7 +22,9 @@ import { v4 as uuidv4 } from 'uuid';
 // Define a custom type for the Prisma transaction client
 type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'> & {
   activityLog: {
-    create: (args: { data: Omit<ActivityLog, 'id'> }) => Promise<ActivityLog>;
+    create: (args: { 
+      data: Omit<ActivityLog, 'id' | 'metadata'> & { metadata?: string | null } 
+    }) => Promise<ActivityLog>;
     groupBy: (args: { 
       by: string[]; 
       where?: Record<string, any>;
@@ -257,21 +259,22 @@ export class EventsService implements OnModuleInit {
       ...(projectId ? { projectId } : {})
     };
 
-    // Convert to JSON string, or empty object if no properties
+    // Always ensure we have a non-null string for metadata
     const metadataStr = Object.keys(metadataObj).length > 0 
       ? JSON.stringify(metadataObj)
       : '{}';
 
+    // Build the activity data with required fields
     const activityData = {
       userId,
       action: type,
       entityType: entityType || 'event',
       entityId: entityId || uuidv4(),
-      metadata: metadataStr, // Always a non-null string
+      metadata: metadataStr, // This is now guaranteed to be a non-null string
       ...(timestamp ? { createdAt: new Date(timestamp) } : {}),
-      ...(context?.ip && { ipAddress: context.ip }),
-      ...(context?.userAgent && { userAgent: context.userAgent }),
-      ...(projectId ? { projectId } : {}), // Include projectId directly if provided
+      ...(context?.ip ? { ipAddress: context.ip } : {}),
+      ...(context?.userAgent ? { userAgent: context.userAgent } : {}),
+      ...(projectId ? { projectId } : {}),
     };
 
     try {

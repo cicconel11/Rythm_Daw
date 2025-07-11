@@ -1,61 +1,100 @@
-# Rythm Server
+# RHYTHM Server
 
-NestJS server for the Rythm DAW application.
+This is the backend server for the RHYTHM Collaboration Suite, built with NestJS and TypeScript.
 
 ## Development
 
-```bash
-# Install dependencies
-pnpm install
+### Prerequisites
 
-# Start development server
-pnpm start:dev
+- Node.js (v16 or later)
+- npm or yarn
+- Docker (for database in development)
 
-# Run tests
-pnpm test
+### Getting Started
 
-# Lint code
-pnpm lint
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-# Typecheck
-pnpm typecheck
-```
+2. **Set up environment variables**
+   Copy `.env.example` to `.env` and update the values as needed.
 
-## CI/CD Pipeline
+3. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+   The server will be available at `http://localhost:3000` by default.
 
-The project uses GitHub Actions for CI/CD with the following workflows:
+## Testing
 
-### Continuous Integration (CI)
-- Runs on every push and pull request to `main`
-- Lints TypeScript code
-- Runs type checking
-- Executes tests with coverage
-- Uploads coverage to Codecov
-
-### Docker Build & Publish
-- Triggered on version tags (v*)
-- Builds a production-ready Docker image
-- Pushes to GitHub Container Registry (GHCR)
-- Tags with both version and git SHA
-
-## Docker
-
-### Building Locally
+### Running Tests
 
 ```bash
-docker build -t rythm-server .
-docker run -p 3000:3000 rythm-server
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage
+npm run test:cov
+
+# Run e2e tests
+npm run test:e2e
 ```
 
-### Environment Variables
+### Testing Guidelines
 
-Create a `.env` file in the root directory with the required environment variables (see `.env.example`).
+- **Unit Tests**: Test individual components in isolation
+- **Integration Tests**: Test component interactions
+- **E2E Tests**: Test the entire application flow
+
+### Test Isolation
+
+- Test code should not be included in production builds
+- Use dependency injection for test doubles
+- Keep test utilities in the `test/` directory
+
+## Production
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+### Starting in Production
+
+```bash
+npm run start:prod
+```
 
 ## Code Quality
 
-[![CI Status](https://github.com/your-org/Rythm_Daw/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/your-org/Rythm_Daw/actions)
-[![codecov](https://codecov.io/gh/your-org/Rythm_Daw/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/Rythm_Daw)
-[![Docker Image Size](https://img.shields.io/docker/image-size/ghcr.io/your-org/Rythm_Daw/latest)](https://github.com/your-org/Rythm_Daw/pkgs/container/rythm-server)
+### Linting
+
+```bash
+# Check for linting issues
+npm run lint
+
+# Fix auto-fixable issues
+npm run lint -- --fix
+```
+
+### Formatting
+
+```bash
+# Format code
+npm run format
+```
+
+## Contributing
+
+1. Create a new branch for your feature or bugfix
+2. Write tests for your changes
+3. Ensure all tests pass
+4. Submit a pull request
 
 ## License
 

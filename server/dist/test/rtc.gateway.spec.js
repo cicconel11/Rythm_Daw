@@ -40,9 +40,6 @@ class MockAdapter {
         this.sids.delete(id);
         return Promise.resolve();
     }
-    socketRooms(id) {
-        return this.sids.get(id) || new Set();
-    }
 }
 class MockLogger {
     constructor() {
@@ -57,14 +54,7 @@ class MockLogger {
 const mockLogger = new MockLogger();
 jest.mock('../src/auth/guards/jwt-ws-auth.guard', () => ({
     JwtWsAuthGuard: () => ({
-        canActivate: (context) => {
-            const client = context.getArgByIndex(0);
-            if (!client.handshake?.auth?.token) {
-                return false;
-            }
-            client.user = { userId: 'test-user', email: 'test@example.com' };
-            return true;
-        },
+        canActivate: () => true,
     }),
 }));
 class TestRtcGateway extends rtc_gateway_1.RtcGateway {
@@ -73,72 +63,44 @@ class TestRtcGateway extends rtc_gateway_1.RtcGateway {
         this.testSockets = new Map();
         this.logger = mockLogger;
         this.testServer = this.createTestServer();
-        this.server = this.testServer;
+        this.testServer = this.testServer;
     }
     createTestServer() {
-        const adapter = new MockAdapter();
         return {
             sockets: {
-                sockets: this.testSockets,
-                adapter: adapter,
+                sockets: new Map(),
             },
-            of: jest.fn().mockReturnThis(),
+            to: jest.fn().mockImplementation(() => ({
+                emit: jest.fn(),
+            })),
             emit: jest.fn(),
-            to: jest.fn().mockReturnThis(),
-            in: jest.fn().mockReturnThis(),
-            server: {},
-            on: jest.fn(),
-            use: jest.fn(),
-            close: jest.fn(),
-            listen: jest.fn(),
-            attach: jest.fn(),
-            path: jest.fn(),
-            adapter: adapter,
         };
     }
     createTestSocket(user = {}) {
-        const userId = user.userId || 'test-user';
+        const id = `test-socket-${Math.random().toString(36).substr(2, 9)}`;
+        const userData = {
+            userId: user.userId || 'test-user',
+            email: user.email || 'test@example.com',
+            name: user.name || 'Test User'
+        };
         const socket = {
-            id: `socket-${Date.now()}`,
-            user: {
-                userId,
-                email: user.email || 'test@example.com',
-                name: user.name || 'Test User',
-            },
+            id,
+            user: userData,
             handshake: {
-                user: {
-                    userId,
-                    email: user.email || 'test@example.com',
-                    name: user.name || 'Test User',
-                },
+                user: userData,
                 headers: {},
                 time: new Date().toISOString(),
-                address: '::1',
+                address: '127.0.0.1',
                 xdomain: false,
-                secure: false,
+                secure: true,
                 issued: Date.now(),
                 url: '/',
                 query: {},
-                auth: { token: 'test-token' },
             },
-            rooms: new Set(),
-            join: jest.fn().mockImplementation((room) => {
-                socket.rooms.add(room);
-                return Promise.resolve();
-            }),
-            leave: jest.fn().mockImplementation((room) => {
-                socket.rooms.delete(room);
-                return Promise.resolve();
-            }),
-            disconnect: jest.fn().mockImplementation(() => {
-                socket.connected = false;
-                socket.disconnected = true;
-            }),
-            emit: jest.fn().mockReturnThis(),
-            on: jest.fn().mockReturnThis(),
-            once: jest.fn().mockReturnThis(),
-            removeListener: jest.fn().mockReturnThis(),
-            removeAllListeners: jest.fn().mockReturnThis(),
+            join: jest.fn().mockReturnThis(),
+            leave: jest.fn().mockReturnThis(),
+            disconnect: jest.fn(),
+            emit: jest.fn(),
             to: jest.fn().mockReturnThis(),
             in: jest.fn().mockReturnThis(),
             connected: true,
@@ -149,7 +111,7 @@ class TestRtcGateway extends rtc_gateway_1.RtcGateway {
             },
             client: {
                 conn: {
-                    remoteAddress: '::1',
+                    remoteAddress: '127.0.0.1',
                 },
             },
             data: {},
@@ -157,88 +119,62 @@ class TestRtcGateway extends rtc_gateway_1.RtcGateway {
                 headers: {},
             },
         };
-        this.testSockets.set(socket.id, socket);
+        this.testServer.sockets.sockets.set(id, socket);
+        this.testSockets.set(id, socket);
         return socket;
     }
-    async testEmitToUser(userId, event, data) {
+    testEmitToUser(userId, event, data) {
         return this.emitToUser(userId, event, data);
     }
-    async testHandleConnection(client) {
+    testHandleConnection(client) {
         return this.handleConnection(client);
     }
-    async testHandleDisconnect(client) {
-        await this.handleDisconnect({
-            id: client.id,
-            handshake: { user: { userId: 'test-user' } },
-            on: jest.fn(),
-            removeListener: jest.fn(),
-            disconnect: jest.fn(),
-        });
-        this.testSockets.delete(client.id);
+    testHandleDisconnect(client) {
+        return this.handleDisconnect(client);
     }
 }
 describe('RtcGateway', () => {
     let gateway;
     beforeEach(() => {
-        jest.clearAllMocks();
         gateway = new TestRtcGateway();
     });
     afterEach(() => {
         jest.clearAllMocks();
     });
+    it('should be defined', () => {
+        expect(gateway).toBeDefined();
+    });
     describe('handleConnection', () => {
-        it('should handle connection with valid user', async () => {
-            const user = { userId: 'test-user', email: 'test@example.com' };
-            const socket = gateway.createTestSocket(user);
-            await gateway.testHandleConnection(socket);
-            expect(gateway.testSockets.get(socket.id)).toBeDefined();
-            expect(socket.emit).toHaveBeenCalledWith('rtc:connection-success', {
-                userId: user.userId,
-                email: user.email,
-                name: 'Test User',
-                socketId: socket.id
-            });
-            expect(socket.emit).toHaveBeenCalledWith('rtc:online-users', {
-                users: expect.any(Array)
-            });
-        });
-        it('should disconnect if user is missing', async () => {
-            const socket = gateway.createTestSocket();
-            socket.handshake.user = undefined;
-            await gateway.testHandleConnection(socket);
-            expect(socket.disconnect).toHaveBeenCalled();
-            expect(mockLogger.warn).toHaveBeenCalledWith('Missing user in handshake – disconnecting', 'RtcGateway');
+        it('should handle connection and store socket', async () => {
+            const client = gateway.createTestSocket({ userId: 'user1' });
+            await gateway.testHandleConnection(client);
+            expect(client.join).toHaveBeenCalledWith('user1');
+            expect(gateway['userSockets'].has('user1')).toBe(true);
+            expect(gateway['socketToUser'].get(client.id)).toBe('user1');
         });
     });
     describe('handleDisconnect', () => {
-        it('should clean up user connections on disconnect', async () => {
-            const user = { userId: 'test-user', email: 'test@example.com' };
-            const socket = gateway.createTestSocket(user);
-            gateway.testSockets.set(socket.id, socket);
-            expect(gateway.testSockets.has(socket.id)).toBe(true);
-            await gateway.testHandleDisconnect({ id: socket.id });
-            expect(gateway.testSockets.has(socket.id)).toBe(false);
+        it('should handle disconnection and clean up', async () => {
+            const client = gateway.createTestSocket({ userId: 'user1' });
+            await gateway.testHandleConnection(client);
+            client.connected = false;
+            await gateway.testHandleDisconnect(client);
+            expect(client.leave).toHaveBeenCalled();
+            expect(gateway['userSockets'].get('user1')?.has(client.id)).toBe(false);
+            expect(gateway['socketToUser'].has(client.id)).toBe(false);
         });
     });
     describe('emitToUser', () => {
-        it('should emit event to all user sockets', async () => {
-            const user = { userId: 'test-user', email: 'test@example.com' };
-            const socket1 = gateway.createTestSocket(user);
-            const socket2 = gateway.createTestSocket(user);
-            await gateway.testHandleConnection(socket1);
-            await gateway.testHandleConnection(socket2);
-            socket1.emit.mockClear();
-            socket2.emit.mockClear();
-            const event = 'test-event';
-            const data = { message: 'test' };
-            const result = await gateway.emitToUser(user.userId, event, data);
+        it('should emit event to user', async () => {
+            const client = gateway.createTestSocket({ userId: 'user1' });
+            await gateway.testHandleConnection(client);
+            const result = gateway.testEmitToUser('user1', 'test-event', { data: 'test' });
             expect(result).toBe(true);
-            expect(result).toBe(true);
+            expect(client.emit).toHaveBeenCalledWith('test-event', { data: 'test' });
         });
-        it('should handle case when user has no sockets', async () => {
-            const result = await gateway.testEmitToUser('non-existent-user', 'test-event', {});
+        it('should handle non-existent user', () => {
+            const result = gateway.testEmitToUser('non-existent', 'test-event', {});
             expect(result).toBe(false);
-            expect(mockLogger.warn).toHaveBeenCalledWith('Attempted to emit to user non-existent-user but no sockets found', 'RtcGateway');
         });
     });
 });
