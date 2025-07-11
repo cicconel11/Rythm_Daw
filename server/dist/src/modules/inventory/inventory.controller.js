@@ -23,7 +23,7 @@ let InventoryController = class InventoryController {
         this.inventoryService = inventoryService;
     }
     async syncInventory(req, dto) {
-        const userId = req.user.sub;
+        const userId = req.user.userId;
         return this.inventoryService.syncUserInventory(userId, dto);
     }
 };

@@ -192,41 +192,97 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
     registerWsServer(server) {
         this.server = server;
     }
+    cleanupDeadSockets(userId, socketIds) {
+        if (socketIds.length === 0)
+            return;
+        this.logger.debug(`Cleaning up ${socketIds.length} dead sockets for user ${userId}`);
+        const userSockets = this.userSockets.get(userId);
+        if (userSockets) {
+            socketIds.forEach(socketId => {
+                userSockets.delete(socketId);
+                this.socketToUser.delete(socketId);
+                this.cleanupRoomAssociations(userId, socketId);
+            });
+            if (userSockets.size === 0) {
+                this.userSockets.delete(userId);
+            }
+        }
+    }
+    cleanupRoomAssociations(userId, socketId) {
+        this.userRooms.forEach((userIds, roomId) => {
+            if (userIds.has(userId)) {
+                userIds.delete(userId);
+                if (userIds.size === 0) {
+                    this.userRooms.delete(roomId);
+                }
+                this.notifyRoomOfUserLeave(roomId, userId, socketId);
+            }
+        });
+    }
+    notifyRoomOfUserLeave(roomId, userId, socketId) {
+        try {
+            const roomSockets = this.rooms.get(roomId);
+            if (roomSockets) {
+                roomSockets.delete(socketId);
+                if (roomSockets.size === 0) {
+                    this.rooms.delete(roomId);
+                }
+                else {
+                    const leaveMessage = {
+                        userId,
+                        socketId,
+                        roomId,
+                        timestamp: new Date().toISOString()
+                    };
+                    this.server.to(roomId).emit('user-left', leaveMessage);
+                }
+            }
+        }
+        catch (error) {
+            this.logger.error(`Error notifying room ${roomId} of user ${userId} leaving:`, error);
+        }
+    }
     emitToUser(userId, event, payload) {
+        if (!userId || !event) {
+            this.logger.warn('Invalid parameters provided to emitToUser', { userId, event });
+            return false;
+        }
         const sockets = this.userSockets.get(userId);
-        if (!sockets || sockets.size === 0 || !this.server?.sockets?.sockets) {
+        if (!sockets || sockets.size === 0) {
             this.logger.warn(`Attempted to emit to user ${userId} but no sockets found`, RtcGateway_1.name);
+            return false;
+        }
+        if (!this.server?.sockets?.sockets) {
+            this.logger.error('WebSocket server not properly initialized');
             return false;
         }
         let success = false;
         const socketsToRemove = [];
-        sockets.forEach(socketId => {
+        const socketIds = Array.from(sockets);
+        for (const socketId of socketIds) {
             try {
                 const socket = this.server.sockets.sockets.get(socketId);
-                if (socket) {
-                    socket.emit(event, payload);
-                    success = true;
+                if (socket && socket.connected) {
+                    try {
+                        socket.emit(event, payload);
+                        success = true;
+                    }
+                    catch (emitError) {
+                        this.logger.error(`Error emitting to socket ${socketId}:`, emitError);
+                        socketsToRemove.push(socketId);
+                    }
                 }
                 else {
                     socketsToRemove.push(socketId);
                 }
             }
             catch (error) {
-                this.logger.error(`Error emitting to socket ${socketId}:`, error);
+                this.logger.error(`Unexpected error processing socket ${socketId}:`, error);
                 socketsToRemove.push(socketId);
             }
-        });
+        }
         if (socketsToRemove.length > 0) {
-            const userSockets = this.userSockets.get(userId);
-            if (userSockets) {
-                socketsToRemove.forEach(socketId => {
-                    userSockets.delete(socketId);
-                    this.socketToUser.delete(socketId);
-                });
-                if (userSockets.size === 0) {
-                    this.userSockets.delete(userId);
-                }
-            }
+            this.cleanupDeadSockets(userId, socketsToRemove);
         }
         return success;
     }

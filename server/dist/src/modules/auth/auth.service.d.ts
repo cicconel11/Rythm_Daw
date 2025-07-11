@@ -1,6 +1,10 @@
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
-import { User } from '@prisma/client';
+interface SafeUser {
+    id: string;
+    email: string;
+    name: string | null;
+}
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 export interface TokenPayload {
@@ -10,11 +14,13 @@ export interface TokenPayload {
     [key: string]: any;
 }
 export interface AuthResponse {
-    id: string;
-    email: string;
-    name: string;
     accessToken: string;
     refreshToken: string;
+    user: {
+        id: string;
+        email: string;
+        name: string | null;
+    };
 }
 export interface Tokens {
     accessToken: string;
@@ -38,11 +44,17 @@ export declare class AuthService {
     login(email: string, password: string): Promise<AuthResponse>;
     logout(userId: string): Promise<boolean>;
     refreshTokens(userId: string, refreshToken: string): Promise<Tokens>;
-    validateUser(email: string, password: string): Promise<Omit<User, 'password'> | null>;
+    validateUser(email: string, password: string): Promise<SafeUser | null>;
     verifyToken(token: string): Promise<TokenPayload>;
     private updateRefreshToken;
     private revokeUserRefreshTokens;
     private getTokens;
     setRefreshTokenCookie(res: Response, refreshToken: string): void;
     clearRefreshTokenCookie(res: Response): void;
+    getUserById(userId: string): Promise<{
+        id: string;
+        email: string;
+        name: string | null;
+    }>;
 }
+export {};

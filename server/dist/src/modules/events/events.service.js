@@ -14,7 +14,6 @@ exports.EventsService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const event_emitter_1 = require("@nestjs/event-emitter");
-const client_1 = require("@prisma/client");
 const uuid_1 = require("uuid");
 let EventsService = EventsService_1 = class EventsService {
     constructor(prisma, eventEmitter) {
@@ -37,53 +36,41 @@ let EventsService = EventsService_1 = class EventsService {
         if (events.length > this.MAX_BATCH_SIZE) {
             throw new Error(`Maximum batch size is ${this.MAX_BATCH_SIZE} events`);
         }
-        const validEvents = events.filter(event => {
+        const validEvents = [];
+        for (const event of events) {
             if (!event.userId) {
                 this.logger.warn('Skipping event - userId is required');
-                return false;
+                continue;
             }
-            return true;
-        });
-        const trackEvents = validEvents.map((event) => {
             const trackEvent = {
-                type: event.type,
+                ...event,
                 userId: event.userId,
                 timestamp: event.timestamp ? new Date(event.timestamp) : new Date(),
             };
-            const assignIfExists = (key, value) => {
-                if (value !== undefined) {
-                    trackEvent[key] = value;
-                }
-            };
-            assignIfExists('properties', event.properties);
-            assignIfExists('context', event.context);
-            assignIfExists('entityType', event.entityType);
-            assignIfExists('entityId', event.entityId);
-            assignIfExists('name', event.name);
-            assignIfExists('anonymousId', event.anonymousId);
-            assignIfExists('sessionId', event.sessionId);
-            assignIfExists('projectId', event.projectId);
-            return trackEvent;
-        });
+            validEvents.push(trackEvent);
+        }
+        if (validEvents.length === 0) {
+            return;
+        }
         if (debug) {
-            this.logger.debug(`Processing ${trackEvents.length} events in debug mode`);
-            await this.processEvents(trackEvents);
+            await this.processEventBatch(validEvents, this.prisma);
+            return;
         }
-        else {
-            await this.enqueueEvents(trackEvents);
-        }
+        await this.enqueueEvents(validEvents);
     }
-    async processEvents(events) {
+    async processEventBatch(events, tx) {
         if (events.length === 0)
             return;
         try {
-            await this.prisma.$transaction(async (tx) => {
+            await tx.$transaction(async (prismaTx) => {
+                const txClient = prismaTx;
                 for (const event of events) {
                     if (!event.userId) {
                         this.logger.warn('Skipping event - userId is required');
                         continue;
                     }
-                    await this.createActivityLog(event, tx);
+                    await this.createActivityLog(txClient, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
+                    await this.createActivityLog(tx, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
                 }
             });
             this.logger.log(`Processed ${events.length} events synchronously`);
@@ -106,36 +93,6 @@ let EventsService = EventsService_1 = class EventsService {
             this.scheduleFlush();
         }
     }
-    async createActivityLog(event, tx) {
-        const { userId, type, properties = {}, context = {}, timestamp, projectId, entityType, entityId } = event;
-        const activityData = {
-            action: type,
-            entityType: entityType || 'event',
-            entityId: entityId || (0, uuid_1.v4)(),
-            metadata: {
-                ...properties,
-                ...(projectId ? { projectId } : {})
-            },
-            createdAt: timestamp ? new Date(timestamp) : new Date(),
-            user: {
-                connect: {
-                    id: userId
-                }
-            },
-            ...(context?.ip && { ipAddress: context.ip }),
-            ...(context?.userAgent && { userAgent: context.userAgent }),
-        };
-        try {
-            await tx.activityLog.create({
-                data: activityData
-            });
-        }
-        catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            this.logger.error(`Failed to create activity log: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
-            throw error;
-        }
-    }
     async processQueue() {
         if (this.isProcessing || this.eventQueue.length === 0) {
             return;
@@ -143,13 +100,14 @@ let EventsService = EventsService_1 = class EventsService {
         this.isProcessing = true;
         const batch = this.eventQueue.splice(0, this.BATCH_SIZE);
         try {
-            await this.prisma.$transaction(async (tx) => {
+            await this.prisma.$transaction(async (prismaTx) => {
+                const tx = prismaTx;
                 for (const event of batch) {
                     if (!event.userId) {
                         this.logger.warn('Skipping event - userId is required');
                         continue;
                     }
-                    await this.createActivityLog(event, tx);
+                    await this.createActivityLog(tx, event.type, event.userId, event.projectId, event.entityType, event.entityId, event.properties, event.context, event.timestamp);
                 }
             });
             this.logger.log(`Processed ${batch.length} events`);
@@ -166,6 +124,32 @@ let EventsService = EventsService_1 = class EventsService {
             if (this.eventQueue.length > 0) {
                 setImmediate(() => this.processQueue());
             }
+        }
+    }
+    async createActivityLog(tx, type, userId, projectId, entityType, entityId, properties = {}, context = {}, timestamp) {
+        const metadata = JSON.stringify({
+            ...properties,
+            ...(projectId ? { projectId } : {})
+        });
+        const activityData = {
+            userId,
+            action: type,
+            entityType: entityType || 'event',
+            entityId: entityId || (0, uuid_1.v4)(),
+            metadata,
+            createdAt: timestamp ? new Date(timestamp) : new Date(),
+            ...(context?.ip && { ipAddress: context.ip }),
+            ...(context?.userAgent && { userAgent: context.userAgent }),
+        };
+        try {
+            return await tx.activityLog.create({
+                data: activityData
+            });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error(`Failed to create activity log: ${errorMessage}`, error instanceof Error ? error.stack : undefined);
+            throw error;
         }
     }
     scheduleFlush() {
@@ -189,83 +173,93 @@ let EventsService = EventsService_1 = class EventsService {
             }
         }, this.FLUSH_INTERVAL_MS);
     }
-    async getStats(options = {}) {
-        const { startDate, endDate, userId, action } = options;
-        const where = {
-            AND: [
-                startDate ? { createdAt: { gte: startDate } } : {},
-                endDate ? { createdAt: { lte: endDate } } : {},
-                userId ? { userId } : {},
-                action ? { action } : {},
-            ].filter(Boolean),
-        };
-        const stats = {
-            total: 0,
-            byType: {},
-            byDay: [],
-            byUser: {},
-            byProject: {}
-        };
+    async getEventStats(userId, startDate, endDate) {
         try {
-            stats.total = await this.prisma.activityLog.count({ where });
-            const byTypeResults = await this.prisma.activityLog.groupBy({
-                by: ['action'],
-                where,
-                _count: true,
+            const total = await this.prisma.activityLog.count({
+                where: {
+                    userId,
+                    createdAt: {
+                        gte: startDate,
+                        lte: endDate,
+                    },
+                },
             });
-            stats.byType = byTypeResults.reduce((acc, { action, _count }) => {
-                if (action) {
-                    acc[action] = _count;
-                }
-                return acc;
-            }, {});
-            const byDay = await this.prisma.$queryRaw `
-        SELECT DATE("createdAt") as date, COUNT(*)::int as count
+            const daysWithEvents = await this.prisma.activityLog.findMany({
+                where: {
+                    userId,
+                    createdAt: {
+                        gte: startDate,
+                        lte: endDate,
+                    },
+                },
+                select: {
+                    createdAt: true,
+                },
+                distinct: ['createdAt'],
+            });
+            const prismaClient = this.prisma;
+            const byTypeResult = await prismaClient.$queryRaw `
+        SELECT action, COUNT(*) as count
         FROM "ActivityLog"
-        WHERE ${client_1.Prisma.raw(JSON.stringify(where))}
-        GROUP BY DATE("createdAt")
-        ORDER BY date ASC
+        WHERE "userId" = ${userId}
+          AND "createdAt" >= ${startDate}
+          AND "createdAt" <= ${endDate}
+        GROUP BY action
       `;
-            stats.byDay = byDay.map(({ date, count }) => ({
-                date,
-                count: Number(count)
-            }));
-            const byUserResults = await this.prisma.activityLog.groupBy({
-                by: ['userId'],
-                where,
-                _count: true,
-            });
-            stats.byUser = byUserResults.reduce((acc, { userId, _count }) => {
-                if (userId) {
-                    acc[userId] = _count;
-                }
+            const byType = byTypeResult.reduce((acc, item) => {
+                acc[item.action] = Number(item.count);
                 return acc;
             }, {});
+            const byUserResult = await this.prisma.activityLog.groupBy({
+                by: ['userId'],
+                where: {
+                    userId,
+                    createdAt: {
+                        gte: startDate,
+                        lte: endDate,
+                    },
+                },
+                _count: true,
+            });
+            const byUser = byUserResult.reduce((acc, item) => {
+                acc[item.userId] = item._count;
+                return acc;
+            }, {});
+            let byProject = {};
             try {
-                const byProjectResults = await this.prisma.$queryRaw `
+                const prismaProjectClient = this.prisma;
+                const byProjectResult = await prismaProjectClient.$queryRaw `
           SELECT 
-            metadata->>'projectId' as "projectId", 
-            COUNT(*)::int as count
+            json_extract(metadata, '$.projectId') as projectId,
+            COUNT(*) as count
           FROM "ActivityLog"
-          WHERE ${client_1.Prisma.raw(JSON.stringify(where))}
-          AND metadata->>'projectId' IS NOT NULL
-          GROUP BY metadata->>'projectId'
+          WHERE "userId" = ${userId}
+            AND "createdAt" >= ${startDate}
+            AND "createdAt" <= ${endDate}
+            AND json_extract(metadata, '$.projectId') IS NOT NULL
+          GROUP BY json_extract(metadata, '$.projectId')
         `;
-                stats.byProject = byProjectResults.reduce((acc, { projectId, count }) => {
-                    if (projectId) {
-                        acc[projectId] = Number(count);
-                    }
+                byProject = byProjectResult
+                    .filter((item) => Boolean(item.projectId))
+                    .reduce((acc, item) => {
+                    acc[item.projectId] = Number(item.count);
                     return acc;
                 }, {});
             }
             catch (error) {
-                this.logger.debug('Project grouping not available in ActivityLog metadata');
+                this.logger.warn('Could not group by project', error);
             }
-            return stats;
+            return {
+                total,
+                daysWithEvents: daysWithEvents.length,
+                byType,
+                byUser,
+                byProject,
+            };
         }
         catch (error) {
-            this.logger.error(`Error getting event stats: ${error instanceof Error ? error.message : 'Unknown error'}`);
-            throw error;
+            this.logger.error('Error getting event stats', error);
+            throw new Error('Failed to get event stats');
         }
     }
 };

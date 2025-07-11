@@ -59,7 +59,7 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
-  async joinProjectRoom(client: Socket, projectId: string) {
+  private async joinProjectRoom(client: Socket, projectId: string) {
     const userId = this.userSockets.get(client.id);
     if (!userId) return;
 
@@ -75,20 +75,21 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
     this.projectRooms.get(projectId)?.add(client.id);
     
-    // Notify others in the project
-    const user = await this.presenceService.getUserPresence(userId);
-    if (user) {
-      this.server.to(`project:${projectId}`).emit('presence-joined', {
-        userId: user.userId,
-        status: user.status,
-        user: {
-          id: user.user.id,
-          name: user.user.name,
-          email: user.user.email,
-        },
-        projectId,
-      });
-    }
+    // Get user presence status
+    const isOnline = await this.presenceService.getUserPresence(userId);
+    
+    // In a real app, you would fetch the user data from your database here
+    // For now, we'll just use the basic info we have
+    this.server.to(`project:${projectId}`).emit('presence-joined', {
+      userId,
+      status: isOnline ? 'online' : 'offline',
+      user: {
+        id: userId,
+        name: 'User', // This should be fetched from your user service
+        email: 'user@example.com', // This should be fetched from your user service
+      },
+      projectId,
+    });
     
     // Send current presence in the room
     const currentPresence = await this.presenceService.getProjectPresence(projectId);

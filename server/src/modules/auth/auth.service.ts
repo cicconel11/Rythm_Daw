@@ -8,7 +8,13 @@ import {
 import { JwtService } from '@nestjs/jwt';
 // Import PrismaService and types
 import { PrismaService } from '../../prisma/prisma.service';
-import { User } from '@prisma/client';
+
+// Define the user data we want to expose
+interface SafeUser {
+  id: string;
+  email: string;
+  name: string | null;
+}
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
@@ -21,11 +27,13 @@ export interface TokenPayload {
 }
 
 export interface AuthResponse {
-  id: string;
-  email: string;
-  name: string;
   accessToken: string;
   refreshToken: string;
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+  };
 }
 
 export interface Tokens {
@@ -53,30 +61,21 @@ export class AuthService {
 
   async signup(email: string, password: string, name?: string): Promise<AuthResponse> {
     try {
-      // Check if email already exists
+      // Check if user already exists
       const existingUser = await this.prisma.user.findUnique({ where: { email } });
       if (existingUser) {
         throw new ConflictException('Email already in use');
       }
 
-      // Hash the password
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, this.SALT_ROUNDS);
       
-      // Set default name from email if not provided
-      const userName = name || email.split('@')[0];
-
-      // Create new user
+      // Create user
       const user = await this.prisma.user.create({
         data: {
           email,
+          name: name || email.split('@')[0],
           password: hashedPassword,
-          name: userName,
-          isApproved: true,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
         },
       });
 
@@ -85,13 +84,15 @@ export class AuthService {
       
       // Update refresh token in database
       await this.updateRefreshToken(user.id, tokens.refreshToken);
-
+      
       return {
-        id: user.id,
-        email: user.email,
-        name: user.name || '',
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
       };
     } catch (error) {
       this.logger.error(`Signup error: ${error.message}`, error.stack);
@@ -101,20 +102,32 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<AuthResponse> {
     try {
-      const user = await this.validateUser(email, password);
+      // Find user by email
+      const user = await this.prisma.user.findUnique({ where: { email } });
       if (!user) {
         throw new UnauthorizedException('Invalid credentials');
       }
 
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      // Generate tokens
       const tokens = await this.getTokens(user.id, user.email, user.name || '');
+      
+      // Update refresh token in database
       await this.updateRefreshToken(user.id, tokens.refreshToken);
       
       return {
-        id: user.id,
-        email: user.email,
-        name: user.name || '',
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
       };
     } catch (error) {
       this.logger.error(`Login error: ${error.message}`, error.stack);
@@ -162,21 +175,27 @@ export class AuthService {
     }
   }
 
-  async validateUser(email: string, password: string): Promise<Omit<User, 'password'> | null> {
-    try {
-      const user = await this.prisma.user.findUnique({ where: { email } });
-      if (!user) return null;
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) return null;
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password: _, ...result } = user;
-      return result;
-    } catch (error) {
-      this.logger.error(`Validate user error: ${error.message}`, error.stack);
-      throw error;
+  async validateUser(email: string, password: string): Promise<SafeUser | null> {
+    const user = await this.prisma.user.findUnique({ 
+      where: { email },
+      select: { id: true, email: true, name: true, password: true }
+    });
+    
+    if (!user) {
+      return null;
     }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    // Return only the safe user fields
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name
+    };
   }
 
   async verifyToken(token: string): Promise<TokenPayload> {
@@ -268,5 +287,18 @@ export class AuthService {
       sameSite: isProduction ? 'strict' : 'lax',
       path: '/',
     });
+  }
+
+  async getUserById(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true }
+    });
+    
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    
+    return user;
   }
 }

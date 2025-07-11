@@ -38,15 +38,15 @@ let SnapshotsController = class SnapshotsController {
             description: createSnapshotDto.description,
             metadata,
         };
-        const userId = req.user.sub;
+        const userId = req.user.userId;
         return this.snapshotsService.createSnapshot(userId, dto, file);
     }
     async findAll(req, projectId) {
-        const userId = req.user.sub;
+        const userId = req.user.userId;
         return this.snapshotsService.getProjectSnapshots(projectId, userId);
     }
     async findOne(req, projectId, snapshotId) {
-        const userId = req.user.sub;
+        const userId = req.user.userId;
         return this.snapshotsService.getSnapshotById(projectId, snapshotId, userId);
     }
 };

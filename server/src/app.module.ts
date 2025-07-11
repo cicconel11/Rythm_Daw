@@ -1,7 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, INestApplication } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { INestApplication } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { FilesModule } from './modules/files/files.module';
@@ -23,10 +22,8 @@ import { WsAdapter } from './ws/ws-adapter';
   providers: [
     {
       provide: WsAdapter,
-      useFactory: (app: INestApplication) => {
-        return new WsAdapter(app);
-      },
-      inject: [INestApplication],
+      useFactory: (app: INestApplication) => new WsAdapter(app),
+      inject: [APP_INTERCEPTOR],
     },
   ],
 })

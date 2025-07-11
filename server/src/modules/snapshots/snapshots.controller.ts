@@ -2,17 +2,9 @@ import { Controller, Post, Get, Body, Param, UploadedFile, UseInterceptors, UseG
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { Request } from 'express';
 import { CreateSnapshotDto } from './dto/create-snapshot.dto';
 import { SnapshotsService } from './snapshots.service';
-
-interface RequestWithUser extends Request {
-  user: {
-    sub: string;
-    email: string;
-    [key: string]: any;
-  };
-}
+import { RequestWithUser } from '../../constants/request-with-user';
 
 @ApiTags('snapshots')
 @Controller('api/snapshots')
@@ -84,7 +76,7 @@ export class SnapshotsController {
       metadata,
     };
 
-    const userId = req.user.sub; // From JWT
+    const userId = req.user.userId; // From JWT
     return this.snapshotsService.createSnapshot(userId, dto, file);
   }
 
@@ -96,7 +88,7 @@ export class SnapshotsController {
     @Req() req: RequestWithUser,
     @Param('projectId', ParseUUIDPipe) projectId: string,
   ) {
-    const userId = req.user.sub; // From JWT
+    const userId = req.user.userId; // From JWT
     return this.snapshotsService.getProjectSnapshots(projectId, userId);
   }
 
@@ -109,7 +101,7 @@ export class SnapshotsController {
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('snapshotId', ParseUUIDPipe) snapshotId: string,
   ) {
-    const userId = req.user.sub; // From JWT
+    const userId = req.user.userId; // From JWT
     return this.snapshotsService.getSnapshotById(projectId, snapshotId, userId);
   }
 }
