@@ -13,8 +13,16 @@ import {
   HttpCode 
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiBody, 
+  ApiBearerAuth 
+} from '@nestjs/swagger';
 import { AuthService, AuthResponse, Tokens } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -41,7 +49,11 @@ export class AuthController {
       
       return {
         accessToken: result.accessToken,
-        user: result.user
+        user: {
+          id: result.id,
+          email: result.email,
+          name: result.name
+        }
       };
     } catch (error) {
       throw new HttpException(
@@ -59,18 +71,27 @@ export class AuthController {
     return this.signup(registerDto, res);
   }
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
+  @UseGuards(LocalAuthGuard)
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiBody({ type: LoginDto })
   async login(
-    @Req() req: any,
+    @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-  ) {
-    const result = await this.authService.login(req.user);
+  ): Promise<{ accessToken: string; user: { id: string; email: string; name: string } }> {
+    const { email, password } = loginDto;
+    const result = await this.authService.login(email, password);
     this.authService.setRefreshTokenCookie(res, result.refreshToken);
     
     return {
       accessToken: result.accessToken,
-      user: result.user,
+      user: {
+        id: result.id,
+        email: result.email,
+        name: result.name,
+      },
     };
   }
 

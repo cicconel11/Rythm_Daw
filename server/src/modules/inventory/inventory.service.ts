@@ -18,7 +18,7 @@ export class InventoryService {
     const { plugins, inventoryHash } = dto;
     
     // Start a transaction to ensure data consistency
-    return this.prisma.$transaction(async (prisma) => {
+    return this.prisma.$transaction(async (prisma: any) => {
       // 1. Upsert all plugins
       const upsertedPlugins = await Promise.all(
         plugins.map((plugin) =>
@@ -48,12 +48,12 @@ export class InventoryService {
         select: { pluginId: true },
       });
 
-      const currentPluginUids = new Set(currentUserPlugins.map((up: { pluginId: string }) => up.pluginId));
-      const newPluginUids = new Set(plugins.map((p) => p.uid));
+      const currentPluginUids = new Set<string>(currentUserPlugins.map((up: { pluginId: string }) => up.pluginId));
+      const newPluginUids = new Set<string>(plugins.map((p: PluginDto) => p.uid));
 
       // 3. Find plugins to add and remove
-      const pluginsToAdd = [...newPluginUids].filter((uid) => !currentPluginUids.has(uid));
-      const pluginsToRemove = [...currentPluginUids].filter((uid) => !newPluginUids.has(uid));
+      const pluginsToAdd = Array.from(newPluginUids).filter((uid: string) => !currentPluginUids.has(uid));
+      const pluginsToRemove = Array.from(currentPluginUids).filter((uid: string) => !newPluginUids.has(uid));
 
       // 4. Update user plugins
       const updatePromises = [];
@@ -71,7 +71,7 @@ export class InventoryService {
           },
         });
         
-        const existingPluginIds = new Set(existingUserPlugins.map(up => up.pluginId));
+        const existingPluginIds = new Set(existingUserPlugins.map((up: { pluginId: string }) => up.pluginId));
         const pluginsToCreate = pluginsToAdd.filter(pluginId => !existingPluginIds.has(pluginId));
         
         if (pluginsToCreate.length > 0) {
@@ -139,7 +139,7 @@ export class InventoryService {
         timestamp: new Date(),
         added: pluginsToAdd,
         removed: pluginsToRemove,
-        inventory: updatedInventory.map((up) => ({
+        inventory: updatedInventory.map((up: { plugin: any; isActive: boolean; updatedAt: Date }) => ({
           ...up.plugin,
           isActive: up.isActive,
           lastSynced: up.updatedAt,

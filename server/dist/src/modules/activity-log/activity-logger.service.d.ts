@@ -37,6 +37,6 @@ export declare class ActivityLoggerService implements OnModuleInit {
         limit?: number;
         cursor?: string;
     }): Promise<ActivityWithUser[]>;
-    getActivitySummary(projectId: string, days?: number): Promise<any>;
+    getActivitySummary(projectId: string, days?: number): Promise<unknown>;
 }
 export {};

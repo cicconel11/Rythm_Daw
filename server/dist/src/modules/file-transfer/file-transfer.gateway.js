@@ -30,11 +30,17 @@ let FileTransferGateway = FileTransferGateway_1 = class FileTransferGateway {
             { urls: 'stun:stun.l.google.com:19302' },
             { urls: 'stun:stun1.l.google.com:19302' },
         ];
+        const region = this.configService.get('AWS_REGION');
+        const accessKeyId = this.configService.get('AWS_ACCESS_KEY_ID');
+        const secretAccessKey = this.configService.get('AWS_SECRET_ACCESS_KEY');
+        if (!region || !accessKeyId || !secretAccessKey) {
+            throw new Error('Missing required AWS configuration');
+        }
         this.s3Client = new client_s3_1.S3Client({
-            region: this.configService.get('AWS_REGION'),
+            region,
             credentials: {
-                accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-                secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+                accessKeyId,
+                secretAccessKey,
             },
         });
     }

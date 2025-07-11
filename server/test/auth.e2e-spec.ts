@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { AuthConfig } from '../src/config/auth.config';
+import AuthConfig from '../src/config/auth.config';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -19,8 +19,8 @@ describe('AuthController (e2e)', () => {
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     
     prisma = moduleFixture.get<PrismaService>(PrismaService);
-    const configService = moduleFixture.get(ConfigService);
-    authConfig = configService.get<ReturnType<typeof AuthConfig>>('auth');
+    const configService = moduleFixture.get('ConfigService');
+    authConfig = AuthConfig();
 
     await app.init();
   });
@@ -94,10 +94,15 @@ describe('AuthController (e2e)', () => {
       expect(response.body.email).toBe(testUser.email);
       
       // Check for httpOnly cookie
-      const cookies = response.headers['set-cookie'];
+      const cookies = response.headers['set-cookie'] as string[] | string | undefined;
       expect(cookies).toBeDefined();
-      expect(cookies.some((cookie: string) => 
-        cookie.includes(authConfig.refreshToken.cookieName))).toBeTruthy();
+      if (Array.isArray(cookies)) {
+        expect(cookies.some(cookie => cookie.includes('refreshToken='))).toBeTruthy();
+      } else if (typeof cookies === 'string') {
+        expect(cookies.includes('refreshToken=')).toBeTruthy();
+      } else {
+        fail('Expected cookies to be defined');
+      }
     });
 
     it('should reject invalid credentials', async () => {
@@ -133,8 +138,14 @@ describe('AuthController (e2e)', () => {
           password: user.password,
         });
 
-      refreshToken = loginResponse.headers['set-cookie']
-        .find((cookie: string) => cookie.includes(authConfig.refreshToken.cookieName));
+      const cookies = loginResponse.headers['set-cookie'] as string[] | string | undefined;
+      if (Array.isArray(cookies)) {
+        refreshToken = cookies.find(cookie => cookie.includes('refreshToken=')) || '';
+      } else if (typeof cookies === 'string') {
+        refreshToken = cookies.includes('refreshToken=') ? cookies : '';
+      } else {
+        refreshToken = '';
+      }
     });
 
     it('should refresh access token with valid refresh token', async () => {
@@ -178,8 +189,14 @@ describe('AuthController (e2e)', () => {
         });
 
       accessToken = loginResponse.body.accessToken;
-      refreshToken = loginResponse.headers['set-cookie']
-        .find((cookie: string) => cookie.includes(authConfig.refreshToken.cookieName));
+      const cookies = loginResponse.headers['set-cookie'] as string[] | string | undefined;
+      if (Array.isArray(cookies)) {
+        refreshToken = cookies.find(cookie => cookie.includes('refreshToken=')) || '';
+      } else if (typeof cookies === 'string') {
+        refreshToken = cookies.includes('refreshToken=') ? cookies : '';
+      } else {
+        refreshToken = '';
+      }
     });
 
     it('should logout successfully', async () => {

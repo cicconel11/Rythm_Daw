@@ -6,6 +6,7 @@ import {
   SubscribeMessage,
   ConnectedSocket,
   MessageBody,
+  WebSocketServerOptions,
 } from '@nestjs/websockets';
 import { Server, WebSocket } from 'ws';
 import { Logger, UseGuards } from '@nestjs/common';
@@ -14,11 +15,12 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ConfigService } from '@nestjs/config';
 
-interface FileTransferClient extends WebSocket {
+// Extend the WebSocket type from 'ws' with our custom properties
+type FileTransferClient = WebSocket & {
   id: string;
   userId: string;
   isAlive: boolean;
-}
+};
 
 @WebSocketGateway({
   path: '/ws/file-transfer',
@@ -31,7 +33,7 @@ interface FileTransferClient extends WebSocket {
 })
 export class FileTransferGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server<FileTransferClient>;
+  server: Server;
   private readonly logger = new Logger(FileTransferGateway.name);
   private clients: Map<string, FileTransferClient> = new Map();
   private s3Client: S3Client;
@@ -41,11 +43,19 @@ export class FileTransferGateway implements OnGatewayConnection, OnGatewayDiscon
   ];
 
   constructor(private configService: ConfigService) {
+    const region = this.configService.get<string>('AWS_REGION');
+    const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
+    const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
+
+    if (!region || !accessKeyId || !secretAccessKey) {
+      throw new Error('Missing required AWS configuration');
+    }
+
     this.s3Client = new S3Client({
-      region: this.configService.get('AWS_REGION'),
+      region,
       credentials: {
-        accessKeyId: this.configService.get('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY'),
+        accessKeyId,
+        secretAccessKey,
       },
     });
   }

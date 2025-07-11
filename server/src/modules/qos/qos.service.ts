@@ -271,18 +271,10 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
     limit?: number;
     includeSensitive?: boolean;
   }): Promise<Array<Record<string, any>>> {
-    const { 
-      userId, 
-      projectId, 
-      startDate, 
-      endDate, 
-      type, 
-      limit = 100, 
-      includeSensitive = false 
-    } = options;
+    const { userId, projectId, startDate, endDate, type, limit = 100, includeSensitive = false } = options;
 
     const where: any = {
-      timestamp: {
+      createdAt: {
         gte: startDate,
         lte: endDate,
       },
@@ -299,40 +291,75 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
         orderBy: { createdAt: 'desc' },
       });
 
-      return reports.map(report => {
-        const result: any = {
+      return reports.map((report: any) => {
+        const result: Record<string, any> = {
           id: report.id,
           error: report.error,
           stack: includeSensitive ? report.stack : (report.stack ? '[REDACTED]' : null),
           stackTrace: includeSensitive ? report.stackTrace : (report.stackTrace ? '[REDACTED]' : null),
           userId: report.userId,
           projectId: report.projectId,
-          createdAt: report.createdAt
+          createdAt: report.createdAt,
+          type: report.type || null,
         };
 
         // Handle potentially sensitive data
         if (includeSensitive) {
+          // Handle breadcrumbs
           if (report.breadcrumbs) {
-            result.breadcrumbs = JSON.parse(report.breadcrumbs);
-          }
-          if (report.context) {
-            result.context = JSON.parse(report.context);
-          }
-          if (report.metadata) {
-            result.metadata = report.metadata;
-            // Extract common fields from metadata
-            if (typeof report.metadata === 'object' && report.metadata !== null) {
-              const meta = report.metadata as Record<string, any>;
-              result.type = meta.type;
-              result.platform = meta.platform;
-              result.os = meta.os;
-              result.browser = meta.browser;
-              result.userAgent = meta.userAgent;
-              result.url = meta.url;
-              result.memoryUsage = meta.memoryUsage;
+            try {
+              result.breadcrumbs = typeof report.breadcrumbs === 'string' 
+                ? JSON.parse(report.breadcrumbs) 
+                : report.breadcrumbs;
+            } catch (e) {
+              result.breadcrumbs = null;
+              this.logger.warn('Failed to parse breadcrumbs', { reportId: report.id });
             }
+          } else {
+            result.breadcrumbs = null;
+          }
+
+          // Handle context
+          if (report.context) {
+            try {
+              result.context = typeof report.context === 'string' 
+                ? JSON.parse(report.context) 
+                : report.context;
+            } catch (e) {
+              result.context = null;
+              this.logger.warn('Failed to parse context', { reportId: report.id });
+            }
+          } else {
+            result.context = null;
+          }
+
+          // Handle metadata
+          if (report.metadata) {
+            try {
+              const metadata = typeof report.metadata === 'string' 
+                ? JSON.parse(report.metadata) 
+                : report.metadata;
+              
+              result.metadata = metadata;
+              
+              // Extract common fields
+              if (metadata && typeof metadata === 'object') {
+                result.platform = metadata.platform || null;
+                result.os = metadata.os || null;
+                result.browser = metadata.browser || null;
+                result.userAgent = metadata.userAgent || null;
+                result.url = metadata.url || null;
+                result.memoryUsage = metadata.memoryUsage || null;
+              }
+            } catch (e) {
+              result.metadata = null;
+              this.logger.warn('Failed to parse metadata', { reportId: report.id });
+            }
+          } else {
+            result.metadata = null;
           }
         } else {
+          // Redact sensitive data
           result.breadcrumbs = report.breadcrumbs ? '[REDACTED]' : null;
           result.context = report.context ? '[REDACTED]' : null;
           result.metadata = report.metadata ? '[REDACTED]' : null;

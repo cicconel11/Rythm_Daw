@@ -43,13 +43,28 @@ let PresenceService = class PresenceService {
     }
     cleanupDisconnectedUsers() {
         const now = new Date();
-        const offlineThreshold = 30000;
+        const offlineThreshold = now.getTime() - 30000;
         for (const [userId, presence] of this.userPresence.entries()) {
-            const timeDiff = now.getTime() - presence.lastSeen.getTime();
-            if (timeDiff > offlineThreshold) {
+            if (presence.lastSeen.getTime() < offlineThreshold) {
                 this.userPresence.delete(userId);
             }
         }
+    }
+    async updateHeartbeat(userId, dto) {
+        this.updateUserPresence(userId);
+    }
+    async getUserPresence(userId) {
+        return this.isOnline(userId);
+    }
+    async getProjectPresence(projectId) {
+        const result = [];
+        for (const [userId, presence] of this.userPresence.entries()) {
+            result.push({
+                userId,
+                isOnline: this.isOnline(userId),
+            });
+        }
+        return result;
     }
 };
 exports.PresenceService = PresenceService;

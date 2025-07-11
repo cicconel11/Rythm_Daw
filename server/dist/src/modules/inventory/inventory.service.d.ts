@@ -8,6 +8,29 @@ export declare class InventoryService {
     private eventEmitter;
     private readonly logger;
     constructor(prisma: PrismaService, inventoryGateway: InventoryGateway, eventEmitter: EventEmitter2);
-    syncUserInventory(userId: string, dto: SyncInventoryDto): Promise<any>;
-    getUserInventory(userId: string): Promise<any>;
+    syncUserInventory(userId: string, dto: SyncInventoryDto): Promise<{
+        userId: string;
+        timestamp: Date;
+        added: string[];
+        removed: string[];
+        inventory: any;
+    }>;
+    getUserInventory(userId: string): Promise<({
+        plugin: {
+            description: string | null;
+            id: string;
+            name: string;
+            createdAt: Date;
+            updatedAt: Date;
+            deletedAt: Date | null;
+            version: string;
+        };
+    } & {
+        userId: string;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        pluginId: string;
+        isActive: boolean;
+    })[]>;
 }

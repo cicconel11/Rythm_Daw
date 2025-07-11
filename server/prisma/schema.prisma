@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  binaryTargets   = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -15,7 +17,7 @@ model User {
   bio              String?
   avatarUrl        String?
   password         String
-  refreshToken     String?        @db.Text
+  refreshToken     String?
   isApproved       Boolean        @default(true)
   inventoryHash    String?
   lastLoginAt      DateTime?
@@ -51,7 +53,7 @@ model Device {
   userId       String
   name         String
   type         String   // e.g., 'DAW_PLUGIN', 'MOBILE', 'WEB'
-  info         Json?    // Additional device-specific info
+  info         String?   // Additional device-specific info (stored as JSON string)
   lastActiveAt DateTime
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -100,7 +102,7 @@ model ActivityLog {
   entityType  String
   entityId    String
   projectId   String?
-  metadata    Json?
+  metadata    String?   // Stored as JSON string
   ipAddress   String?
   userAgent   String?
   createdAt   DateTime @default(now())
@@ -124,7 +126,7 @@ model CrashReport {
   breadcrumbs String?
   context     String?
   projectId   String?
-  metadata    Json?
+  metadata    String?   // Stored as JSON string
   createdAt   DateTime @default(now())
   
   // Relations
@@ -148,7 +150,7 @@ model WebRtcMetric {
   localCandidateId    String?
   remoteCandidateId   String?
   timestamp           DateTime
-  metadata            Json?
+  metadata            String?   // Stored as JSON string
   createdAt           DateTime @default(now())
   
   // Relations
@@ -176,7 +178,7 @@ model Snapshot {
   projectId   String
   name        String
   description String?
-  data        Json
+  data        String   // Stored as JSON string
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   

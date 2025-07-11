@@ -5,12 +5,14 @@ import { Request } from 'express';
 // Extend the Express Request type to include the user property
 declare global {
   namespace Express {
+    interface User {
+      userId: string;
+      email: string;
+      name?: string;
+    }
+    
     interface Request {
-      user?: {
-        sub: string;
-        email: string;
-        // Add other user properties as needed
-      };
+      user?: User;
     }
   }
 }

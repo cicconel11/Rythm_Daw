@@ -2,23 +2,32 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const rtc_gateway_1 = require("../src/modules/rtc/rtc.gateway");
 jest.mock('../src/modules/rtc/rtc.gateway', () => {
+    const userSockets = new Map();
+    const socketToUser = new Map();
+    const logger = {
+        log: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+        verbose: jest.fn(),
+    };
     const mockGateway = {
         server: {
             to: jest.fn().mockReturnThis(),
             emit: jest.fn(),
+            sockets: {
+                sockets: new Map()
+            }
         },
-        userSockets: new Map(),
-        socketToUser: new Map(),
-        logger: {
-            log: jest.fn(),
-            error: jest.fn(),
-            warn: jest.fn(),
-            debug: jest.fn(),
-            verbose: jest.fn(),
-        },
+        userSockets,
+        socketToUser,
+        logger,
         registerWsServer: function (server) {
             this.server = server;
         },
+        getUserSockets: jest.fn().mockImplementation(() => userSockets),
+        getSocketToUser: jest.fn().mockImplementation(() => socketToUser),
+        getLogger: jest.fn().mockImplementation(() => logger),
         emitToUser: jest.fn().mockImplementation(function (userId, event, data) {
             const sockets = this.userSockets.get(userId);
             if (!sockets)
@@ -49,12 +58,13 @@ jest.mock('../src/modules/rtc/rtc.gateway', () => {
             }
         }),
         handleDisconnect: jest.fn().mockImplementation(function (socket) {
-            const userId = this.socketToUser.get(socket.id);
+            const socketId = socket.id;
+            const userId = this.socketToUser.get(socketId);
             if (userId) {
-                const sockets = this.userSockets.get(userId);
-                if (sockets) {
-                    sockets.delete(socket.id);
-                    if (sockets.size === 0) {
+                const userSockets = this.userSockets.get(userId);
+                if (userSockets) {
+                    userSockets.delete(socketId);
+                    if (userSockets.size === 0) {
                         this.userSockets.delete(userId);
                     }
                 }
@@ -87,7 +97,7 @@ describe('RtcGateway', () => {
             const userId = 'test-user';
             const event = 'test-event';
             const data = { test: 'data' };
-            gateway.userSockets.set(userId, new Set(['socket-1', 'socket-2']));
+            gateway.getUserSockets().set(userId, new Set(['socket-1', 'socket-2']));
             const result = gateway.emitToUser(userId, event, data);
             expect(result).toBe(true);
             expect(gateway.server.to).toHaveBeenCalledTimes(2);
@@ -104,8 +114,8 @@ describe('RtcGateway', () => {
     describe('handleConnection', () => {
         it('should handle successful connection', async () => {
             await gateway.handleConnection(mockSocket);
-            expect(gateway.userSockets.get('test-user-id')).toBeDefined();
-            expect(gateway.socketToUser.get('test-socket-id')).toBe('test-user-id');
+            expect(gateway.getUserSockets().get('test-user-id')).toBeDefined();
+            expect(gateway.getSocketToUser().get('test-socket-id')).toBe('test-user-id');
             expect(mockSocket.join).toHaveBeenCalledWith('user_test-user-id');
             expect(mockSocket.emit).toHaveBeenCalledWith('welcome', { userId: 'test-user-id' });
         });
@@ -116,19 +126,22 @@ describe('RtcGateway', () => {
             };
             await gateway.handleConnection(errorSocket);
             expect(errorSocket.disconnect).toHaveBeenCalled();
-            expect(gateway.logger.error).toHaveBeenCalled();
+            expect(gateway.getLogger().error).toHaveBeenCalled();
         });
     });
     describe('handleDisconnect', () => {
         it('should handle disconnection', async () => {
             const userId = 'test-user-id';
             const socketId = 'test-socket-id';
-            gateway.userSockets.set(userId, new Set([socketId]));
-            gateway.socketToUser.set(socketId, userId);
+            mockSocket.id = socketId;
+            const userSockets = new Set([socketId]);
+            gateway.getUserSockets().set(userId, userSockets);
+            gateway.getSocketToUser().set(socketId, userId);
+            expect(gateway.getUserSockets().get(userId)).toBeDefined();
+            expect(gateway.getSocketToUser().get(socketId)).toBe(userId);
             await gateway.handleDisconnect(mockSocket);
-            const userSockets = gateway.userSockets.get(userId);
-            expect(userSockets?.has(socketId)).toBeFalsy();
-            expect(gateway.socketToUser.has(socketId)).toBeFalsy();
+            expect(gateway.getUserSockets().has(userId)).toBe(false);
+            expect(gateway.getSocketToUser().has(socketId)).toBe(false);
         });
     });
 });

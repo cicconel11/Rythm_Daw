@@ -40,17 +40,15 @@ const CLAMSCAN_CMD = process.env.CLAMSCAN_CMD || 'clamscan';
 // Initialize S3 client with proper type safety
 const s3Config: S3ClientConfig = {
   region: process.env.AWS_REGION || 'us-east-1',
+  ...(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
+  } : {})
 };
 
-// Only add credentials if they are provided
-if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-  s3Config.credentials = {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  };
-}
-
-const s3Client = new S3Client(s3Config);
+const s3Client = new S3Client(s3Config as S3ClientConfig);
 
 // In-memory stores (in production, use Redis or database)
 const peerConnections = new Map<string, PeerConnection>();
@@ -264,7 +262,9 @@ export class FileShare {
         } else if (Body instanceof Uint8Array || typeof Body === 'string') {
           writeStream.write(Body);
           writeStream.end();
-          await new Promise((resolve) => writeStream.on('close', resolve));
+          await new Promise<void>((resolve) => {
+            writeStream.on('close', () => resolve());
+          });
         } else if (Body && typeof (Body as any).transformToWebStream === 'function') {
           // Handle web streams
           const webStream = (Body as any).transformToWebStream();

@@ -1,26 +1,34 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { INestApplication, Injectable, Logger } from '@nestjs/common';
-import { ServerOptions, Server as SocketIOServer } from 'socket.io';
-import { createServer, Server as HttpServer } from 'http';
+import { ServerOptions, Server as SocketIOServer, Socket } from 'socket.io';
+import { createServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http';
 import { Server as WsServer } from 'ws';
+import { INestApplicationContext } from '@nestjs/common/interfaces/nest-application-context.interface';
 
 @Injectable()
 export class WsAdapter extends IoAdapter {
   private readonly logger = new Logger(WsAdapter.name);
-  private httpServer: HttpServer;
-  private wsServer: WsServer;
+  protected httpServer: HttpServer | null = null;
+  private wsServer: WsServer | null = null;
+  private app: INestApplicationContext;
 
   constructor(app: INestApplication) {
     super(app);
+    this.app = app;
+    this.createHttpServer();
   }
 
-  create(port: number, options?: ServerOptions): any {
-    // Create HTTP server if not already created
+  private createHttpServer() {
     if (!this.httpServer) {
       this.httpServer = createServer();
     }
-
-    // Create Socket.IO server
+  }
+  
+  public createIOServer(port: number, options?: ServerOptions): any {
+    if (!this.httpServer) {
+      throw new Error('HTTP server not initialized');
+    }
+    
     const io = new SocketIOServer(this.httpServer, {
       ...options,
       cors: {
@@ -29,16 +37,31 @@ export class WsAdapter extends IoAdapter {
       },
     });
     
+    return io;
+  }
+
+  create(port: number, options?: ServerOptions): any {
+    // Ensure HTTP server is created
+    this.createHttpServer();
+
+    if (!this.httpServer) {
+      throw new Error('Failed to create HTTP server');
+    }
+
+    // Create Socket.IO server using our helper method
+    const io = this.createIOServer(port, options);
+    
     // Create WebSocket server
     this.wsServer = new WsServer({
       server: this.httpServer,
-      path: '/socket.io/',
+      path: options?.path || '/socket.io/',
     });
     
     // Start listening if a port is provided
-    if (port && typeof port === 'number') {
-      this.httpServer.listen(port);
-      this.logger.log(`WebSocket server listening on port ${port}`);
+    if (port && typeof port === 'number' && this.httpServer) {
+      this.httpServer.listen(port, () => {
+        this.logger.log(`WebSocket server listening on port ${port}`);
+      });
     }
     
     // Store references for cleanup
@@ -63,20 +86,22 @@ export class WsAdapter extends IoAdapter {
   async close() {
     if (this.wsServer) {
       await new Promise<void>((resolve) => {
-        this.wsServer.close(() => {
+        this.wsServer?.close(() => {
           this.logger.log('WebSocket server closed');
           resolve();
         });
       });
+      this.wsServer = null;
     }
     
     if (this.httpServer) {
       await new Promise<void>((resolve) => {
-        this.httpServer.close(() => {
+        this.httpServer?.close(() => {
           this.logger.log('HTTP server closed');
           resolve();
         });
       });
+      this.httpServer = null;
     }
   }
 }

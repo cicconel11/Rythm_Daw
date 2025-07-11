@@ -202,7 +202,7 @@ let QosService = QosService_1 = class QosService {
     async getCrashReports(options) {
         const { userId, projectId, startDate, endDate, type, limit = 100, includeSensitive = false } = options;
         const where = {
-            timestamp: {
+            createdAt: {
                 gte: startDate,
                 lte: endDate,
             },
@@ -219,7 +219,7 @@ let QosService = QosService_1 = class QosService {
                 take: limit,
                 orderBy: { createdAt: 'desc' },
             });
-            return reports.map(report => {
+            return reports.map((report) => {
                 const result = {
                     id: report.id,
                     error: report.error,
@@ -227,27 +227,60 @@ let QosService = QosService_1 = class QosService {
                     stackTrace: includeSensitive ? report.stackTrace : (report.stackTrace ? '[REDACTED]' : null),
                     userId: report.userId,
                     projectId: report.projectId,
-                    createdAt: report.createdAt
+                    createdAt: report.createdAt,
+                    type: report.type || null,
                 };
                 if (includeSensitive) {
                     if (report.breadcrumbs) {
-                        result.breadcrumbs = JSON.parse(report.breadcrumbs);
+                        try {
+                            result.breadcrumbs = typeof report.breadcrumbs === 'string'
+                                ? JSON.parse(report.breadcrumbs)
+                                : report.breadcrumbs;
+                        }
+                        catch (e) {
+                            result.breadcrumbs = null;
+                            this.logger.warn('Failed to parse breadcrumbs', { reportId: report.id });
+                        }
+                    }
+                    else {
+                        result.breadcrumbs = null;
                     }
                     if (report.context) {
-                        result.context = JSON.parse(report.context);
+                        try {
+                            result.context = typeof report.context === 'string'
+                                ? JSON.parse(report.context)
+                                : report.context;
+                        }
+                        catch (e) {
+                            result.context = null;
+                            this.logger.warn('Failed to parse context', { reportId: report.id });
+                        }
+                    }
+                    else {
+                        result.context = null;
                     }
                     if (report.metadata) {
-                        result.metadata = report.metadata;
-                        if (typeof report.metadata === 'object' && report.metadata !== null) {
-                            const meta = report.metadata;
-                            result.type = meta.type;
-                            result.platform = meta.platform;
-                            result.os = meta.os;
-                            result.browser = meta.browser;
-                            result.userAgent = meta.userAgent;
-                            result.url = meta.url;
-                            result.memoryUsage = meta.memoryUsage;
+                        try {
+                            const metadata = typeof report.metadata === 'string'
+                                ? JSON.parse(report.metadata)
+                                : report.metadata;
+                            result.metadata = metadata;
+                            if (metadata && typeof metadata === 'object') {
+                                result.platform = metadata.platform || null;
+                                result.os = metadata.os || null;
+                                result.browser = metadata.browser || null;
+                                result.userAgent = metadata.userAgent || null;
+                                result.url = metadata.url || null;
+                                result.memoryUsage = metadata.memoryUsage || null;
+                            }
                         }
+                        catch (e) {
+                            result.metadata = null;
+                            this.logger.warn('Failed to parse metadata', { reportId: report.id });
+                        }
+                    }
+                    else {
+                        result.metadata = null;
                     }
                 }
                 else {

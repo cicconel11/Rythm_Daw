@@ -1,11 +1,13 @@
 import { ExecutionContext } from '@nestjs/common';
 declare global {
     namespace Express {
+        interface User {
+            userId: string;
+            email: string;
+            name?: string;
+        }
         interface Request {
-            user?: {
-                sub: string;
-                email: string;
-            };
+            user?: User;
         }
     }
 }
