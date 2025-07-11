@@ -20,10 +20,19 @@ let WsAdapter = WsAdapter_1 = class WsAdapter extends platform_socket_io_1.IoAda
     constructor(app) {
         super(app);
         this.logger = new common_1.Logger(WsAdapter_1.name);
+        this.httpServer = null;
+        this.wsServer = null;
+        this.app = app;
+        this.createHttpServer();
     }
-    create(port, options) {
+    createHttpServer() {
         if (!this.httpServer) {
             this.httpServer = (0, http_1.createServer)();
+        }
+    }
+    createIOServer(port, options) {
+        if (!this.httpServer) {
+            throw new Error('HTTP server not initialized');
         }
         const io = new socket_io_1.Server(this.httpServer, {
             ...options,
@@ -32,13 +41,22 @@ let WsAdapter = WsAdapter_1 = class WsAdapter extends platform_socket_io_1.IoAda
                 methods: ['GET', 'POST'],
             },
         });
+        return io;
+    }
+    create(port, options) {
+        this.createHttpServer();
+        if (!this.httpServer) {
+            throw new Error('Failed to create HTTP server');
+        }
+        const io = this.createIOServer(port, options);
         this.wsServer = new ws_1.Server({
             server: this.httpServer,
-            path: '/socket.io/',
+            path: options?.path || '/socket.io/',
         });
-        if (port && typeof port === 'number') {
-            this.httpServer.listen(port);
-            this.logger.log(`WebSocket server listening on port ${port}`);
+        if (port && typeof port === 'number' && this.httpServer) {
+            this.httpServer.listen(port, () => {
+                this.logger.log(`WebSocket server listening on port ${port}`);
+            });
         }
         io.httpServer = this.httpServer;
         io.wsServer = this.wsServer;
@@ -56,19 +74,21 @@ let WsAdapter = WsAdapter_1 = class WsAdapter extends platform_socket_io_1.IoAda
     async close() {
         if (this.wsServer) {
             await new Promise((resolve) => {
-                this.wsServer.close(() => {
+                this.wsServer?.close(() => {
                     this.logger.log('WebSocket server closed');
                     resolve();
                 });
             });
+            this.wsServer = null;
         }
         if (this.httpServer) {
             await new Promise((resolve) => {
-                this.httpServer.close(() => {
+                this.httpServer?.close(() => {
                     this.logger.log('HTTP server closed');
                     resolve();
                 });
             });
+            this.httpServer = null;
         }
     }
 };

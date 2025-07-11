@@ -50,15 +50,34 @@ export class PresenceService implements OnModuleDestroy {
   }
 
   @Interval(30000) // Run every 30 seconds
-  private cleanupDisconnectedUsers(): void {
+  private cleanupDisconnectedUsers() {
     const now = new Date();
-    const offlineThreshold = 30000; // 30 seconds
+    const offlineThreshold = now.getTime() - 30000; // 30 seconds
 
     for (const [userId, presence] of this.userPresence.entries()) {
-      const timeDiff = now.getTime() - presence.lastSeen.getTime();
-      if (timeDiff > offlineThreshold) {
+      if (presence.lastSeen.getTime() < offlineThreshold) {
         this.userPresence.delete(userId);
       }
     }
+  }
+
+  async updateHeartbeat(userId: string, dto: any): Promise<void> {
+    this.updateUserPresence(userId);
+  }
+
+  async getUserPresence(userId: string): Promise<boolean> {
+    return this.isOnline(userId);
+  }
+
+  async getProjectPresence(projectId: string): Promise<Array<{ userId: string; isOnline: boolean }>> {
+    // This is a simplified implementation. In a real app, you would check which users have access to the project
+    const result = [];
+    for (const [userId, presence] of this.userPresence.entries()) {
+      result.push({
+        userId,
+        isOnline: this.isOnline(userId),
+      });
+    }
+    return result;
   }
 }

@@ -2,23 +2,34 @@ import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
 
 // Mock the RtcGateway class
 jest.mock('../src/modules/rtc/rtc.gateway', () => {
+  const userSockets = new Map();
+  const socketToUser = new Map();
+  const logger = {
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+  };
+
   const mockGateway = {
     server: {
       to: jest.fn().mockReturnThis(),
       emit: jest.fn(),
+      sockets: {
+        sockets: new Map()
+      }
     },
-    userSockets: new Map(),
-    socketToUser: new Map(),
-    logger: {
-      log: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
-      verbose: jest.fn(),
-    },
+    userSockets,
+    socketToUser,
+    logger,
     registerWsServer: function(server: any) {
       this.server = server;
     },
+    // Add getter methods for testing
+    getUserSockets: jest.fn().mockImplementation(() => userSockets),
+    getSocketToUser: jest.fn().mockImplementation(() => socketToUser),
+    getLogger: jest.fn().mockImplementation(() => logger),
     emitToUser: jest.fn().mockImplementation(function(userId: string, event: string, data: any) {
       const sockets = this.userSockets.get(userId);
       if (!sockets) return false;
@@ -58,12 +69,17 @@ jest.mock('../src/modules/rtc/rtc.gateway', () => {
       }
     }),
     handleDisconnect: jest.fn().mockImplementation(function(socket: any) {
-      const userId = this.socketToUser.get(socket.id);
+      const socketId = socket.id;
+      const userId = this.socketToUser.get(socketId);
+      
       if (userId) {
-        const sockets = this.userSockets.get(userId);
-        if (sockets) {
-          sockets.delete(socket.id);
-          if (sockets.size === 0) {
+        // Remove socket from user's sockets
+        const userSockets = this.userSockets.get(userId);
+        if (userSockets) {
+          userSockets.delete(socketId);
+          
+          // If user has no more sockets, remove the user entry
+          if (userSockets.size === 0) {
             this.userSockets.delete(userId);
           }
         }
@@ -108,7 +124,7 @@ describe('RtcGateway', () => {
       const data = { test: 'data' };
       
       // Add test socket
-      gateway.userSockets.set(userId, new Set(['socket-1', 'socket-2']));
+      gateway.getUserSockets().set(userId, new Set(['socket-1', 'socket-2']));
       
       // Call the method
       const result = gateway.emitToUser(userId, event, data);
@@ -133,8 +149,8 @@ describe('RtcGateway', () => {
       await gateway.handleConnection(mockSocket);
       
       // Verify socket was added to userSockets
-      expect(gateway.userSockets.get('test-user-id')).toBeDefined();
-      expect(gateway.socketToUser.get('test-socket-id')).toBe('test-user-id');
+      expect(gateway.getUserSockets().get('test-user-id')).toBeDefined();
+      expect(gateway.getSocketToUser().get('test-socket-id')).toBe('test-user-id');
       
       // Verify socket joined user's room
       expect(mockSocket.join).toHaveBeenCalledWith('user_test-user-id');
@@ -153,7 +169,7 @@ describe('RtcGateway', () => {
       
       // Verify error was handled
       expect(errorSocket.disconnect).toHaveBeenCalled();
-      expect(gateway.logger.error).toHaveBeenCalled();
+      expect(gateway.getLogger().error).toHaveBeenCalled();
     });
   });
   
@@ -163,17 +179,24 @@ describe('RtcGateway', () => {
       const userId = 'test-user-id';
       const socketId = 'test-socket-id';
       
+      // Setup mock socket
+      mockSocket.id = socketId;
+      
       // Add test data
-      gateway.userSockets.set(userId, new Set([socketId]));
-      gateway.socketToUser.set(socketId, userId);
+      const userSockets = new Set([socketId]);
+      gateway.getUserSockets().set(userId, userSockets);
+      gateway.getSocketToUser().set(socketId, userId);
+      
+      // Verify initial state
+      expect(gateway.getUserSockets().get(userId)).toBeDefined();
+      expect(gateway.getSocketToUser().get(socketId)).toBe(userId);
       
       // Call the method
       await gateway.handleDisconnect(mockSocket);
       
-      // Verify socket was removed
-      const userSockets = gateway.userSockets.get(userId);
-      expect(userSockets?.has(socketId)).toBeFalsy();
-      expect(gateway.socketToUser.has(socketId)).toBeFalsy();
+      // Verify socket and user were removed from mappings
+      expect(gateway.getUserSockets().has(userId)).toBe(false);
+      expect(gateway.getSocketToUser().has(socketId)).toBe(false);
     });
   });
 });

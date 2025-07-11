@@ -51,15 +51,20 @@ const prisma_service_1 = require("../../prisma/prisma.service");
 const bcrypt = __importStar(require("bcrypt"));
 let RefreshTokenStrategy = class RefreshTokenStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt-refresh') {
     constructor(prisma, configService) {
-        super({
+        const secret = configService.get('JWT_REFRESH_SECRET');
+        if (!secret) {
+            throw new Error('JWT_REFRESH_SECRET is not defined in the configuration');
+        }
+        const strategyOptions = {
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromExtractors([
                 (req) => {
                     return req?.cookies?.refreshToken;
                 },
             ]),
-            secretOrKey: configService.get('JWT_REFRESH_SECRET'),
+            secretOrKey: secret,
             passReqToCallback: true,
-        });
+        };
+        super(strategyOptions);
         this.prisma = prisma;
     }
     async validate(req, payload) {

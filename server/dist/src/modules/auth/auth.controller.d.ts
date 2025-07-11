@@ -1,31 +1,32 @@
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
     signup(registerDto: RegisterDto, res: Response): Promise<{
         accessToken: string;
         user: {
-            id: any;
-            email: any;
-            name: any;
+            id: string;
+            email: string;
+            name: string;
         };
     }>;
     register(registerDto: RegisterDto, res: Response): Promise<{
         accessToken: string;
         user: {
-            id: any;
-            email: any;
-            name: any;
+            id: string;
+            email: string;
+            name: string;
         };
     }>;
-    login(req: any, res: Response): Promise<{
+    login(loginDto: LoginDto, res: Response): Promise<{
         accessToken: string;
         user: {
-            id: any;
-            email: any;
-            name: any;
+            id: string;
+            email: string;
+            name: string;
         };
     }>;
     refreshToken(req: any, res: Response): Promise<{
@@ -33,7 +34,7 @@ export declare class AuthController {
         user: {
             id: string;
             email: string;
-            name: string;
+            name: string | null;
         };
     }>;
     logout(req: any, res: Response): Promise<{

@@ -1,5 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 export interface TokenPayload {
@@ -13,6 +14,7 @@ export interface AuthResponse {
     email: string;
     name: string;
     accessToken: string;
+    refreshToken: string;
 }
 export interface Tokens {
     accessToken: string;
@@ -20,40 +22,27 @@ export interface Tokens {
     user: {
         id: string;
         email: string;
-        name: string;
+        name: string | null;
     };
 }
 export declare class AuthService {
     private readonly jwtService;
     private readonly prisma;
     private readonly configService;
-    private readonly authConfig;
+    private readonly logger;
+    private readonly SALT_ROUNDS;
+    private readonly REFRESH_TOKEN_EXPIRY;
+    private readonly ACCESS_TOKEN_EXPIRY;
     constructor(jwtService: JwtService, prisma: PrismaService, configService: ConfigService);
-    signup(email: string, password: string, name?: string): Promise<{
-        user: {
-            id: any;
-            email: any;
-            name: any;
-        };
-        accessToken: string;
-        refreshToken: string;
-    }>;
-    login(user: any): Promise<{
-        user: {
-            id: any;
-            email: any;
-            name: any;
-        };
-        accessToken: string;
-        refreshToken: string;
-    }>;
+    signup(email: string, password: string, name?: string): Promise<AuthResponse>;
+    login(email: string, password: string): Promise<AuthResponse>;
     logout(userId: string): Promise<boolean>;
     refreshTokens(userId: string, refreshToken: string): Promise<Tokens>;
+    validateUser(email: string, password: string): Promise<Omit<User, 'password'> | null>;
+    verifyToken(token: string): Promise<TokenPayload>;
     private updateRefreshToken;
+    private revokeUserRefreshTokens;
     private getTokens;
-    validateUser(email: string, pass: string): Promise<any>;
     setRefreshTokenCookie(res: Response, refreshToken: string): void;
     clearRefreshTokenCookie(res: Response): void;
-    verifyToken(token: string): Promise<TokenPayload>;
-    generateToken(payload: TokenPayload): string;
 }

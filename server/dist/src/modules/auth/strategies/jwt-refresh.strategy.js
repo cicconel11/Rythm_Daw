@@ -54,18 +54,17 @@ let JwtRefreshStrategy = class JwtRefreshStrategy extends (0, passport_1.Passpor
         const authConfig = configService.get('auth');
         super({
             jwtFromRequest: (req) => {
-                if (req && req.cookies) {
-                    return req.cookies[authConfig.refreshToken.cookieName];
-                }
-                return null;
+                return req?.cookies?.[authConfig.refreshToken.cookieName];
             },
             secretOrKey: authConfig.refreshToken.secret,
             passReqToCallback: true,
         });
         this.prisma = prisma;
+        this.configService = configService;
+        this.authConfig = authConfig;
     }
     async validate(req, payload) {
-        const refreshToken = req.cookies[this.getRequest().cookies];
+        const refreshToken = req?.cookies?.[this.authConfig.refreshToken.cookieName];
         if (!refreshToken) {
             throw new common_1.UnauthorizedException('Refresh token not found');
         }

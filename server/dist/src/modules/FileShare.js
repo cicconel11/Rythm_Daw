@@ -19,13 +19,13 @@ const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 const CLAMSCAN_CMD = process.env.CLAMSCAN_CMD || 'clamscan';
 const s3Config = {
     region: process.env.AWS_REGION || 'us-east-1',
+    ...(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
+        credentials: {
+            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        }
+    } : {})
 };
-if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
-    s3Config.credentials = {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    };
-}
 const s3Client = new client_s3_1.S3Client(s3Config);
 const peerConnections = new Map();
 const fileMetadata = new Map();
@@ -190,7 +190,9 @@ class FileShare {
                 else if (Body instanceof Uint8Array || typeof Body === 'string') {
                     writeStream.write(Body);
                     writeStream.end();
-                    await new Promise((resolve) => writeStream.on('close', resolve));
+                    await new Promise((resolve) => {
+                        writeStream.on('close', () => resolve());
+                    });
                 }
                 else if (Body && typeof Body.transformToWebStream === 'function') {
                     const webStream = Body.transformToWebStream();

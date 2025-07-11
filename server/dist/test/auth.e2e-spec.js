@@ -1,43 +1,14 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const testing_1 = require("@nestjs/testing");
 const common_1 = require("@nestjs/common");
-const request = __importStar(require("supertest"));
+const supertest_1 = __importDefault(require("supertest"));
 const app_module_1 = require("../src/app.module");
 const prisma_service_1 = require("../src/prisma/prisma.service");
+const auth_config_1 = __importDefault(require("../src/config/auth.config"));
 describe('AuthController (e2e)', () => {
     let app;
     let prisma;
@@ -49,8 +20,8 @@ describe('AuthController (e2e)', () => {
         app = moduleFixture.createNestApplication();
         app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true }));
         prisma = moduleFixture.get(prisma_service_1.PrismaService);
-        const configService = moduleFixture.get(ConfigService);
-        authConfig = configService.get('auth');
+        const configService = moduleFixture.get('ConfigService');
+        authConfig = (0, auth_config_1.default)();
         await app.init();
     });
     afterAll(async () => {
@@ -67,7 +38,7 @@ describe('AuthController (e2e)', () => {
                 password: 'StrongPass123!',
                 name: 'Test User',
             };
-            const response = await request(app.getHttpServer())
+            const response = await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/signup')
                 .send(userData)
                 .expect(201);
@@ -77,7 +48,7 @@ describe('AuthController (e2e)', () => {
             expect(response.body.name).toBe(userData.name);
         });
         it('should reject weak password', async () => {
-            const response = await request(app.getHttpServer())
+            const response = await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/signup')
                 .send({
                 email: 'test@example.com',
@@ -95,12 +66,12 @@ describe('AuthController (e2e)', () => {
             name: 'Test User',
         };
         beforeEach(async () => {
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/signup')
                 .send(testUser);
         });
         it('should login with valid credentials', async () => {
-            const response = await request(app.getHttpServer())
+            const response = await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/login')
                 .send({
                 email: testUser.email,
@@ -111,10 +82,18 @@ describe('AuthController (e2e)', () => {
             expect(response.body.email).toBe(testUser.email);
             const cookies = response.headers['set-cookie'];
             expect(cookies).toBeDefined();
-            expect(cookies.some((cookie) => cookie.includes(authConfig.refreshToken.cookieName))).toBeTruthy();
+            if (Array.isArray(cookies)) {
+                expect(cookies.some(cookie => cookie.includes('refreshToken='))).toBeTruthy();
+            }
+            else if (typeof cookies === 'string') {
+                expect(cookies.includes('refreshToken=')).toBeTruthy();
+            }
+            else {
+                fail('Expected cookies to be defined');
+            }
         });
         it('should reject invalid credentials', async () => {
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/login')
                 .send({
                 email: testUser.email,
@@ -131,27 +110,35 @@ describe('AuthController (e2e)', () => {
                 password: 'StrongPass123!',
                 name: 'Test User',
             };
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/signup')
                 .send(user);
-            const loginResponse = await request(app.getHttpServer())
+            const loginResponse = await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/login')
                 .send({
                 email: user.email,
                 password: user.password,
             });
-            refreshToken = loginResponse.headers['set-cookie']
-                .find((cookie) => cookie.includes(authConfig.refreshToken.cookieName));
+            const cookies = loginResponse.headers['set-cookie'];
+            if (Array.isArray(cookies)) {
+                refreshToken = cookies.find(cookie => cookie.includes('refreshToken=')) || '';
+            }
+            else if (typeof cookies === 'string') {
+                refreshToken = cookies.includes('refreshToken=') ? cookies : '';
+            }
+            else {
+                refreshToken = '';
+            }
         });
         it('should refresh access token with valid refresh token', async () => {
-            const response = await request(app.getHttpServer())
+            const response = await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/refresh')
                 .set('Cookie', [refreshToken])
                 .expect(200);
             expect(response.body).toHaveProperty('accessToken');
         });
         it('should reject invalid refresh token', async () => {
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/refresh')
                 .set('Cookie', [`${authConfig.refreshToken.cookieName}=invalidtoken`])
                 .expect(401);
@@ -166,26 +153,34 @@ describe('AuthController (e2e)', () => {
                 password: 'StrongPass123!',
                 name: 'Test User',
             };
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/signup')
                 .send(user);
-            const loginResponse = await request(app.getHttpServer())
+            const loginResponse = await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/login')
                 .send({
                 email: user.email,
                 password: user.password,
             });
             accessToken = loginResponse.body.accessToken;
-            refreshToken = loginResponse.headers['set-cookie']
-                .find((cookie) => cookie.includes(authConfig.refreshToken.cookieName));
+            const cookies = loginResponse.headers['set-cookie'];
+            if (Array.isArray(cookies)) {
+                refreshToken = cookies.find(cookie => cookie.includes('refreshToken=')) || '';
+            }
+            else if (typeof cookies === 'string') {
+                refreshToken = cookies.includes('refreshToken=') ? cookies : '';
+            }
+            else {
+                refreshToken = '';
+            }
         });
         it('should logout successfully', async () => {
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/logout')
                 .set('Authorization', `Bearer ${accessToken}`)
                 .set('Cookie', [refreshToken])
                 .expect(201);
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/refresh')
                 .set('Cookie', [refreshToken])
                 .expect(401);
@@ -199,10 +194,10 @@ describe('AuthController (e2e)', () => {
                 password: 'StrongPass123!',
                 name: 'Test User',
             };
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/signup')
                 .send(user);
-            const loginResponse = await request(app.getHttpServer())
+            const loginResponse = await (0, supertest_1.default)(app.getHttpServer())
                 .post('/auth/login')
                 .send({
                 email: user.email,
@@ -211,14 +206,14 @@ describe('AuthController (e2e)', () => {
             accessToken = loginResponse.body.accessToken;
         });
         it('should return user profile with valid token', async () => {
-            const response = await request(app.getHttpServer())
+            const response = await (0, supertest_1.default)(app.getHttpServer())
                 .get('/auth/profile')
                 .set('Authorization', `Bearer ${accessToken}`)
                 .expect(200);
             expect(response.body).toHaveProperty('email', 'test@example.com');
         });
         it('should reject with invalid token', async () => {
-            await request(app.getHttpServer())
+            await (0, supertest_1.default)(app.getHttpServer())
                 .get('/auth/profile')
                 .set('Authorization', 'Bearer invalidtoken')
                 .expect(401);

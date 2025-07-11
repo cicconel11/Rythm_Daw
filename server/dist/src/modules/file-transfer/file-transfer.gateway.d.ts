@@ -1,14 +1,14 @@
 import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, WebSocket } from 'ws';
 import { ConfigService } from '@nestjs/config';
-interface FileTransferClient extends WebSocket {
+type FileTransferClient = WebSocket & {
     id: string;
     userId: string;
     isAlive: boolean;
-}
+};
 export declare class FileTransferGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private configService;
-    server: Server<FileTransferClient>;
+    server: Server;
     private readonly logger;
     private clients;
     private s3Client;

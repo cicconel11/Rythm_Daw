@@ -46,8 +46,8 @@ let InventoryService = InventoryService_1 = class InventoryService {
             });
             const currentPluginUids = new Set(currentUserPlugins.map((up) => up.pluginId));
             const newPluginUids = new Set(plugins.map((p) => p.uid));
-            const pluginsToAdd = [...newPluginUids].filter((uid) => !currentPluginUids.has(uid));
-            const pluginsToRemove = [...currentPluginUids].filter((uid) => !newPluginUids.has(uid));
+            const pluginsToAdd = Array.from(newPluginUids).filter((uid) => !currentPluginUids.has(uid));
+            const pluginsToRemove = Array.from(currentPluginUids).filter((uid) => !newPluginUids.has(uid));
             const updatePromises = [];
             if (pluginsToAdd.length > 0) {
                 const existingUserPlugins = await userPlugin.findMany({
@@ -59,7 +59,7 @@ let InventoryService = InventoryService_1 = class InventoryService {
                         pluginId: true,
                     },
                 });
-                const existingPluginIds = new Set(existingUserPlugins.map(up => up.pluginId));
+                const existingPluginIds = new Set(existingUserPlugins.map((up) => up.pluginId));
                 const pluginsToCreate = pluginsToAdd.filter(pluginId => !existingPluginIds.has(pluginId));
                 if (pluginsToCreate.length > 0) {
                     updatePromises.push(userPlugin.createMany({
