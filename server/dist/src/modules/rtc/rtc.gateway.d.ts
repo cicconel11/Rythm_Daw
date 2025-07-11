@@ -75,6 +75,6 @@ export declare class RtcGateway implements OnGatewayConnection, OnGatewayDisconn
     getSocketToUser(): Map<string, string>;
     getLogger(): Logger;
     registerWsServer(server: Server): void;
-    protected emitToUser(userId: string, event: string, payload: any): boolean;
+    emitToUser(userId: string, event: string, payload: any): boolean;
 }
 export {};

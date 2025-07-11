@@ -1,72 +1,33 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { ExecutionContext, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 
-// Extend the Socket.IO types to include our custom user property
-declare module 'socket.io' {
-  interface Handshake {
-    user?: {
-      userId: string;
-      email: string;
-      name?: string;
-    };
-  }
-
-  interface Socket {
-    user?: {
-      userId: string;
-      email: string;
-      name?: string;
-    };
-  }
-}
-
 @Injectable()
-export class JwtWsAuthGuard extends AuthGuard('ws-jwt') {
-  private readonly logger = new Logger(JwtWsAuthGuard.name);
+export class JwtWsAuthGuard {
+  constructor(private readonly jwt: JwtService) {}
 
-  getRequest(context: ExecutionContext) {
-    const ctx = context.switchToWs();
-    const client = ctx.getClient<Socket>();
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const client = context.switchToWs().getClient<Socket>();
+    const token = client.handshake.auth?.token;
     
-    // For WebSocket connections, we need to attach the handshake headers to the request
-    const request = {
-      headers: {
-        authorization: client.handshake?.auth?.token || 
-                      client.handshake?.headers?.authorization ||
-                      '',
-      },
-      // Add the socket to the request for later use
-      _socket: client,
-    };
-    
-    return request;
-  }
-  
-  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
-    if (err || !user) {
-      const errorMessage = info?.message || 'Unauthorized';
-      this.logger.warn(`WebSocket authentication failed: ${errorMessage}`);
-      throw new WsException(errorMessage);
+    if (!token) {
+      throw new WsException('Missing token');
     }
-    
+
     try {
-      // Attach user to the socket for later use
-      const client = context.switchToWs().getClient<Socket>();
+      const payload: any = this.jwt.verify(token);
       
-      // Store user in the socket
-      client.user = user;
+      // Add user to handshake
+      (client.handshake as any).user = {
+        userId: payload.sub,
+        email: payload.email,
+        name: payload.name,
+      };
       
-      // Also store in handshake for backward compatibility
-      if (client.handshake) {
-        client.handshake.user = user;
-      }
-      
-      return user;
+      return true;
     } catch (error) {
-      this.logger.error('Error in WebSocket authentication:', error);
-      throw new WsException('Authentication failed');
+      throw new WsException('Invalid token');
     }
   }
 }

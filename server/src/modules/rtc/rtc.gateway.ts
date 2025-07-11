@@ -368,7 +368,7 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * @param payload - The data to send with the event
    * @returns boolean - True if the event was emitted to at least one socket
    */
-  protected emitToUser(userId: string, event: string, payload: any): boolean {
+  public emitToUser(userId: string, event: string, payload: any): boolean {
     const sockets = this.userSockets.get(userId);
     if (!sockets || sockets.size === 0 || !this.server?.sockets?.sockets) {
       this.logger.warn(

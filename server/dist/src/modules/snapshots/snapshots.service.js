@@ -100,7 +100,7 @@ let SnapshotsService = SnapshotsService_1 = class SnapshotsService {
                 id: snapshotId,
                 name: snapshotData.name,
                 description: snapshotData.description,
-                data: { files: fileMetadata },
+                data: JSON.stringify({ files: fileMetadata }),
                 projectId,
             },
         });

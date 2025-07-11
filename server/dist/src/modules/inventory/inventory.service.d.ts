@@ -17,19 +17,19 @@ export declare class InventoryService {
     }>;
     getUserInventory(userId: string): Promise<({
         plugin: {
-            description: string | null;
             id: string;
-            name: string;
             createdAt: Date;
+            name: string;
+            description: string | null;
             updatedAt: Date;
             deletedAt: Date | null;
             version: string;
         };
     } & {
-        userId: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
+        userId: string;
         pluginId: string;
         isActive: boolean;
     })[]>;
