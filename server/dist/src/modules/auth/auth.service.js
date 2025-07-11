@@ -66,28 +66,23 @@ let AuthService = AuthService_1 = class AuthService {
                 throw new common_1.ConflictException('Email already in use');
             }
             const hashedPassword = await bcrypt.hash(password, this.SALT_ROUNDS);
-            const userName = name || email.split('@')[0];
             const user = await this.prisma.user.create({
                 data: {
                     email,
+                    name: name || email.split('@')[0],
                     password: hashedPassword,
-                    name: userName,
-                    isApproved: true,
-                },
-                select: {
-                    id: true,
-                    email: true,
-                    name: true,
                 },
             });
             const tokens = await this.getTokens(user.id, user.email, user.name || '');
             await this.updateRefreshToken(user.id, tokens.refreshToken);
             return {
-                id: user.id,
-                email: user.email,
-                name: user.name || '',
                 accessToken: tokens.accessToken,
                 refreshToken: tokens.refreshToken,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                },
             };
         }
         catch (error) {
@@ -97,18 +92,24 @@ let AuthService = AuthService_1 = class AuthService {
     }
     async login(email, password) {
         try {
-            const user = await this.validateUser(email, password);
+            const user = await this.prisma.user.findUnique({ where: { email } });
             if (!user) {
+                throw new common_1.UnauthorizedException('Invalid credentials');
+            }
+            const isPasswordValid = await bcrypt.compare(password, user.password);
+            if (!isPasswordValid) {
                 throw new common_1.UnauthorizedException('Invalid credentials');
             }
             const tokens = await this.getTokens(user.id, user.email, user.name || '');
             await this.updateRefreshToken(user.id, tokens.refreshToken);
             return {
-                id: user.id,
-                email: user.email,
-                name: user.name || '',
                 accessToken: tokens.accessToken,
                 refreshToken: tokens.refreshToken,
+                user: {
+                    id: user.id,
+                    email: user.email,
+                    name: user.name,
+                },
             };
         }
         catch (error) {
@@ -153,20 +154,22 @@ let AuthService = AuthService_1 = class AuthService {
         }
     }
     async validateUser(email, password) {
-        try {
-            const user = await this.prisma.user.findUnique({ where: { email } });
-            if (!user)
-                return null;
-            const isPasswordValid = await bcrypt.compare(password, user.password);
-            if (!isPasswordValid)
-                return null;
-            const { password: _, ...result } = user;
-            return result;
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+            select: { id: true, email: true, name: true, password: true }
+        });
+        if (!user) {
+            return null;
         }
-        catch (error) {
-            this.logger.error(`Validate user error: ${error.message}`, error.stack);
-            throw error;
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return null;
         }
+        return {
+            id: user.id,
+            email: user.email,
+            name: user.name
+        };
     }
     async verifyToken(token) {
         try {
@@ -249,6 +252,16 @@ let AuthService = AuthService_1 = class AuthService {
             sameSite: isProduction ? 'strict' : 'lax',
             path: '/',
         });
+    }
+    async getUserById(userId) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, email: true, name: true }
+        });
+        if (!user) {
+            throw new common_1.UnauthorizedException('User not found');
+        }
+        return user;
     }
 };
 exports.AuthService = AuthService;

@@ -1,17 +1,9 @@
 import { Controller, Post, Body, Req, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Request } from 'express';
 import { HeartbeatDto } from './dto/heartbeat.dto';
 import { PresenceService } from './presence.service';
-
-interface RequestWithUser extends Request {
-  user: {
-    sub: string;
-    email: string;
-    [key: string]: any;
-  };
-}
+import { RequestWithUser } from '../../constants/request-with-user';
 
 @ApiTags('presence')
 @Controller('presence')
@@ -30,7 +22,7 @@ export class PresenceController {
     @Req() req: RequestWithUser,
     @Body() dto: HeartbeatDto,
   ) {
-    const userId = req.user.sub; // Set by JwtAuthGuard
+    const userId = req.user.userId; // Set by JwtAuthGuard
     await this.presenceService.updateHeartbeat(userId, dto);
   }
 }

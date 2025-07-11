@@ -9,7 +9,7 @@ export declare class PresenceGateway implements OnGatewayConnection, OnGatewayDi
     constructor(presenceService: PresenceService);
     handleConnection(client: Socket): void;
     handleDisconnect(client: Socket): void;
-    joinProjectRoom(client: Socket, projectId: string): Promise<void>;
+    private joinProjectRoom;
     private leaveAllProjectRooms;
     broadcastPresenceUpdate(projectId: string, data: any): void;
 }

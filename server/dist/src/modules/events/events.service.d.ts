@@ -4,13 +4,10 @@ import { TrackEventsBulkDto } from './dto/track-event.dto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 interface EventStats {
     total: number;
+    daysWithEvents: number;
     byType: Record<string, number>;
-    byDay: Array<{
-        date: string;
-        count: number;
-    }>;
-    byProject: Record<string, number>;
     byUser: Record<string, number>;
+    byProject: Record<string, number>;
 }
 export declare class EventsService implements OnModuleInit {
     private readonly prisma;
@@ -26,16 +23,11 @@ export declare class EventsService implements OnModuleInit {
     constructor(prisma: PrismaService, eventEmitter: EventEmitter2);
     onModuleInit(): void;
     trackBulk(dto: TrackEventsBulkDto): Promise<void>;
-    private processEvents;
+    private processEventBatch;
     private enqueueEvents;
-    private createActivityLog;
     private processQueue;
+    private createActivityLog;
     private scheduleFlush;
-    getStats(options?: {
-        startDate?: Date;
-        endDate?: Date;
-        userId?: string;
-        action?: string;
-    }): Promise<EventStats>;
+    getEventStats(userId: string, startDate: Date, endDate: Date): Promise<EventStats>;
 }
 export {};

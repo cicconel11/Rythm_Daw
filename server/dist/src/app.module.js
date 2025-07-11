@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const core_1 = require("@nestjs/core");
 const auth_module_1 = require("./modules/auth/auth.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 const files_module_1 = require("./modules/files/files.module");
@@ -33,10 +34,8 @@ exports.AppModule = AppModule = __decorate([
         providers: [
             {
                 provide: ws_adapter_1.WsAdapter,
-                useFactory: (app) => {
-                    return new ws_adapter_1.WsAdapter(app);
-                },
-                inject: [common_2.INestApplication],
+                useFactory: (app) => new ws_adapter_1.WsAdapter(app),
+                inject: [core_1.APP_INTERCEPTOR],
             },
         ],
     })

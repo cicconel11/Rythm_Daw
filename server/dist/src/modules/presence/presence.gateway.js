@@ -60,19 +60,17 @@ let PresenceGateway = class PresenceGateway {
             this.projectRooms.set(projectId, new Set());
         }
         this.projectRooms.get(projectId)?.add(client.id);
-        const user = await this.presenceService.getUserPresence(userId);
-        if (user) {
-            this.server.to(`project:${projectId}`).emit('presence-joined', {
-                userId: user.userId,
-                status: user.status,
-                user: {
-                    id: user.user.id,
-                    name: user.user.name,
-                    email: user.user.email,
-                },
-                projectId,
-            });
-        }
+        const isOnline = await this.presenceService.getUserPresence(userId);
+        this.server.to(`project:${projectId}`).emit('presence-joined', {
+            userId,
+            status: isOnline ? 'online' : 'offline',
+            user: {
+                id: userId,
+                name: 'User',
+                email: 'user@example.com',
+            },
+            projectId,
+        });
         const currentPresence = await this.presenceService.getProjectPresence(projectId);
         client.emit('presence-sync', currentPresence);
     }

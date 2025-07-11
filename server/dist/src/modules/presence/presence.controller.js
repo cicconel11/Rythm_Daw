@@ -23,7 +23,7 @@ let PresenceController = class PresenceController {
         this.presenceService = presenceService;
     }
     async heartbeat(req, dto) {
-        const userId = req.user.sub;
+        const userId = req.user.userId;
         await this.presenceService.updateHeartbeat(userId, dto);
     }
 };

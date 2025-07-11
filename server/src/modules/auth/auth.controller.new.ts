@@ -57,12 +57,14 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshTokens(
+  async refreshTokens(
     @GetCurrentUserId() userId: string,
     @GetCurrentUser('refreshToken') refreshToken: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    return this.authService.refreshTokens(userId, refreshToken);
+    const tokens = await this.authService.refreshTokens(userId, refreshToken);
+    const { id, email, name } = await this.authService.getUserById(userId);
+    return { ...tokens, user: { id, email, name } } as const;
   }
 
   @UseGuards(JwtAuthGuard)

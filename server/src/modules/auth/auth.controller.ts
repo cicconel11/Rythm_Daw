@@ -50,9 +50,9 @@ export class AuthController {
       return {
         accessToken: result.accessToken,
         user: {
-          id: result.id,
-          email: result.email,
-          name: result.name
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name || result.user.email.split('@')[0] // Use email prefix as fallback for name
         }
       };
     } catch (error) {
@@ -88,9 +88,9 @@ export class AuthController {
     return {
       accessToken: result.accessToken,
       user: {
-        id: result.id,
-        email: result.email,
-        name: result.name,
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name || result.user.email.split('@')[0], // Use email prefix as fallback for name
       },
     };
   }

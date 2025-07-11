@@ -1,13 +1,6 @@
-import { Request } from 'express';
 import { SyncInventoryDto } from './dto/sync-inventory.dto';
 import { InventoryService } from './inventory.service';
-interface RequestWithUser extends Request {
-    user: {
-        sub: string;
-        email: string;
-        [key: string]: any;
-    };
-}
+import { RequestWithUser } from '../../constants/request-with-user';
 export declare class InventoryController {
     private readonly inventoryService;
     constructor(inventoryService: InventoryService);
@@ -19,4 +12,3 @@ export declare class InventoryController {
         inventory: any;
     }>;
 }
-export {};
