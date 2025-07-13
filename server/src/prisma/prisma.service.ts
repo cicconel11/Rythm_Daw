@@ -1,5 +1,10 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
+
+type ModelName = Prisma.ModelName;
+
+// Get all model names from Prisma
+const modelNames: ModelName[] = Object.values(Prisma.ModelName) as ModelName[];
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
@@ -11,11 +16,17 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$disconnect();
   }
 
-  async modelExists(table: string): Promise<boolean> {
-    const rows = await this.$queryRaw<Array<{ name: string }>>`
-      SELECT name FROM sqlite_master
-      WHERE type = 'table' AND name = ${table}
-    `;
-    return rows.length > 0;
+  async clearDatabase() {
+    if (process.env.NODE_ENV === 'production') return;
+    
+    return Promise.all(
+      modelNames.map((modelName) => {
+        const prismaModelKey = modelName[0].toLowerCase() + modelName.slice(1) as Uncapitalize<typeof modelName>;
+        return (this as any)[prismaModelKey]?.deleteMany?.({});
+      }),
+    ).then(results => {
+      // Filter out undefined results in case some models don't have deleteMany
+      return results.filter(Boolean);
+    });
   }
 }

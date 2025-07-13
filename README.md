@@ -96,4 +96,4 @@ graph LR
 ---
 
 ## 📜 License
-Free Beta — proprietary (contact <legal@rhythm.app> for details).
+Free Beta — proprietary (contact <lociccone11@gmail.com> for details).
