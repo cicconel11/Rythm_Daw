@@ -1,11 +1,8 @@
 import { ChatGateway } from '../src/modules/chat/chat.gateway';
+import { presenceServiceMock } from './utils/presence-mock';
 
 // Mock dependencies
-const mockPresenceService = {
-  updateUserPresence: jest.fn(),
-  removeUserPresence: jest.fn(),
-  isOnline: jest.fn(),
-};
+// Using shared presenceServiceMock from test/utils/presence-mock
 
 const mockRtcGateway = {
   registerWsServer: jest.fn(),
@@ -18,7 +15,7 @@ describe('ChatGateway', () => {
   beforeEach(() => {
     // Create a new instance of the gateway with mocked dependencies
     gateway = new ChatGateway(
-      mockPresenceService as any,
+      presenceServiceMock as any,
       mockRtcGateway as any,
     );
 
@@ -50,9 +47,13 @@ describe('ChatGateway', () => {
         },
       };
 
+      // Mock the presence service methods
+      presenceServiceMock.updateUserPresence.mockResolvedValue(undefined);
+      presenceServiceMock.isOnline.mockReturnValue(true);
+
       await gateway.handleConnection(mockSocket as any);
       
-      expect(mockPresenceService.updateUserPresence).toHaveBeenCalledWith('test-user');
+      expect(presenceServiceMock.updateUserPresence).toHaveBeenCalledWith('test-user');
       expect(mockServer.emit).toHaveBeenCalledWith('userOnline', { userId: 'test-user' });
     });
   });

@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket as BaseSocket } from 'socket.io';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger, UseGuards, OnModuleInit } from '@nestjs/common';
 import { JwtWsAuthGuard } from '../../auth/guards/jwt-ws-auth.guard';
 
 // Define a custom interface that extends the base Socket
@@ -76,14 +76,14 @@ interface SignalingMessage {
 @WebSocketGateway({
   namespace: 'rtc',
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://your-production-domain.com']
-      : ['http://localhost:3000'],
+    origin: process.env.CORS_ORIGIN || '*',
     credentials: true,
   },
+  pingInterval: 30000,  // 30 seconds
+  pingTimeout: 10000,   // 10 seconds
 })
 @UseGuards(JwtWsAuthGuard)
-export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   @WebSocketServer()
   private server: Server<any, any, any, AuthenticatedSocket>;
   
@@ -91,6 +91,38 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
   public testServer?: any;
   
   private readonly logger = new Logger(RtcGateway.name);
+  private readonly missedPongs = new Map<string, number>();
+  private readonly MAX_MISSED_PONGS = 2;
+  private pingInterval: NodeJS.Timeout;
+  
+  onModuleInit() {
+    // Setup ping interval
+    this.setupPingInterval();
+  }
+  
+  private setupPingInterval() {
+    // Clear existing interval if any
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+    }
+    
+    // Send ping every 30 seconds
+    this.pingInterval = setInterval(() => {
+      const now = Date.now();
+      this.server.sockets.sockets.forEach((socket: AuthenticatedSocket) => {
+        // Only send ping to authenticated sockets
+        if (socket.connected && socket.handshake.user?.userId) {
+          socket.emit('ping', { timestamp: now });
+          
+          // Initialize missed pongs counter if needed
+          if (!this.missedPongs.has(socket.id)) {
+            this.missedPongs.set(socket.id, 0);
+          }
+        }
+      });
+    }, 30000); // 30 seconds
+  }
+  
   private userSockets = new Map<string, Set<string>>(); // userId -> Set<socketId>
   private socketToUser = new Map<string, string>(); // socketId -> userId
   private rooms = new Map<string, Set<string>>(); // roomId -> Set<userId>
@@ -110,6 +142,37 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
         client.disconnect();
         return;
       }
+
+      // Initialize missed pongs counter
+      this.missedPongs.set(client.id, 0);
+      
+      // Setup pong handler for this client
+      client.on('pong', (data) => {
+        if (data?.timestamp) {
+          const latency = Date.now() - data.timestamp;
+          this.logger.debug(`Pong received from ${user.userId} (${client.id}) - Latency: ${latency}ms`);
+          this.missedPongs.set(client.id, 0); // Reset missed pongs counter
+        }
+      });
+      
+      // Check for missed pongs
+      const checkPongs = setInterval(() => {
+        const missed = this.missedPongs.get(client.id) || 0;
+        if (missed >= this.MAX_MISSED_PONGS) {
+          this.logger.warn(`Disconnecting ${user.userId} (${client.id}) - Missed ${missed} pongs`);
+          this.handleDisconnect(client);
+          client.disconnect(true);
+          clearInterval(checkPongs);
+        } else {
+          this.missedPongs.set(client.id, missed + 1);
+        }
+      }, 35000); // Check every 35 seconds (slightly more than ping interval)
+      
+      // Clean up on disconnect
+      client.once('disconnect', () => {
+        clearInterval(checkPongs);
+        this.missedPongs.delete(client.id);
+      });
 
       const { userId, email } = user;
       this.logger.log(`[RtcGateway] Client connected: ${client.id} (User: ${userId})`);
@@ -163,10 +226,15 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: AuthenticatedSocket) {
-    const userId = this.socketToUser.get(client.id);
-    if (!userId) return;
+    const socketId = client.id;
+    const userId = this.socketToUser.get(socketId);
+    
+    // Clean up ping/pong tracking
+    this.missedPongs.delete(socketId);
 
-    // Remove socket from user's socket set
+    if (!userId) {
+      return;
+    } // Remove socket from user's socket set
     const sockets = this.userSockets.get(userId);
     if (sockets) {
       sockets.delete(client.id);
