@@ -75,8 +75,12 @@ describe('AuthService', () => {
   let prisma: any;
   let jwtService: jest.Mocked<JwtService>;
   let configService: any;
+  let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(async () => {
+    // Mock console.error to prevent test output pollution
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    
     // Create fresh mocks for each test
     jwtService = createMockJwtService();
     
@@ -141,86 +145,156 @@ describe('AuthService', () => {
   afterEach(() => {
     jest.clearAllMocks();
     jest.restoreAllMocks();
+    if (consoleErrorSpy) {
+      consoleErrorSpy.mockRestore();
+    }
   });
 
   describe('refreshTokens', () => {
     it('should return new tokens with valid refresh token', async () => {
-      // Mock the user with a refresh token
+      // Arrange
+      const userId = TEST_USER.id;
+      const refreshToken = 'valid-refresh-token';
+      
+      // Mock user with matching refresh token
       const mockUser = {
         ...TEST_USER,
-        refreshToken: 'valid-refresh-token',
+        id: userId,
+        refreshToken,
       };
-
-      // Setup the JWT verify mock
-      jwtService.verify.mockImplementationOnce((token: string, options: any) => ({
-        sub: 'test-user-id',
-        email: 'test@example.com',
-        name: 'Test User'
-      }));
-
-      // Mock the Prisma responses
-      prisma.user.findUnique.mockResolvedValueOnce(mockUser);
-      prisma.user.update.mockImplementation(({ where, data }: any) => 
-        Promise.resolve({ ...mockUser, ...data })
-      );
-
-      // Call the method
-      const result = await service.refreshTokens('test-user-id', 'valid-refresh-token');
-
-      // Verify the results
-      expect(result).toHaveProperty('accessToken', 'mocked-access-token');
-      expect(result).toHaveProperty('refreshToken', 'mocked-refresh-token');
-      expect(result).toHaveProperty('user');
       
-      // Verify JWT verify was called with correct parameters
-      expect(jwtService.verify).toHaveBeenCalledWith('valid-refresh-token', {
+      // Mock Prisma and JWT service
+      prisma.user.findUnique.mockResolvedValue(mockUser);
+      
+      // Mock JWT verify to return a valid payload
+      jwtService.verify.mockImplementation((token, options) => ({
+        sub: userId,
+        email: TEST_USER.email,
+        name: TEST_USER.name,
+      }));
+      
+      // Mock the private getTokens method
+      const getTokensSpy = jest.spyOn(service as any, 'getTokens');
+      getTokensSpy.mockImplementation(async () => ({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+        user: { 
+          id: userId, 
+          email: TEST_USER.email, 
+          name: TEST_USER.name 
+        }
+      }));
+      
+      // Mock the user update
+      prisma.user.update.mockResolvedValue({
+        ...mockUser,
+        refreshToken: 'new-refresh-token',
+      });
+
+      // Act
+      const result = await service.refreshTokens(userId, refreshToken);
+
+      // Assert
+      expect(result).toEqual({
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+        user: {
+          id: userId,
+          email: TEST_USER.email,
+          name: TEST_USER.name,
+        },
+      });
+      
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
+      
+      expect(jwtService.verify).toHaveBeenCalledWith(refreshToken, {
         secret: 'test-refresh-secret',
       });
       
-      // Verify the user was updated with a new refresh token
       expect(prisma.user.update).toHaveBeenCalledWith({
-        where: { id: 'test-user-id' },
-        data: { refreshToken: 'mocked-refresh-token' },
+        where: { id: userId },
+        data: { refreshToken: 'new-refresh-token' },
       });
     });
 
     it('should throw UnauthorizedException if refresh token is invalid', async () => {
-      const refreshToken = 'invalid-refresh-token';
+      // Arrange
+      const userId = TEST_USER.id;
+      const invalidToken = 'invalid-refresh-token';
       
-      const mockUser = {
-        ...TEST_USER,
-        refreshToken: 'different-hashed-token',
-      };
-      
-      prisma.user.findUnique.mockResolvedValue(mockUser);
+      // Mock JWT verification to throw an error
+      jwtService.verify.mockImplementation(() => {
+        throw new Error('Invalid token');
+      });
 
-      await expect(service.refreshTokens(TEST_USER.id, refreshToken)).rejects.toThrow(
-        UnauthorizedException
-      );
+      // Act & Assert
+      await expect(
+        service.refreshTokens(userId, invalidToken)
+      ).rejects.toThrow(UnauthorizedException);
+      
+      expect(prisma.user.findUnique).not.toHaveBeenCalled();
+      expect(prisma.user.update).not.toHaveBeenCalled();
     });
 
-    it('should throw UnauthorizedException if user not found', async () => {
+    it('should throw UnauthorizedException when user is not found', async () => {
+      // Arrange
       const userId = 'non-existent-user-id';
+      const refreshToken = 'valid-token';
+      
+      // Mock JWT verification to pass
+      jwtService.verify.mockImplementation((token, options) => ({
+        sub: userId,
+        email: 'test@example.com',
+        name: 'Test User'
+      }));
+      
+      // Mock user not found
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.refreshTokens(userId, 'any-token')).rejects.toThrow(
-        UnauthorizedException
-      );
+      // Act & Assert
+      await expect(
+        service.refreshTokens(userId, refreshToken)
+      ).rejects.toThrow(UnauthorizedException);
+      
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
+      expect(prisma.user.update).not.toHaveBeenCalled();
     });
 
-    it('should throw UnauthorizedException if refresh token does not match', async () => {
+    it('should throw UnauthorizedException when refresh token does not match', async () => {
+      // Arrange
+      const userId = TEST_USER.id;
       const refreshToken = 'valid-refresh-token';
       
+      // Mock user with different refresh token
       const mockUser = {
         ...TEST_USER,
-        refreshToken: 'different-hashed-token',
+        id: userId,
+        refreshToken: 'different-refresh-token',
       };
       
+      // Mock JWT verification to pass
+      jwtService.verify.mockImplementation((token, options) => ({
+        sub: userId,
+        email: 'test@example.com',
+        name: 'Test User'
+      }));
+      
+      // Mock user found but with different token
       prisma.user.findUnique.mockResolvedValue(mockUser);
 
-      await expect(service.refreshTokens(TEST_USER.id, refreshToken)).rejects.toThrow(
-        UnauthorizedException
-      );
+      // Act & Assert
+      await expect(
+        service.refreshTokens(userId, refreshToken)
+      ).rejects.toThrow(UnauthorizedException);
+      
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: userId },
+      });
+      expect(prisma.user.update).not.toHaveBeenCalled();
     });
   });
 });

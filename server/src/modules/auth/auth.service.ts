@@ -148,32 +148,7 @@ export class AuthService {
     }
   }
 
-  async refreshTokens(userId: string, refreshToken: string): Promise<Tokens> {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-      });
 
-      if (!user?.refreshToken) {
-        await this.revokeUserRefreshTokens(userId);
-        throw new ForbiddenException('Access Denied - Invalid Token');
-      }
-
-      const refreshTokenMatches = await bcrypt.compare(refreshToken, user.refreshToken);
-      if (!refreshTokenMatches) {
-        await this.revokeUserRefreshTokens(userId);
-        throw new ForbiddenException('Access Denied - Token Mismatch');
-      }
-
-      const tokens = await this.getTokens(user.id, user.email, user.name || '');
-      await this.updateRefreshToken(user.id, tokens.refreshToken);
-
-      return tokens;
-    } catch (error) {
-      this.logger.error(`Refresh tokens error: ${error.message}`, error.stack);
-      throw error;
-    }
-  }
 
   async refreshTokens(userId: string, refreshToken: string): Promise<Tokens> {
     if (!refreshToken) {
@@ -211,7 +186,7 @@ export class AuthService {
 
       return tokens;
     } catch (error) {
-      console.error('Refresh token error:', error);
+      this.logger.error(`Refresh token error: ${error.message}`, error.stack);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
