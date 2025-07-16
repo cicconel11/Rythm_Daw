@@ -5,34 +5,13 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AwsS3Service } from '../src/modules/files/aws-s3.service';
 
-// Mock PrismaService
-interface MockPrismaService {
-  $connect: jest.Mock;
-  $disconnect: jest.Mock;
-  $on: jest.Mock;
-  $transaction: jest.Mock;
-  user: {
-    findUnique: jest.Mock;
-    create: jest.Mock;
-    update: jest.Mock;
-    findMany: jest.Mock;
-    delete: jest.Mock;
-  };
-}
+// Import our mock Prisma client
+import prisma from './__mocks__/@prisma/client';
 
-export const mockPrismaService: MockPrismaService = {
-  $connect: jest.fn().mockResolvedValue(undefined),
-  $disconnect: jest.fn().mockResolvedValue(undefined),
-  $on: jest.fn(),
-  $transaction: jest.fn((fn) => fn(mockPrismaService)),
-  user: {
-    findUnique: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    findMany: jest.fn(),
-    delete: jest.fn(),
-  },
-};
+// Mock PrismaService
+type MockPrismaService = typeof prisma;
+
+export const mockPrismaService: MockPrismaService = prisma;
 
 // Mock ConfigService
 interface MockConfigService {
@@ -50,6 +29,7 @@ export const mockConfigService: MockConfigService = {
       AWS_ACCESS_KEY_ID: 'test-access-key-id',
       AWS_SECRET_ACCESS_KEY: 'test-secret-access-key',
       S3_BUCKET_NAME: 'test-bucket',
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
     };
     return config[key];
   }),
@@ -61,33 +41,52 @@ interface MockAwsS3Service {
   deleteFile: jest.Mock;
   getFileUrl: jest.Mock;
   getPresignedUrl: jest.Mock;
+  getPresignedPair: jest.Mock;
 }
 
 export const mockAwsS3Service: MockAwsS3Service = {
-  uploadFile: jest.fn(),
-  deleteFile: jest.fn(),
-  getFileUrl: jest.fn(),
-  getPresignedUrl: jest.fn().mockResolvedValue({
+  uploadFile: jest.fn().mockResolvedValue({
+    Location: 'https://s3.amazonaws.com/test-bucket/test-file.txt'
+  }),
+  deleteFile: jest.fn().mockResolvedValue({}),
+  getFileUrl: jest.fn().mockReturnValue('https://s3.amazonaws.com/test-bucket/test-file.txt'),
+  getPresignedUrl: jest.fn().mockResolvedValue('https://s3.amazonaws.com/test-bucket/test-file.txt'),
+  getPresignedPair: jest.fn().mockResolvedValue({
     putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
     getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
   }),
 };
 
-
 // Global test setup
 beforeAll(async () => {
   // Mock the PrismaService
   jest.mock('../src/prisma/prisma.service', () => ({
-    PrismaService: jest.fn().mockImplementation(() => mockPrismaService),
+    PrismaService: jest.fn().mockImplementation(() => ({
+      ...mockPrismaService,
+      $on: jest.fn(),
+      $connect: jest.fn().mockResolvedValue(undefined),
+      $disconnect: jest.fn().mockResolvedValue(undefined),
+    })),
   }));
 
   // Mock the AwsS3Service
   jest.mock('../src/modules/files/aws-s3.service', () => ({
     AwsS3Service: jest.fn().mockImplementation(() => mockAwsS3Service),
   }));
+
+  // Mock ConfigModule
+  jest.mock('@nestjs/config', () => ({
+    ConfigModule: {
+      forRoot: jest.fn(),
+    },
+  }));
 });
 
 // Clean up after each test
 afterEach(() => {
   jest.clearAllMocks();
+});
+
+afterAll(async () => {
+  await mockPrismaService.$disconnect();
 });

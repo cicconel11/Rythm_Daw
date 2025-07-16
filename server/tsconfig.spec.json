@@ -3,7 +3,13 @@
   "compilerOptions": {
     "outDir": "./dist",
     "module": "commonjs",
-    "types": ["node", "jest", "ws"]
+    "target": "es2019",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "types": ["node", "jest"],
+    "typeRoots": ["node_modules/@types"]
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules"]
