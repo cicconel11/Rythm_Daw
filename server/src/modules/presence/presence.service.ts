@@ -71,8 +71,8 @@ export class PresenceService implements OnModuleDestroy {
 
   async getProjectPresence(projectId: string): Promise<Array<{ userId: string; isOnline: boolean }>> {
     // This is a simplified implementation. In a real app, you would check which users have access to the project
-    const result = [];
-    for (const [userId, presence] of this.userPresence.entries()) {
+    const result: Array<{ userId: string; isOnline: boolean }> = [];
+    for (const [userId] of this.userPresence.entries()) {
       result.push({
         userId,
         isOnline: this.isOnline(userId),

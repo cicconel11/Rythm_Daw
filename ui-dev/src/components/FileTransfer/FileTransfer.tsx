@@ -103,7 +103,7 @@ const FileTransfer: React.FC<FileTransferProps> = ({ userId, recipientId }) => {
         </div>
       )}
       
-      <style jsx>{`
+      <style>{`
         .file-transfer-container {
           padding: 16px;
           border: 1px solid #d9d9d9;

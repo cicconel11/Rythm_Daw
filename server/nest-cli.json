@@ -5,7 +5,13 @@
     "tsConfigPath": "tsconfig.build.json",
     "deleteOutDir": true,
     "webpack": false,
-    "typeCheck": true
+    "typeCheck": true,
+    "assets": [
+      {
+        "include": "**/*.json",
+        "outDir": "dist"
+      }
+    ]
   },
   "watchAssets": [
     "src/**/*",

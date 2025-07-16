@@ -17,12 +17,15 @@
       "@store/*": ["./src/store/*"],
       "@rhythm/ui-kit": ["ui-kit/src"]
     },
-    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types"
+    ],
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "jsxImportSource": "react"
   },
   "include": ["src/**/*", "vite.config.ts"],

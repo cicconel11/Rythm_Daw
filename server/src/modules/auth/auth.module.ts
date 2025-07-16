@@ -2,24 +2,26 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
+import authConfig from '../../config/auth.config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-// Import the refresh token guard with its correct name
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
 @Module({
   imports: [
-    ConfigModule,
+    ConfigModule.forFeature(authConfig),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET', 'defaultSecret'),
-        signOptions: { expiresIn: '15m' }, // Access token expires in 15 minutes
+        secret: configService.get<string>('auth.accessToken.secret', 'defaultSecret'),
+        signOptions: { 
+          expiresIn: configService.get<string>('auth.accessToken.expiresIn', '15m'),
+        },
       }),
       inject: [ConfigService],
     }),

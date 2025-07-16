@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "declaration": false,
+    "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
+    "esModuleInterop": true,
+    "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": ".",
+    "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
@@ -17,23 +18,26 @@
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "esModuleInterop": true,
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "types": ["node"],
+    "isolatedModules": true,
+    "noEmit": false,
+    "paths": {
+      "@app/*": ["./src/*"],
+      "@test/*": ["./test/*"],
+      "@prisma/*": ["./prisma/*"],
+      "@auth/*": ["./src/auth/*"],
+      "@common/*": ["./src/common/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@modules/chat/*": ["./src/modules/chat/*"],
+      "@modules/presence/*": ["./src/modules/presence/*"]
+    },
+    "lib": ["es2017", "esnext.asynciterable"],
+    "types": ["node", "jest"],
     "typeRoots": [
       "./node_modules/@types"
     ],
-    "paths": {
-      "@app/*": ["src/*"],
-      "@test/*": ["test/*"],
-      "@prisma/*": ["src/prisma/*"],
-      "@auth/*": ["src/auth/*"],
-      "@common/*": ["src/common/*"],
-      "@modules/*": ["src/modules/*"],
-      "@modules/chat/*": ["src/modules/chat/*"],
-      "@modules/presence/*": ["src/modules/presence/*"]
-    }
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*",

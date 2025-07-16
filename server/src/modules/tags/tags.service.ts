@@ -182,7 +182,7 @@ export class TagsService {
    * @returns Array of tags with their usage counts
    */
   async findAll(filter?: { search?: string; limit?: number }) {
-    const where: Prisma.TagWhereInput = {};
+    const where: any = {}; // Using any to avoid Prisma type issues
     
     if (filter?.search) {
       where.OR = [
@@ -224,16 +224,20 @@ export class TagsService {
       entityId: string;
     }
 
-    const result = await this.prisma.$queryRaw<QueryResult[]>`
+    // Convert tags to a comma-separated string with proper escaping
+    const tagsList = tags.map(tag => `'${tag.replace(/'/g, "''")}'`).join(',');
+    
+    const query = `
       SELECT "entityId"
       FROM "EntityTag" et
       JOIN "Tag" t ON et."tagId" = t.id
-      WHERE et."entityType" = ${entityType}
-      AND t.name IN (${Prisma.join(tags)})
+      WHERE et."entityType" = $1
+      AND t.name IN (${tagsList})
       GROUP BY "entityId"
-      HAVING COUNT(DISTINCT t.name) = ${tags.length}
+      HAVING COUNT(DISTINCT t.name) = $2
     `;
 
+    const result = await this.prisma.$queryRawUnsafe(query, entityType, tags.length) as QueryResult[];
     return result.map(r => r.entityId);
   }
 

@@ -40,7 +40,9 @@
     "tailwind-merge": "^3.3.1",
     "use-sync-external-store": "^1.5.0",
     "uuid": "^11.1.0",
-    "zustand": "^4.5.0"
+    "zustand": "^4.5.0",
+    "antd": "^5.17.3",
+    "@ant-design/icons": "^5.5.0"
   },
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.27.1",

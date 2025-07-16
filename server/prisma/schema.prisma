@@ -2,11 +2,14 @@ generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextSearch", "fullTextIndex"]
   binaryTargets   = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+  
+  // Enable seeding
+  output = "./generated/client"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
