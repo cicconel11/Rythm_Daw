@@ -39,8 +39,13 @@ export class InventoryService {
         ),
       );
 
-      // Get the Prisma userPlugin delegate
-      const userPlugin = prisma.userPlugin;
+      // Get the Prisma userPlugin delegate with proper typing
+      const userPlugin = (prisma as any).userPlugin as {
+        findMany: (args: any) => Promise<Array<{ pluginId: string }>>;
+        createMany: (args: any) => Promise<any>;
+        deleteMany: (args: any) => Promise<any>;
+        updateMany: (args: any) => Promise<any>;
+      };
 
       // 2. Get current user plugins using the userPlugin delegate
       const currentUserPlugins = await userPlugin.findMany({
@@ -56,7 +61,7 @@ export class InventoryService {
       const pluginsToRemove = Array.from(currentPluginUids).filter((uid: string) => !newPluginUids.has(uid));
 
       // 4. Update user plugins
-      const updatePromises = [];
+      const updatePromises: Promise<any>[] = [];
       
       // Add new plugins
       if (pluginsToAdd.length > 0) {

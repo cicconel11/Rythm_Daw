@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AccountSettings from './AccountSettings';
-import SettingsLayout from './';
-import { useAuth } from '@/hooks/useAuth';
+import { SettingsLayout } from './';
+import useAuth from '@/hooks/useAuth';
 
 export default function AccountSettingsPage() {
   const { isAuthenticated } = useAuth();

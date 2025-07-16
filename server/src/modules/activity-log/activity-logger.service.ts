@@ -12,7 +12,7 @@ type RawActivityLog = {
   action: string;
   entityType: string;
   entityId: string;
-  metadata: Prisma.JsonValue | null;
+  metadata: any; // Using any to avoid Prisma type issues
   ipAddress: string | null;
   userAgent: string | null;
   userId: string;
@@ -26,7 +26,7 @@ type ActivityWithUser = {
   action: string;
   entityType: string;
   entityId: string;
-  metadata: Prisma.JsonValue | null;
+  metadata: any; // Using any to avoid Prisma type issues
   ipAddress: string | null;
   userAgent: string | null;
   createdAt: Date;
@@ -80,7 +80,7 @@ export class ActivityLoggerService implements OnModuleInit {
         action,
         entityId,
         entityType,
-        metadata: metadata as Prisma.InputJsonValue,
+        metadata: metadata as any, // Using any to avoid Prisma type issues
         ...(ipAddress && { ipAddress }),
         ...(userAgent && { userAgent }),
         // userId is optional, only include if provided
@@ -99,10 +99,10 @@ export class ActivityLoggerService implements OnModuleInit {
       `;
       
       const values = Object.values(activityData);
-      const activity = (await this.prisma.$queryRawUnsafe<RawActivityLog[]>(query, ...values))[0];
+      const activity = (await this.prisma.$queryRawUnsafe(query, ...values) as RawActivityLog[])[0];
       
       // Fetch user data if userId is provided
-      let user = null;
+      let user: { id: string; name: string | null; email: string } | null = null;
       if (userId) {
         user = await this.prisma.user.findUnique({
           where: { id: userId },
@@ -236,11 +236,11 @@ export class ActivityLoggerService implements OnModuleInit {
     
     params.push(limit);
     
-    const activities = await this.prisma.$queryRawUnsafe<Array<RawActivityLog & {
+    const activities = await this.prisma.$queryRawUnsafe(query, ...params) as Array<RawActivityLog & {
       "user.id"?: string;
       "user.name"?: string | null;
       "user.email"?: string;
-    }>>(query, ...params);
+    }>;
 
     // Map the raw results to ActivityWithUser objects
     return activities.map(row => ({
@@ -272,16 +272,18 @@ export class ActivityLoggerService implements OnModuleInit {
     const date = new Date();
     date.setDate(date.getDate() - days);
 
-    return this.prisma.$queryRaw`
+    const query = `
       SELECT 
         DATE("createdAt") as date,
         "action" as event,
         COUNT(*) as count
       FROM "ActivityLog"
-      WHERE "projectId" = ${projectId}
-        AND "createdAt" >= ${date}
+      WHERE "projectId" = $1
+        AND "createdAt" >= $2
       GROUP BY DATE("createdAt"), "action"
       ORDER BY date DESC, count DESC;
     `;
+
+    return this.prisma.$queryRawUnsafe(query, projectId, date);
   }
 }

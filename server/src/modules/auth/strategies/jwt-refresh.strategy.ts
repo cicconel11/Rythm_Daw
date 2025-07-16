@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 interface JwtPayload {
   sub: string;
@@ -21,17 +21,28 @@ export class JwtRefreshStrategy extends PassportStrategy(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    const authConfig = configService.get('auth');
+    const authConfig = configService.get('auth', {
+      refreshToken: {
+        cookieName: 'refreshToken',
+        secret: process.env.JWT_REFRESH_SECRET || 'defaultRefreshSecret',
+      },
+    });
     
     super({
       jwtFromRequest: (req: { cookies?: { [key: string]: string } }) => {
-        return req?.cookies?.[authConfig.refreshToken.cookieName];
+        const cookieName = authConfig?.refreshToken?.cookieName || 'refreshToken';
+        return req?.cookies?.[cookieName];
       },
-      secretOrKey: authConfig.refreshToken.secret,
+      secretOrKey: authConfig?.refreshToken?.secret || 'defaultRefreshSecret',
       passReqToCallback: true,
     } as any); // Using type assertion to bypass the type checking issue
     
-    this.authConfig = authConfig;
+    this.authConfig = {
+      refreshToken: {
+        cookieName: authConfig?.refreshToken?.cookieName || 'refreshToken',
+        secret: authConfig?.refreshToken?.secret || 'defaultRefreshSecret',
+      },
+    };
   }
 
   async validate(req: any, payload: JwtPayload) {

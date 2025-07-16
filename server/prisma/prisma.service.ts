@@ -1,10 +1,23 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
-type ModelName = Prisma.ModelName;
-
-// Get all model names from Prisma
-const modelNames: ModelName[] = Object.values(Prisma.ModelName) as ModelName[];
+// List of all Prisma models in your schema
+const modelNames = [
+  'User',
+  'Session',
+  'ActivityLog',
+  'Project',
+  'ProjectMember',
+  'ProjectInvitation',
+  'AudioFile',
+  'AudioTrack',
+  'AudioClip',
+  'Snapshot',
+  'Tag',
+  'ChatMessage',
+  'RTCPeerConnection',
+  'QoSMetrics'
+] as const;
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
@@ -21,7 +34,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     
     return Promise.all(
       modelNames.map((modelName) => {
-        const prismaModelKey = modelName[0].toLowerCase() + modelName.slice(1) as Uncapitalize<typeof modelName>;
+        const prismaModelKey = modelName[0].toLowerCase() + modelName.slice(1);
         return (this as any)[prismaModelKey]?.deleteMany?.({});
       }),
     ).then(results => {

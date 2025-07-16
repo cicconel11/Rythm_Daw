@@ -8,15 +8,6 @@ import { Icons } from '@/components/ui/icons';
 import { Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 
-// This tells TypeScript about the Vite environment variables
-declare global {
-  interface ImportMeta {
-    env: {
-      VITE_API_URL: string;
-    };
-  }
-}
-
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface AuthFormProps {

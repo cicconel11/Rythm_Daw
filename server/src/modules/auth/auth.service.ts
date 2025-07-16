@@ -15,7 +15,7 @@ interface SafeUser {
   email: string;
   name: string | null;
 }
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 
@@ -172,6 +172,47 @@ export class AuthService {
     } catch (error) {
       this.logger.error(`Refresh tokens error: ${error.message}`, error.stack);
       throw error;
+    }
+  }
+
+  async refreshTokens(userId: string, refreshToken: string): Promise<Tokens> {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
+
+    try {
+      // Verify the refresh token
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+      });
+
+      // Verify the user exists
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      // Verify the token matches the one in the database
+      if (user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Generate new tokens
+      const tokens = await this.getTokens(user.id, user.email, user.name || undefined);
+      
+      // Update the refresh token in the database
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { refreshToken: tokens.refreshToken },
+      });
+
+      return tokens;
+    } catch (error) {
+      console.error('Refresh token error:', error);
+      throw new UnauthorizedException('Invalid refresh token');
     }
   }
 

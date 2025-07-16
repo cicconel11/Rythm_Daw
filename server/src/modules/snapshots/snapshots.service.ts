@@ -123,16 +123,17 @@ export class SnapshotsService {
     // Generate signed URLs for files
     const snapshotsWithUrls = await Promise.all(
       snapshots.map(async (snapshot) => {
-        const files = [];
+        const files: Array<{ path: string; downloadUrl: string }> = [];
         try {
           const snapshotData = snapshot.data as { files?: Array<{ path: string }> };
           if (snapshotData?.files?.length) {
-            files.push(...await Promise.all(
-              snapshotData.files.map(async (file) => ({
-                ...file,
-                downloadUrl: await this.generateDownloadUrl(projectId, snapshot.id, file.path),
-              })),
-            ));
+            const filePromises = snapshotData.files.map(async (file) => ({
+              ...file,
+              downloadUrl: await this.generateDownloadUrl(projectId, snapshot.id, file.path),
+            }));
+            
+            const processedFiles = await Promise.all(filePromises);
+            files.push(...processedFiles);
           }
         } catch (error) {
           this.logger.error('Error processing snapshot files', error);
@@ -141,7 +142,7 @@ export class SnapshotsService {
         return {
           ...snapshot,
           files,
-        };
+        } as any; // Using any to avoid complex type assertions
       }),
     );
 

@@ -3,19 +3,25 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": ".",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "ES2021",
-    "sourceMap": true
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*.ts",
+    "prisma/**/*.ts"
+  ],
   "exclude": [
     "**/*.spec.ts",
-    "test/**/*",
-    "node_modules",
-    "prisma"
+    "**/*.test.ts",
+    "test/**",
+    "node_modules"
   ]
 }
