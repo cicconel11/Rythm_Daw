@@ -6,6 +6,12 @@
 
 ## 🚀 Quick-Start (Local Dev)
 
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
+- pnpm 8.x
+- Docker (for local development)
+
 ### 1. Clone & install
 ```bash
 # SSH
@@ -33,13 +39,18 @@ S3_SECRET_KEY=...
 # launch database (Docker example)
 docker compose up -d postgres
 
-# generate Prisma client
-a=server
-npm run prisma:generate --workspace $a
-
-# start the server (Next.js + WS gateway)
+# install dependencies
 cd server
-npm run dev
+pnpm install
+
+# generate Prisma client
+pnpm prisma:generate
+
+# run database migrations
+pnpm prisma:migrate:dev
+
+# start the development server
+pnpm start:dev
 ```
 
 ### 4. Build the plug-in (JUCE 7)
@@ -51,6 +62,42 @@ cmake --build build --config Release
 The React UI panel will auto-bundle via `npm run build:ui` and is baked into the binary.
 
 ---
+
+## 🔐 Authentication System
+
+The application uses JWT-based authentication with the following features:
+
+- **Stateless JWT Authentication**
+  - Access tokens (15m expiry)
+  - Refresh tokens (7d expiry)
+  - Secure HTTP-only cookies for token storage
+  - CSRF protection
+
+- **Key Endpoints**
+  - `POST /auth/signup` - Register new user
+  - `POST /auth/login` - Authenticate user
+  - `POST /auth/refresh` - Refresh access token
+  - `POST /auth/logout` - Invalidate tokens
+
+- **Security Features**
+  - Password hashing with bcrypt (12 rounds)
+  - Input validation using class-validator
+  - Rate limiting on auth endpoints
+  - Secure cookie settings (httpOnly, sameSite, secure)
+
+## 🧪 Testing
+
+Run the test suite with:
+```bash
+# Run all tests
+pnpm test
+
+# Run auth service tests only
+pnpm test test/auth/auth.service.spec.ts
+
+# Run with coverage
+pnpm test:cov
+```
 
 ## 🏗️ High-Level Architecture
 ```mermaid
@@ -78,6 +125,42 @@ graph LR
 ```
 
 ---
+
+## 🛠️ Development
+
+### Environment Variables
+Create a `.env` file in the `server` directory with the following variables:
+
+```env
+# App
+NODE_ENV=development
+PORT=3000
+
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/rhythm?schema=public"
+
+# JWT
+JWT_ACCESS_SECRET=your_jwt_access_secret
+JWT_REFRESH_SECRET=your_jwt_refresh_secret
+JWT_ACCESS_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Security
+BCRYPT_SALT_ROUNDS=12
+```
+
+### Database Management
+
+```bash
+# Generate and run migrations
+pnpm prisma:migrate:dev
+
+# Reset database
+pnpm prisma:reset
+
+# Open Prisma Studio
+pnpm prisma:studio
+```
 
 ## 🤝 Contribution Guide
 
