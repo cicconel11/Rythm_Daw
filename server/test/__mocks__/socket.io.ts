@@ -69,6 +69,10 @@ export class MockSocket {
 
   to = jest.fn(() => this);
   in = jest.fn(() => this);
+  
+  listeners = jest.fn((event: string) => {
+    return [...(this._listeners[event] || []), ...(this._onceListeners[event] || [])];
+  });
 
   // Test helpers
   _trigger(event: string, ...args: any[]) {

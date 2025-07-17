@@ -7,8 +7,7 @@ module.exports = {
   detectOpenHandles: true,
   transform: {
     '^.+\\.(t|j)s$': ['ts-jest', {
-      tsconfig: 'tsconfig.json',
-      isolatedModules: true,
+      tsconfig: 'tsconfig.json'
     }],
   },
   collectCoverageFrom: ['src/**/*.(t|j)s'],

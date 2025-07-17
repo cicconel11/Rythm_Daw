@@ -1,0 +1,1351 @@
+
+> rhythm-server@0.1.0 test /Users/louisciccone/Desktop/Rythm_Daw/server
+> cross-env NODE_ENV=test jest --config=jest.config.js
+
+ts-jest[config] (WARN) 
+    The "ts-jest" config option "isolatedModules" is deprecated and will be removed in v30.0.0. Please use "isolatedModules: true" in /Users/louisciccone/Desktop/Rythm_Daw/server/tsconfig.json instead, see https://www.typescriptlang.org/tsconfig/#isolatedModules
+  
+FAIL test/websocket.e2e.spec.ts (16.433 s)
+  ● Console
+
+    console.warn
+      Running with mock S3 client - file operations will not persist
+
+      40 |       }
+      41 |     } else {
+    > 42 |       console.warn('Running with mock S3 client - file operations will not persist');
+         |               ^
+      43 |     }
+      44 |
+      45 |     this.s3 = new AWS.S3();
+
+      at new AwsS3Service (src/modules/files/aws-s3.service.ts:42:15)
+      at TestingInjector.instantiateClass (node_modules/@nestjs/core/injector/injector.js:373:19)
+      at callback (node_modules/@nestjs/core/injector/injector.js:65:45)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:145:24)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:98:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 4)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 11)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/websocket.e2e.spec.ts:19:27)
+
+  ● WebSocket (e2e) › should connect to WebSocket server
+
+    TypeError: server.on is not a function
+
+      28 |     
+      29 |     // Initialize app
+    > 30 |     await app.init();
+         |     ^
+      31 |     
+      32 |     // Start HTTP server
+      33 |     httpServer = await app.listen(TEST_PORT);
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Object.<anonymous> (test/websocket.e2e.spec.ts:30:5)
+
+  ● WebSocket (e2e) › should send and receive messages
+
+    TypeError: server.on is not a function
+
+      28 |     
+      29 |     // Initialize app
+    > 30 |     await app.init();
+         |     ^
+      31 |     
+      32 |     // Start HTTP server
+      33 |     httpServer = await app.listen(TEST_PORT);
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Object.<anonymous> (test/websocket.e2e.spec.ts:30:5)
+
+  ● WebSocket (e2e) › should handle disconnection
+
+    TypeError: server.on is not a function
+
+      28 |     
+      29 |     // Initialize app
+    > 30 |     await app.init();
+         |     ^
+      31 |     
+      32 |     // Start HTTP server
+      33 |     httpServer = await app.listen(TEST_PORT);
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Object.<anonymous> (test/websocket.e2e.spec.ts:30:5)
+
+
+  ● Test suite failed to run
+
+    thrown: "Exceeded timeout of 15000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      54 |   });
+      55 |
+    > 56 |   afterAll(async () => {
+         |   ^
+      57 |     // Close WebSocket server
+      58 |     if (wss) {
+      59 |       wss.close();
+
+      at test/websocket.e2e.spec.ts:56:3
+      at Object.<anonymous> (test/websocket.e2e.spec.ts:11:1)
+
+[32m[Nest] 29786  - [39m07/17/2025, 4:29:38 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m
+FAIL test/websocket.heartbeat.spec.ts (15.231 s)
+  ● WebSocket Heartbeat › should connect to the WebSocket server
+
+    TypeError: Cannot read properties of undefined (reading 'on')
+
+      107 |     const client = mockIo('http://localhost:3000');
+      108 |     
+    > 109 |     client.on('connect', () => {
+          |            ^
+      110 |       expect(client.connected).toBe(true);
+      111 |       client.disconnect();
+      112 |       done();
+
+      at Object.<anonymous> (test/websocket.heartbeat.spec.ts:109:12)
+
+  ● WebSocket Heartbeat › should handle ping-pong
+
+    TypeError: Cannot read properties of undefined (reading 'emit')
+
+      120 |     const client = mockIo('http://localhost:3000');
+      121 |     
+    > 122 |     client.emit('ping', { timestamp: 12345 }, (response: any) => {
+          |            ^
+      123 |       expect(response).toHaveProperty('timestamp');
+      124 |       expect(response.timestamp).toBe(12345);
+      125 |       client.disconnect();
+
+      at Object.<anonymous> (test/websocket.heartbeat.spec.ts:122:12)
+
+  ● WebSocket Heartbeat › should handle disconnection
+
+    TypeError: Cannot read properties of undefined (reading 'on')
+
+      131 |     const client = mockIo('http://localhost:3000');
+      132 |     
+    > 133 |     client.on('disconnect', () => {
+          |            ^
+      134 |       expect(client.connected).toBe(false);
+      135 |       done();
+      136 |     });
+
+      at Object.<anonymous> (test/websocket.heartbeat.spec.ts:133:12)
+
+  ● WebSocket Heartbeat › should trigger gateway connection handlers
+
+    TypeError: Cannot read properties of undefined (reading 'emit')
+
+      146 |     
+      147 |     // Simulate connection
+    > 148 |     client.emit('connection');
+          |            ^
+      149 |     
+      150 |     process.nextTick(() => {
+      151 |       expect(handleConnectionSpy).toHaveBeenCalledTimes(1);
+
+      at Object.<anonymous> (test/websocket.heartbeat.spec.ts:148:12)
+
+
+  ● Test suite failed to run
+
+    thrown: "Exceeded timeout of 15000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+       95 |   }, 10000);
+       96 |
+    >  97 |   afterAll(async () => {
+          |   ^
+       98 |     await app.close();
+       99 |     jest.clearAllMocks();
+      100 |   });
+
+      at test/websocket.heartbeat.spec.ts:97:3
+      at Object.<anonymous> (test/websocket.heartbeat.spec.ts:76:1)
+
+FAIL test/websocket.simple.spec.ts (15.239 s)
+  ● WebSocket (Simple) › should be defined
+
+    TypeError: server.on is not a function
+
+      47 |     
+      48 |     // Initialize app
+    > 49 |     await app.init();
+         |     ^
+      50 |     
+      51 |     // Start HTTP server
+      52 |     await new Promise<void>((resolve) => {
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Object.<anonymous> (test/websocket.simple.spec.ts:49:5)
+
+  ● WebSocket (Simple) › should connect to the WebSocket server
+
+    TypeError: server.on is not a function
+
+      47 |     
+      48 |     // Initialize app
+    > 49 |     await app.init();
+         |     ^
+      50 |     
+      51 |     // Start HTTP server
+      52 |     await new Promise<void>((resolve) => {
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Object.<anonymous> (test/websocket.simple.spec.ts:49:5)
+
+  ● WebSocket (Simple) › should handle disconnection
+
+    TypeError: server.on is not a function
+
+      47 |     
+      48 |     // Initialize app
+    > 49 |     await app.init();
+         |     ^
+      50 |     
+      51 |     // Start HTTP server
+      52 |     await new Promise<void>((resolve) => {
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Object.<anonymous> (test/websocket.simple.spec.ts:49:5)
+
+
+  ● Test suite failed to run
+
+    thrown: "Exceeded timeout of 15000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      59 |   }, 10000);
+      60 |
+    > 61 |   afterAll(async () => {
+         |   ^
+      62 |     await app.close();
+      63 |     httpServer.close();
+      64 |   });
+
+      at test/websocket.simple.spec.ts:61:3
+      at Object.<anonymous> (test/websocket.simple.spec.ts:28:1)
+
+FAIL test/ws-connection.spec.ts (15.555 s)
+  ● Console
+
+    console.warn
+      Running with mock S3 client - file operations will not persist
+
+      40 |       }
+      41 |     } else {
+    > 42 |       console.warn('Running with mock S3 client - file operations will not persist');
+         |               ^
+      43 |     }
+      44 |
+      45 |     this.s3 = new AWS.S3();
+
+      at new AwsS3Service (src/modules/files/aws-s3.service.ts:42:15)
+      at TestingInjector.instantiateClass (node_modules/@nestjs/core/injector/injector.js:373:19)
+      at callback (node_modules/@nestjs/core/injector/injector.js:65:45)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:145:24)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:98:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 4)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 11)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at Object.<anonymous> (test/ws-connection.spec.ts:13:27)
+
+  ● WebSocket Connection › should connect and receive a ping
+
+    TypeError: server.on is not a function
+
+      19 |     
+      20 |     // Initialize the app first
+    > 21 |     await app.init();
+         |     ^
+      22 |     
+      23 |     // Start HTTP server on a random port
+      24 |     const server = await app.listen(0);
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Object.<anonymous> (test/ws-connection.spec.ts:21:5)
+
+
+  ● Test suite failed to run
+
+    thrown: "Exceeded timeout of 15000 ms for a hook.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      28 |   }, 30000); // 30s timeout for setup
+      29 |
+    > 30 |   afterAll(async () => {
+         |   ^
+      31 |     if (app) {
+      32 |       await app.close();
+      33 |       // Give the server a moment to close
+
+      at test/ws-connection.spec.ts:30:3
+      at Object.<anonymous> (test/ws-connection.spec.ts:7:1)
+
+FAIL test/websocket.smoke.spec.ts
+  ● Console
+
+    console.warn
+      Running with mock S3 client - file operations will not persist
+
+      40 |       }
+      41 |     } else {
+    > 42 |       console.warn('Running with mock S3 client - file operations will not persist');
+         |               ^
+      43 |     }
+      44 |
+      45 |     this.s3 = new AWS.S3();
+
+      at new AwsS3Service (src/modules/files/aws-s3.service.ts:42:15)
+      at TestingInjector.instantiateClass (node_modules/@nestjs/core/injector/injector.js:373:19)
+      at callback (node_modules/@nestjs/core/injector/injector.js:65:45)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:145:24)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:98:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 4)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 11)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at setupTestApp (test/websocket-test.setup.ts:11:25)
+      at Object.<anonymous> (test/websocket.smoke.spec.ts:27:21)
+
+  ● WebSocket Smoke Test › should establish WebSocket connection
+
+    TypeError: server.on is not a function
+
+      14 |
+      15 |     // Add any test-specific WebSocket server logic here
+    > 16 |     server.on('connection', (socket: Socket) => {
+         |            ^
+      17 |       console.log('Test WebSocket client connected');
+      18 |       
+      19 |       // Example: Echo back any message
+
+      at WsTestAdapter.createIOServer (test/ws-test.adapter.ts:16:12)
+      at WsTestAdapter.create (node_modules/@nestjs/platform-socket.io/adapters/io-adapter.js:23:24)
+      at SocketServerProvider.createSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:26:34)
+      at SocketServerProvider.scanForSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:21:20)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:43:60)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at setupTestApp (test/websocket-test.setup.ts:23:3)
+      at Object.<anonymous> (test/websocket.smoke.spec.ts:27:21)
+
+  ● WebSocket Smoke Test › should reject connection with invalid token
+
+    TypeError: server.on is not a function
+
+      14 |
+      15 |     // Add any test-specific WebSocket server logic here
+    > 16 |     server.on('connection', (socket: Socket) => {
+         |            ^
+      17 |       console.log('Test WebSocket client connected');
+      18 |       
+      19 |       // Example: Echo back any message
+
+      at WsTestAdapter.createIOServer (test/ws-test.adapter.ts:16:12)
+      at WsTestAdapter.create (node_modules/@nestjs/platform-socket.io/adapters/io-adapter.js:23:24)
+      at SocketServerProvider.createSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:26:34)
+      at SocketServerProvider.scanForSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:21:20)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:43:60)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at setupTestApp (test/websocket-test.setup.ts:23:3)
+      at Object.<anonymous> (test/websocket.smoke.spec.ts:27:21)
+
+  ● WebSocket Smoke Test › should send and receive messages
+
+    TypeError: server.on is not a function
+
+      14 |
+      15 |     // Add any test-specific WebSocket server logic here
+    > 16 |     server.on('connection', (socket: Socket) => {
+         |            ^
+      17 |       console.log('Test WebSocket client connected');
+      18 |       
+      19 |       // Example: Echo back any message
+
+      at WsTestAdapter.createIOServer (test/ws-test.adapter.ts:16:12)
+      at WsTestAdapter.create (node_modules/@nestjs/platform-socket.io/adapters/io-adapter.js:23:24)
+      at SocketServerProvider.createSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:26:34)
+      at SocketServerProvider.scanForSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:21:20)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:43:60)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at setupTestApp (test/websocket-test.setup.ts:23:3)
+      at Object.<anonymous> (test/websocket.smoke.spec.ts:27:21)
+
+  ● WebSocket Smoke Test › should maintain connection with ping/pong
+
+    TypeError: server.on is not a function
+
+      14 |
+      15 |     // Add any test-specific WebSocket server logic here
+    > 16 |     server.on('connection', (socket: Socket) => {
+         |            ^
+      17 |       console.log('Test WebSocket client connected');
+      18 |       
+      19 |       // Example: Echo back any message
+
+      at WsTestAdapter.createIOServer (test/ws-test.adapter.ts:16:12)
+      at WsTestAdapter.create (node_modules/@nestjs/platform-socket.io/adapters/io-adapter.js:23:24)
+      at SocketServerProvider.createSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:26:34)
+      at SocketServerProvider.scanForSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:21:20)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:43:60)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at setupTestApp (test/websocket-test.setup.ts:23:3)
+      at Object.<anonymous> (test/websocket.smoke.spec.ts:27:21)
+
+  ● WebSocket Smoke Test › should handle disconnection
+
+    TypeError: server.on is not a function
+
+      14 |
+      15 |     // Add any test-specific WebSocket server logic here
+    > 16 |     server.on('connection', (socket: Socket) => {
+         |            ^
+      17 |       console.log('Test WebSocket client connected');
+      18 |       
+      19 |       // Example: Echo back any message
+
+      at WsTestAdapter.createIOServer (test/ws-test.adapter.ts:16:12)
+      at WsTestAdapter.create (node_modules/@nestjs/platform-socket.io/adapters/io-adapter.js:23:24)
+      at SocketServerProvider.createSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:26:34)
+      at SocketServerProvider.scanForSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:21:20)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:43:60)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at setupTestApp (test/websocket-test.setup.ts:23:3)
+      at Object.<anonymous> (test/websocket.smoke.spec.ts:27:21)
+
+  ● WebSocket Smoke Test › should handle multiple concurrent connections
+
+    TypeError: server.on is not a function
+
+      14 |
+      15 |     // Add any test-specific WebSocket server logic here
+    > 16 |     server.on('connection', (socket: Socket) => {
+         |            ^
+      17 |       console.log('Test WebSocket client connected');
+      18 |       
+      19 |       // Example: Echo back any message
+
+      at WsTestAdapter.createIOServer (test/ws-test.adapter.ts:16:12)
+      at WsTestAdapter.create (node_modules/@nestjs/platform-socket.io/adapters/io-adapter.js:23:24)
+      at SocketServerProvider.createSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:26:34)
+      at SocketServerProvider.scanForSocketServer (node_modules/@nestjs/websockets/socket-server-provider.js:21:20)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:43:60)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at setupTestApp (test/websocket-test.setup.ts:23:3)
+      at Object.<anonymous> (test/websocket.smoke.spec.ts:27:21)
+
+FAIL test/ws-simple.spec.ts
+  ● Console
+
+    console.warn
+      Running with mock S3 client - file operations will not persist
+
+      40 |       }
+      41 |     } else {
+    > 42 |       console.warn('Running with mock S3 client - file operations will not persist');
+         |               ^
+      43 |     }
+      44 |
+      45 |     this.s3 = new AWS.S3();
+
+      at new AwsS3Service (src/modules/files/aws-s3.service.ts:42:15)
+      at TestingInjector.instantiateClass (node_modules/@nestjs/core/injector/injector.js:373:19)
+      at callback (node_modules/@nestjs/core/injector/injector.js:65:45)
+      at TestingInjector.resolveConstructorParams (node_modules/@nestjs/core/injector/injector.js:145:24)
+      at TestingInjector.loadInstance (node_modules/@nestjs/core/injector/injector.js:70:13)
+      at TestingInjector.loadProvider (node_modules/@nestjs/core/injector/injector.js:98:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:56:13
+          at async Promise.all (index 4)
+      at TestingInstanceLoader.createInstancesOfProviders (node_modules/@nestjs/core/injector/instance-loader.js:55:9)
+      at node_modules/@nestjs/core/injector/instance-loader.js:40:13
+          at async Promise.all (index 11)
+      at TestingInstanceLoader.createInstances (node_modules/@nestjs/core/injector/instance-loader.js:39:9)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/core/injector/instance-loader.js:22:13)
+      at TestingInstanceLoader.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-instance-loader.js:9:9)
+      at TestingModuleBuilder.createInstancesOfDependencies (node_modules/@nestjs/testing/testing-module.builder.js:118:9)
+      at TestingModuleBuilder.compile (node_modules/@nestjs/testing/testing-module.builder.js:74:9)
+      at createTestApp (test/ws-simple.spec.ts:9:25)
+      at Object.<anonymous> (test/ws-simple.spec.ts:49:21)
+
+  ● WebSocket (Simple Test) › should connect and echo a message
+
+    TypeError: server.on is not a function
+
+      14 |   
+      15 |   // Use Socket.IO with HTTP server
+    > 16 |   const httpServer = await app.listen(0);
+         |                      ^
+      17 |   const io = new Server(httpServer, {
+      18 |     cors: {
+      19 |       origin: '*',
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Proxy.listen (node_modules/@nestjs/core/nest-application.js:172:13)
+      at createTestApp (test/ws-simple.spec.ts:16:22)
+      at Object.<anonymous> (test/ws-simple.spec.ts:49:21)
+
+  ● WebSocket (Simple Test) › should handle disconnection
+
+    TypeError: server.on is not a function
+
+      14 |   
+      15 |   // Use Socket.IO with HTTP server
+    > 16 |   const httpServer = await app.listen(0);
+         |                      ^
+      17 |   const io = new Server(httpServer, {
+      18 |     cors: {
+      19 |       origin: '*',
+
+      at IoAdapter.bindClientConnect (node_modules/@nestjs/websockets/adapters/ws-adapter.js:23:16)
+      at WebSocketsController.subscribeEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:54:17)
+      at WebSocketsController.subscribeToServerEvents (node_modules/@nestjs/websockets/web-sockets-controller.js:45:14)
+      at WebSocketsController.connectGatewayToServer (node_modules/@nestjs/websockets/web-sockets-controller.js:30:14)
+      at SocketModule.connectGatewayToServer (node_modules/@nestjs/websockets/socket-module.js:47:35)
+      at node_modules/@nestjs/websockets/socket-module.js:36:38
+      at IteratorWithOperators.forEach (node_modules/iterare/src/iterate.ts:202:13)
+      at SocketModule.connectAllGateways (node_modules/@nestjs/websockets/socket-module.js:36:14)
+      at node_modules/@nestjs/websockets/socket-module.js:31:61
+          at ModulesContainer.forEach (<anonymous>)
+      at SocketModule.register (node_modules/@nestjs/websockets/socket-module.js:31:17)
+      at Proxy.registerWsModule (node_modules/@nestjs/core/nest-application.js:88:27)
+      at Proxy.registerModules (node_modules/@nestjs/core/nest-application.js:77:14)
+      at Proxy.init (node_modules/@nestjs/core/nest-application.js:98:20)
+      at Proxy.listen (node_modules/@nestjs/core/nest-application.js:172:13)
+      at createTestApp (test/ws-simple.spec.ts:16:22)
+      at Object.<anonymous> (test/ws-simple.spec.ts:49:21)
+
+
+  ● Test suite failed to run
+
+    TypeError: Cannot read properties of undefined (reading 'close')
+
+      55 |   
+      56 |   afterAll(async () => {
+    > 57 |     await app.close();
+         |               ^
+      58 |   });
+      59 |   
+      60 |   it('should connect and echo a message', (done) => {
+
+      at Object.<anonymous> (test/ws-simple.spec.ts:57:15)
+
+FAIL test/standalone-ws.test.ts
+  ● Console
+
+    console.log
+      [Test Server] Test WebSocket server running on port 52227
+
+      at Socket.<anonymous> (test/standalone-ws.test.ts:44:17)
+
+    console.log
+      WebSocket server started on port 52227
+
+      at ChildProcess.<anonymous> (test/standalone-ws.test.ts:32:19)
+
+    console.log
+      [Test Server] Shutting down test WebSocket server
+
+      at Socket.<anonymous> (test/standalone-ws.test.ts:44:17)
+
+    console.log
+      [Test Server] Test WebSocket server stopped
+
+      at Socket.<anonymous> (test/standalone-ws.test.ts:44:17)
+
+  ● Standalone WebSocket Server › should connect to the WebSocket server
+
+    TypeError: Cannot read properties of undefined (reading 'on')
+
+      155 |     };
+      156 |
+    > 157 |     socket.on('connect', onConnect);
+          |            ^
+      158 |     socket.on('connect_error', onError);
+      159 |
+      160 |     // Set a timeout in case the socket doesn't connect
+
+      at Object.<anonymous> (test/standalone-ws.test.ts:157:12)
+
+  ● Standalone WebSocket Server › should echo messages
+
+    TypeError: Cannot read properties of undefined (reading 'on')
+
+      217 |     };
+      218 |
+    > 219 |     socket.on('connect', onConnect);
+          |            ^
+      220 |     socket.on('connect_error', onError);
+      221 |
+      222 |     // Set a timeout for the test
+
+      at Object.<anonymous> (test/standalone-ws.test.ts:219:12)
+
+  ● Standalone WebSocket Server › should handle disconnection
+
+    TypeError: Cannot read properties of undefined (reading 'on')
+
+      273 |     };
+      274 |
+    > 275 |     socket.on('connect', onConnect);
+          |            ^
+      276 |     socket.on('connect_error', onError);
+      277 |
+      278 |     // Set a timeout for the test
+
+      at Object.<anonymous> (test/standalone-ws.test.ts:275:12)
+
+FAIL test/chat.gateway.unit.spec.ts
+  ● ChatGateway (Unit) › handleConnection › should update user presence when a user connects
+
+    TypeError: client.once is not a function
+
+       99 |       
+      100 |       // Clean up on disconnect
+    > 101 |       client.once('disconnect', () => {
+          |              ^
+      102 |         clearInterval(checkPongs);
+      103 |         this.missedPongs.delete(client.id);
+      104 |       });
+
+      at ChatGateway.handleConnection (src/modules/chat/chat.gateway.ts:101:14)
+      at Object.<anonymous> (test/chat.gateway.unit.spec.ts:58:21)
+
+FAIL test/chat.heartbeat.spec.ts
+  ● ChatGateway Heartbeat › should send ping and handle pong response
+
+    TypeError: mockSocket.listeners is not a function
+
+      126 |     
+      127 |     // Simulate pong response with the same timestamp
+    > 128 |     const pongHandler = mockSocket.listeners('pong')[0];
+          |                                    ^
+      129 |     pongHandler({ timestamp: mockTime });
+      130 |     
+      131 |     // Verify the missed pongs counter was reset
+
+      at Object.<anonymous> (test/chat.heartbeat.spec.ts:128:36)
+
+FAIL test/rtc.gateway.spec.ts
+  ● RtcGateway › emitToUser › should emit event to user
+
+    TypeError: this.server.to is not a function
+
+      627 |       const sockets = this.userSockets.get(userId);
+      628 |       if (!sockets || sockets.size === 0) return false;
+    > 629 |       sockets.forEach(sid => this.server.to(sid).emit(event, payload));
+          |                                          ^
+      630 |       return true;
+      631 |     }
+      632 |
+
+      at src/modules/rtc/rtc.gateway.ts:629:42
+          at Set.forEach (<anonymous>)
+      at TestRtcGateway.emitToUser (src/modules/rtc/rtc.gateway.ts:629:15)
+      at Object.<anonymous> (test/rtc.gateway.spec.ts:429:30)
+
+FAIL test/websocket.spec.ts (15.2 s)
+  ● Console
+
+    console.log
+      Test WebSocket server running on ws://localhost:52240
+
+      at Server.<anonymous> (test/websocket.spec.ts:52:15)
+
+    console.error
+      Error handling message: SyntaxError: "[object Object]" is not valid JSON
+          at JSON.parse (<anonymous>)
+          at WebSocket.<anonymous> (/Users/louisciccone/Desktop/Rythm_Daw/server/test/websocket.spec.ts:284:37)
+          at WebSocket.emit (node:events:507:28)
+          at Receiver.receiverOnMessage (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/websocket.js:1220:20)
+          at Receiver.emit (node:events:507:28)
+          at Receiver.dataMessage (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/receiver.js:596:14)
+          at Receiver.getData (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/receiver.js:496:10)
+          at Receiver.startLoop (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/receiver.js:167:16)
+          at Receiver._write (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/receiver.js:94:10)
+          at writeOrBuffer (node:internal/streams/writable:570:12)
+          at _write (node:internal/streams/writable:499:10)
+          at Receiver.Writable.write (node:internal/streams/writable:508:10)
+          at Socket.socketOnData (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/websocket.js:1355:35)
+          at Socket.emit (node:events:507:28)
+          at addChunk (node:internal/streams/readable:559:12)
+          at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+          at Socket.Readable.push (node:internal/streams/readable:390:5)
+          at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+
+      289 |         }
+      290 |       } catch (err) {
+    > 291 |         console.error('Error handling message:', err);
+          |                 ^
+      292 |       }
+      293 |     });
+      294 |     
+
+      at WebSocket.<anonymous> (test/websocket.spec.ts:291:17)
+      at Receiver.receiverOnMessage (node_modules/ws/lib/websocket.js:1220:20)
+      at Receiver.dataMessage (node_modules/ws/lib/receiver.js:596:14)
+      at Receiver.getData (node_modules/ws/lib/receiver.js:496:10)
+      at Receiver.startLoop (node_modules/ws/lib/receiver.js:167:16)
+      at Receiver._write (node_modules/ws/lib/receiver.js:94:10)
+      at Socket.socketOnData (node_modules/ws/lib/websocket.js:1355:35)
+
+    console.error
+      Error handling message: SyntaxError: "[object Object]" is not valid JSON
+          at JSON.parse (<anonymous>)
+          at WebSocket.<anonymous> (/Users/louisciccone/Desktop/Rythm_Daw/server/test/websocket.spec.ts:299:37)
+          at WebSocket.emit (node:events:507:28)
+          at Receiver.receiverOnMessage (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/websocket.js:1220:20)
+          at Receiver.emit (node:events:507:28)
+          at Receiver.dataMessage (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/receiver.js:596:14)
+          at Receiver.getData (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/receiver.js:496:10)
+          at Receiver.startLoop (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/receiver.js:167:16)
+          at Receiver._write (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/receiver.js:94:10)
+          at writeOrBuffer (node:internal/streams/writable:570:12)
+          at _write (node:internal/streams/writable:499:10)
+          at Receiver.Writable.write (node:internal/streams/writable:508:10)
+          at Socket.socketOnData (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/ws/lib/websocket.js:1355:35)
+          at Socket.emit (node:events:507:28)
+          at addChunk (node:internal/streams/readable:559:12)
+          at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+          at Socket.Readable.push (node:internal/streams/readable:390:5)
+          at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+
+      304 |         }
+      305 |       } catch (err) {
+    > 306 |         console.error('Error handling message:', err);
+          |                 ^
+      307 |       }
+      308 |     });
+      309 |     
+
+      at WebSocket.<anonymous> (test/websocket.spec.ts:306:17)
+      at Receiver.receiverOnMessage (node_modules/ws/lib/websocket.js:1220:20)
+      at Receiver.dataMessage (node_modules/ws/lib/receiver.js:596:14)
+      at Receiver.getData (node_modules/ws/lib/receiver.js:496:10)
+      at Receiver.startLoop (node_modules/ws/lib/receiver.js:167:16)
+      at Receiver._write (node_modules/ws/lib/receiver.js:94:10)
+      at Socket.socketOnData (node_modules/ws/lib/websocket.js:1355:35)
+
+    console.log
+      Test teardown complete
+
+      at Server.<anonymous> (test/websocket.spec.ts:173:21)
+
+  ● WebSocket Server › should send and receive messages
+
+    SyntaxError: "[object Object]" is not valid JSON
+        at JSON.parse (<anonymous>)
+
+      224 |         const message = JSON.parse(data.toString());
+      225 |         if (message.type === 'echo') {
+    > 226 |           expect(JSON.parse(message.data)).toEqual(JSON.parse(testMessage));
+          |                       ^
+      227 |           client.close();
+      228 |           done();
+      229 |         }
+
+      at WebSocket.<anonymous> (test/websocket.spec.ts:226:23)
+      at Receiver.receiverOnMessage (node_modules/ws/lib/websocket.js:1220:20)
+      at Receiver.dataMessage (node_modules/ws/lib/receiver.js:596:14)
+      at Receiver.getData (node_modules/ws/lib/receiver.js:496:10)
+      at Receiver.startLoop (node_modules/ws/lib/receiver.js:167:16)
+      at Receiver._write (node_modules/ws/lib/receiver.js:94:10)
+      at Socket.socketOnData (node_modules/ws/lib/websocket.js:1355:35)
+
+  ● WebSocket Server › should handle multiple clients
+
+    thrown: "Exceeded timeout of 15000 ms for a test while waiting for `done()` to be called.
+    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+      241 |   });
+      242 |   
+    > 243 |   test('should handle multiple clients', (done) => {
+          |   ^
+      244 |     // Increase timeout for this test
+      245 |     jest.setTimeout(15000);
+      246 |     const client1 = new WebSocket(serverUrl);
+
+      at test/websocket.spec.ts:243:3
+      at Object.<anonymous> (test/websocket.spec.ts:32:1)
+
+FAIL test/direct-files-service.spec.ts
+  ● Console
+
+    console.log
+      FilesService.getPresignedPair - input: {
+        dto: { name: 'test-file.txt', mime: 'text/plain', size: 1024 },
+        userId: 'test-user-id'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:12:13)
+
+    console.log
+      FilesService.getPresignedPair - test key: test-user-id/test-file.txt
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:17:15)
+
+    console.log
+      FilesService.getPresignedPair - awsS3Service result: {
+        putUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
+        getUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:19:15)
+
+    console.log
+      FilesService.getPresignedPair - input: {
+        dto: { name: 'test-file.txt', mime: 'text/plain', size: 1024 },
+        userId: 'test-user-id'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:12:13)
+
+    console.log
+      FilesService.getPresignedPair - test key: test-user-id/test-file.txt
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:17:15)
+
+  ● FilesService (Direct Test) › getPresignedPair › should return presigned URLs for valid file data
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: StringMatching /^test-user-id\/[a-f0-9-]+-test-file.txt$/, "text/plain", 1024
+    Received: "test-user-id/test-file.txt", "text/plain", 1024
+
+    Number of calls: 1
+
+      57 |       // Verify the AwsS3Service method was called with the correct arguments
+      58 |       // The service should modify the filename to include the user ID and a UUID
+    > 59 |       expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(
+         |                                                 ^
+      60 |         expect.stringMatching(new RegExp(`^${mockUser.id}/[a-f0-9-]+-${fileData.name}$`)),
+      61 |         fileData.mime,
+      62 |         fileData.size
+
+      at Object.<anonymous> (test/direct-files-service.spec.ts:59:49)
+
+FAIL test/rtc.presign.spec.ts
+  ● Console
+
+    console.log
+      FilesService.getPresignedPair - input: {
+        dto: { name: 'test-file.txt', mime: 'text/plain', size: 1024 },
+        userId: 'test-user-id'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:12:13)
+
+    console.log
+      FilesService.getPresignedPair - test key: test-user-id/test-file.txt
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:17:15)
+
+    console.log
+      FilesService.getPresignedPair - awsS3Service result: {
+        putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
+        getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:19:15)
+
+    console.log
+      FilesService.getPresignedPair - input: {
+        dto: {
+          name: 'test file with spaces & special chars_@#$%.txt',
+          mime: 'text/plain',
+          size: 2048
+        },
+        userId: 'test-user-id'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:12:13)
+
+    console.log
+      FilesService.getPresignedPair - test key: test-user-id/test file with spaces & special chars_@#$%.txt
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:17:15)
+
+    console.log
+      FilesService.getPresignedPair - awsS3Service result: {
+        putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
+        getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:19:15)
+
+    console.log
+      FilesService.getPresignedPair - input: {
+        dto: { name: '', mime: 'application/octet-stream', size: 0 },
+        userId: 'test-user-id'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:12:13)
+
+    console.log
+      FilesService.getPresignedPair - test key: test-user-id/
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:17:15)
+
+    console.log
+      FilesService.getPresignedPair - awsS3Service result: {
+        putUrl: 'https://s3.amazonaws.com/test-bucket/empty-file',
+        getUrl: 'https://s3.amazonaws.com/test-bucket/empty-file'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:19:15)
+
+    console.log
+      FilesService.getPresignedPair - input: {
+        dto: { name: 'error-file.txt', mime: 'text/plain', size: 1024 },
+        userId: 'test-user-id'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:12:13)
+
+    console.log
+      FilesService.getPresignedPair - test key: test-user-id/error-file.txt
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:17:15)
+
+    console.log
+      FilesService.getPresignedPair - input: {
+        dto: { name: 'large-video.mp4', mime: 'video/mp4', size: 2147483648 },
+        userId: 'test-user-id'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:12:13)
+
+    console.log
+      FilesService.getPresignedPair - test key: test-user-id/large-video.mp4
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:17:15)
+
+    console.log
+      FilesService.getPresignedPair - awsS3Service result: {
+        putUrl: 'https://s3.amazonaws.com/test-bucket/large-file-upload',
+        getUrl: 'https://s3.amazonaws.com/test-bucket/large-file'
+      }
+
+      at FilesService.getPresignedPair (src/modules/files/files.service.ts:19:15)
+
+  ● FilesService › getPresignedPair › should return pre-signed URLs for file upload
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "test-user-id/123e4567-e89b-12d3-a456-426614174000-test-file.txt", "text/plain", 1024
+    Received: "test-user-id/test-file.txt", "text/plain", 1024
+
+    Number of calls: 1
+
+      59 |       
+      60 |       // Verify the AWS S3 service was called with the correct parameters
+    > 61 |       expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(
+         |                                                 ^
+      62 |         `${mockUser.id}/${mockUuid}-${fileData.name}`,
+      63 |         fileData.mime,
+      64 |         fileData.size
+
+      at Object.<anonymous> (test/rtc.presign.spec.ts:61:49)
+
+FAIL test/ws-server.test.ts
+  ● WebSocket Server › should connect to WebSocket server
+
+    TypeError: ioServer.on is not a function
+
+      22 |
+      23 |     // Handle connections
+    > 24 |     ioServer.on('connection', (socket: any) => {
+         |              ^
+      25 |       console.log('Client connected');
+      26 |       
+      27 |       // Echo back any message
+
+      at Object.<anonymous> (test/ws-server.test.ts:24:14)
+
+  ● WebSocket Server › should send and receive messages
+
+    TypeError: ioServer.on is not a function
+
+      22 |
+      23 |     // Handle connections
+    > 24 |     ioServer.on('connection', (socket: any) => {
+         |              ^
+      25 |       console.log('Client connected');
+      26 |       
+      27 |       // Echo back any message
+
+      at Object.<anonymous> (test/ws-server.test.ts:24:14)
+
+  ● WebSocket Server › should handle disconnection
+
+    TypeError: ioServer.on is not a function
+
+      22 |
+      23 |     // Handle connections
+    > 24 |     ioServer.on('connection', (socket: any) => {
+         |              ^
+      25 |       console.log('Client connected');
+      26 |       
+      27 |       // Echo back any message
+
+      at Object.<anonymous> (test/ws-server.test.ts:24:14)
+
+FAIL test/rtc.integration.spec.ts
+  ● RtcGateway › emitToUser › should emit event to all user sockets
+
+    TypeError: gateway.getUserSockets is not a function
+
+      141 |       
+      142 |       // Add test socket
+    > 143 |       gateway.getUserSockets().set(userId, new Set(['socket-1', 'socket-2']));
+          |               ^
+      144 |       
+      145 |       // Call the method
+      146 |       const result = gateway.emitToUser(userId, event, data);
+
+      at Object.<anonymous> (test/rtc.integration.spec.ts:143:15)
+
+  ● RtcGateway › emitToUser › should return false if user has no sockets
+
+    TypeError: gateway.emitToUser is not a function
+
+      153 |
+      154 |     it('should return false if user has no sockets', () => {
+    > 155 |       const result = gateway.emitToUser('non-existent-user', 'test-event', {});
+          |                              ^
+      156 |       expect(result).toBe(false);
+      157 |       expect(gateway.testServer.to).not.toHaveBeenCalled();
+      158 |     });
+
+      at Object.<anonymous> (test/rtc.integration.spec.ts:155:30)
+
+  ● RtcGateway › handleConnection › should handle successful connection
+
+    TypeError: gateway.handleConnection is not a function
+
+      161 |   describe('handleConnection', () => {
+      162 |     it('should handle successful connection', async () => {
+    > 163 |       await gateway.handleConnection(mockSocket);
+          |                     ^
+      164 |       
+      165 |       // Verify socket was added to userSockets
+      166 |       expect(gateway.getUserSockets().get('test-user-id')).toBeDefined();
+
+      at Object.<anonymous> (test/rtc.integration.spec.ts:163:21)
+
+  ● RtcGateway › handleConnection › should handle connection error
+
+    TypeError: gateway.handleConnection is not a function
+
+      176 |       };
+      177 |       
+    > 178 |       await gateway.handleConnection(errorSocket);
+          |                     ^
+      179 |       
+      180 |       // Verify error was handled
+      181 |       expect(errorSocket.disconnect).toHaveBeenCalled();
+
+      at Object.<anonymous> (test/rtc.integration.spec.ts:178:21)
+
+  ● RtcGateway › handleDisconnect › should handle disconnection
+
+    TypeError: gateway.getUserSockets is not a function
+
+      191 |       // Add test data
+      192 |       const userSockets = new Set([socketId]);
+    > 193 |       gateway.getUserSockets().set(userId, userSockets);
+          |               ^
+      194 |       gateway.getSocketToUser().set(socketId, userId);
+      195 |       
+      196 |       // Verify initial state
+
+      at Object.<anonymous> (test/rtc.integration.spec.ts:193:15)
+
+FAIL test/ws-heartbeat-direct.test.ts
+  ● WebSocket Heartbeat (Direct Test) › should initialize with ping interval
+
+    expect(received).toBeDefined()
+
+    Received: undefined
+
+      76 |   it('should initialize with ping interval', () => {
+      77 |     // The ping interval should be set up in the constructor
+    > 78 |     expect((gateway as any).pingInterval).toBeDefined();
+         |                                           ^
+      79 |     expect((gateway as any).missedPongs).toBeInstanceOf(Map);
+      80 |   });
+      81 |   
+
+      at Object.<anonymous> (test/ws-heartbeat-direct.test.ts:78:43)
+
+  ● WebSocket Heartbeat (Direct Test) › should send ping to connected clients
+
+    TypeError: Cannot read properties of undefined (reading '_onTimeout')
+
+      108 |     try {
+      109 |       // Trigger the ping interval
+    > 110 |       pingInterval._onTimeout();
+          |                    ^
+      111 |       
+      112 |       // Should send ping to the socket
+      113 |       expect(mockSocket.emit).toHaveBeenCalledWith('ping', { timestamp: mockTimestamp });
+
+      at Object.<anonymous> (test/ws-heartbeat-direct.test.ts:110:20)
+
+  ● WebSocket Heartbeat (Direct Test) › should handle pong response
+
+    TypeError: Cannot read properties of undefined (reading '_onTimeout')
+
+      132 |     try {
+      133 |       Date.now = () => mockTimestamp;
+    > 134 |       pingInterval._onTimeout();
+          |                    ^
+      135 |       
+      136 |       // Get the pong handler
+      137 |       const pongHandler = mockSocket.emit.mock.calls[0][1];
+
+      at Object.<anonymous> (test/ws-heartbeat-direct.test.ts:134:20)
+
+  ● WebSocket Heartbeat (Direct Test) › should disconnect client after missing pongs
+
+    TypeError: Cannot read properties of undefined (reading '_onTimeout')
+
+      160 |     const MAX_MISSED_PONGS = 2;
+      161 |     for (let i = 0; i < MAX_MISSED_PONGS + 1; i++) {
+    > 162 |       pingInterval._onTimeout();
+          |                    ^
+      163 |     }
+      164 |     
+      165 |     // Should disconnect the client
+
+      at Object.<anonymous> (test/ws-heartbeat-direct.test.ts:162:20)
+
+  ● WebSocket Heartbeat (Direct Test) › should clean up on disconnection
+
+    expect(jest.fn()).toHaveBeenCalledWith(...expected)
+
+    Expected: "test-user-1"
+
+    Number of calls: 0
+
+      175 |     
+      176 |     // Should clean up
+    > 177 |     expect(mockPresenceService.removeUserPresence).toHaveBeenCalledWith('test-user-1');
+          |                                                    ^
+      178 |     expect(mockServer.emit).toHaveBeenCalledWith('userOffline', { userId: 'test-user-1' });
+      179 |   });
+      180 | });
+
+      at Object.<anonymous> (test/ws-heartbeat-direct.test.ts:177:52)
+
+/Users/louisciccone/Desktop/Rythm_Daw/server/src/modules/chat/chat.gateway.ts:68
+            client.on('pong', (data) => {
+                   ^
+
+TypeError: client.on is not a function
+    at ChatGateway.handleConnection (/Users/louisciccone/Desktop/Rythm_Daw/server/src/modules/chat/chat.gateway.ts:68:20)
+    at Object.<anonymous> (/Users/louisciccone/Desktop/Rythm_Daw/server/test/ws-heartbeat.test.ts:88:13)
+    at Promise.then.completed (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (<anonymous>)
+    at callAsyncCircusFn (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/run.js:316:40)
+    at _runTest (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/louisciccone/Desktop/Rythm_Daw/server/node_modules/jest-runner/build/runTest.js:444:34)
+
+Node.js v24.2.0
+ ELIFECYCLE  Test failed. See above for more details.
