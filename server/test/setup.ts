@@ -1,7 +1,24 @@
 import { config } from 'dotenv';
+import { ConfigService } from '@nestjs/config';
 
 // Load environment variables from .env file
 config({ path: '.env.test' });
+
+// Global ConfigService mock
+jest.mock('@nestjs/config');
+(ConfigService as jest.Mock).mockImplementation(() => ({
+  get: jest.fn((key: string) => {
+    const config: { [key: string]: string } = {
+      JWT_REFRESH_SECRET: 'test-refresh-secret',
+      JWT_ACCESS_SECRET: 'test-access-secret',
+      S3_BUCKET: 'test-bucket',
+      AWS_REGION: 'us-east-1',
+      AWS_ACCESS_KEY_ID: 'test-access-key',
+      AWS_SECRET_ACCESS_KEY: 'test-secret-key',
+    };
+    return config[key] || process.env[key];
+  }),
+}));
 
 // Mock WebSocket server for testing
 jest.mock('ws', () => {

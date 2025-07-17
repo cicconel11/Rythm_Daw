@@ -8,10 +8,45 @@ import { AwsS3Service } from '../src/modules/files/aws-s3.service';
 // Import our mock Prisma client
 import prisma from './__mocks__/@prisma/client';
 
-// Mock PrismaService
-type MockPrismaService = typeof prisma;
+// Define the shape of our mock Prisma service
+interface MockPrismaService {
+  $connect: jest.Mock<Promise<void>>;
+  $disconnect: jest.Mock<Promise<void>>;
+  $on: jest.Mock;
+  $transaction: <T>(fn: (prisma: MockPrismaService) => Promise<T>) => Promise<T>;
+  user: {
+    findUnique: jest.Mock;
+    findFirst: jest.Mock;
+    findMany: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    delete: jest.Mock;
+    upsert: jest.Mock;
+    count: jest.Mock;
+  };
+  // Add other models as needed
+}
 
-export const mockPrismaService: MockPrismaService = prisma;
+// Create a mock Prisma service with all required methods
+const mockPrismaService: MockPrismaService = {
+  $connect: jest.fn().mockResolvedValue(undefined),
+  $disconnect: jest.fn().mockResolvedValue(undefined),
+  $on: jest.fn(),
+  $transaction: jest.fn((fn) => fn(mockPrismaService)),
+  user: {
+    findUnique: jest.fn(),
+    findFirst: jest.fn(),
+    findMany: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    upsert: jest.fn(),
+    count: jest.fn(),
+  },
+  // Add other models as needed
+};
+
+export { mockPrismaService };
 
 // Mock ConfigService
 interface MockConfigService {

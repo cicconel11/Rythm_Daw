@@ -6,7 +6,9 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/'],
   detectOpenHandles: true,
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': ['ts-jest', {
+      tsconfig: 'tsconfig.spec.json',
+    }],
   },
   collectCoverageFrom: ['src/**/*.(t|j)s'],
   coverageDirectory: './coverage',
@@ -22,15 +24,11 @@ module.exports = {
     '^@prisma/client$': '<rootDir>/test/__mocks__/@prisma/client',
     'aws-sdk': '<rootDir>/test/__mocks__/aws-sdk',
     'socket.io-client': '<rootDir>/test/__mocks__/socket.io-client',
+    '^@prisma/client/(.*)$': '<rootDir>/node_modules/@prisma/client/$1',
   },
   modulePaths: ['<rootDir>', '<rootDir>/node_modules'],
   moduleDirectories: ['node_modules', 'src'],
-  globals: {
-    'ts-jest': {
-      tsconfig: 'tsconfig.spec.json',
-      isolatedModules: true,
-    },
-  },
+  globals: {},
   transformIgnorePatterns: [
     '/node_modules/(?!@nestjs|@nestjs/.*|@prisma/client|@?\\.(js|mjs|cjs)$)'
   ],

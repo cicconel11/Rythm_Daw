@@ -1,34 +1,41 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { Server } from 'http';
 import { io as ioClient, Socket } from 'socket.io-client';
-import { EventEmitter } from 'events';
 import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { EventEmitter } from 'events';
+import * as jwt from 'jsonwebtoken';
 
 // Mock socket.io-client
-jest.mock('socket.io-client', () => {
-  return {
-    io: jest.fn().mockImplementation(() => ({
-      id: `test-socket-${Math.random().toString(36).substr(2, 9)}`,
-      connected: true,
-      disconnected: false,
-      on: jest.fn(),
-      emit: jest.fn(),
-      disconnect: jest.fn(),
-      handshake: {
-        user: { userId: 'test-user' }
-      }
-    }))
-  };
-});
+const mockSocket = {
+  id: `test-socket-${Math.random().toString(36).substr(2, 9)}`,
+  connected: true,
+  disconnected: false,
+  on: jest.fn((event, callback) => {
+    if (event === 'connect') {
+      setTimeout(callback, 10);
+    }
+    return mockSocket;
+  }),
+  emit: jest.fn(),
+  disconnect: jest.fn(() => {
+    mockSocket.connected = false;
+    mockSocket.disconnected = true;
+    return mockSocket;
+  }),
+  handshake: {
+    user: { userId: 'test-user' }
+  }
+};
 
-// Mock socket.io-client
-jest.mock('socket.io-client');
+// Mock the socket.io-client module
+jest.mock('socket.io-client', () => ({
+  io: jest.fn().mockImplementation(() => mockSocket)
+}));
 
 // Test Gateway for WebSocket testing
 @WebSocketGateway()
-class TestGateway implements OnGatewayConnection, OnGatewayDisconnect {
+class TestWebSocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: any;
   
   handleConnection(client: any) {
@@ -43,52 +50,28 @@ class TestGateway implements OnGatewayConnection, OnGatewayDisconnect {
 // Mock IoAdapter
 class MockIoAdapter extends IoAdapter {
   createIOServer(port: number, options?: any): any {
-    return {
-      on: jest.fn(),
-      close: jest.fn(),
-      of: jest.fn().mockReturnThis(),
-      use: jest.fn().mockReturnThis(),
-      engine: {
-        on: jest.fn(),
-      },
-      // Add missing properties
-      sockets: {
-        sockets: new Map<string, MockSocket>(),
-        on: jest.fn(),
-      },
+    const server = new EventEmitter() as any;
+    server.sockets = {
+      sockets: new Map(),
     };
+    return server;
   }
 }
 
-// Test WebSocket Gateway to verify server events
-@WebSocketGateway()
-class TestGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: Server;
-
-  handleConnection(client: Socket) {
-    console.log('Client connected:', client.id);
-  }
-
-  handleDisconnect(client: Socket) {
-    console.log('Client disconnected:', client.id);
-  }
-}
-
-describe('WebSocket Heartbeat (Integration)', () => {
+describe('WebSocket Heartbeat', () => {
   let app: INestApplication;
-  let httpServer: Server;
-  let gateway: TestGateway;
-
+  let gateway: TestWebSocketGateway;
+  
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
-      providers: [TestGateway],
+      providers: [TestWebSocketGateway],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     app.useWebSocketAdapter(new MockIoAdapter(app));
     
     await app.init();
-    gateway = moduleFixture.get<TestGateway>(TestGateway);
+    gateway = moduleFixture.get<TestWebSocketGateway>(TestWebSocketGateway);
   });
 
   afterAll(async () => {

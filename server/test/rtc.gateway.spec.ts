@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Logger } from '@nestjs/common';
 import { Server, Socket, Namespace } from 'socket.io';
 import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
+import { presenceServiceMock } from './utils/presence-mock';
 
 // Simple mock for the adapter
 class MockAdapter {

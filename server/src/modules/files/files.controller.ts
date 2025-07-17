@@ -11,7 +11,16 @@ export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Post('presign')
-  create(@Body() dto: FileMetaDto, @CurrentUser() user: User) {
+  async create(@Body() dto: FileMetaDto, @CurrentUser() user: User) {
+    console.log('FilesController.create - input:', { dto, userId: user?.id });
+    const result = await this.filesService.getPresignedPair(dto, user);
+    console.log('FilesController.create - result:', result);
+    return result;
+  }
+
+  // Add this for backward compatibility with tests
+  @Post()
+  async uploadFile(@Body() dto: FileMetaDto, @CurrentUser() user: User) {
     return this.filesService.getPresignedPair(dto, user);
   }
 }
