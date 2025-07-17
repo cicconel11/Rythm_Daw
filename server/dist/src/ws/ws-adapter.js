@@ -15,7 +15,12 @@ const platform_socket_io_1 = require("@nestjs/platform-socket.io");
 const common_1 = require("@nestjs/common");
 const socket_io_1 = require("socket.io");
 const http_1 = require("http");
-const ws_1 = require("ws");
+process.on('uncaughtException', (error) => {
+    console.error('WebSocket uncaught exception:', error);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('WebSocket unhandled rejection at:', promise, 'reason:', reason);
+});
 let WsAdapter = WsAdapter_1 = class WsAdapter extends platform_socket_io_1.IoAdapter {
     constructor(app) {
         super(app);
@@ -27,40 +32,97 @@ let WsAdapter = WsAdapter_1 = class WsAdapter extends platform_socket_io_1.IoAda
     }
     createHttpServer() {
         if (!this.httpServer) {
-            this.httpServer = (0, http_1.createServer)();
+            this.logger.log('Creating HTTP server for WebSockets');
+            this.httpServer = (0, http_1.createServer)((req, res) => {
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end('RHYTHM WebSocket Server');
+            });
+            this.httpServer.on('error', (error) => {
+                this.logger.error('HTTP server error:', error);
+            });
+            this.httpServer.on('listening', () => {
+                const address = this.httpServer?.address();
+                this.logger.log(`HTTP server listening on ${typeof address === 'string' ? address : address?.port}`);
+            });
         }
     }
     createIOServer(port, options) {
-        if (!this.httpServer) {
-            throw new Error('HTTP server not initialized');
+        try {
+            this.logger.log(`Creating Socket.IO server on port ${port}`);
+            if (!this.httpServer) {
+                throw new Error('HTTP server not initialized');
+            }
+            const io = new socket_io_1.Server(this.httpServer, {
+                ...options,
+                cors: {
+                    origin: process.env.CORS_ORIGINS?.split(',') || '*',
+                    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+                    credentials: true,
+                },
+                pingTimeout: 60000,
+                pingInterval: 25000,
+                maxHttpBufferSize: 1e8,
+            });
+            io.on('connection', (socket) => {
+                this.logger.log(`Client connected: ${socket.id}`);
+                socket.on('disconnect', (reason) => {
+                    this.logger.log(`Client disconnected: ${socket.id}, reason: ${reason}`);
+                });
+                socket.on('error', (error) => {
+                    this.logger.error(`Socket error (${socket.id}):`, error);
+                });
+            });
+            io.engine.on('connection_error', (error) => {
+                this.logger.error('Socket.IO connection error:', error);
+            });
+            return io;
         }
-        const io = new socket_io_1.Server(this.httpServer, {
-            ...options,
-            cors: {
-                origin: '*',
-                methods: ['GET', 'POST'],
-            },
-        });
-        return io;
+        catch (error) {
+            this.logger.error('Failed to create Socket.IO server:', error);
+            throw error;
+        }
     }
     create(port, options) {
-        this.createHttpServer();
-        if (!this.httpServer) {
-            throw new Error('Failed to create HTTP server');
-        }
-        const io = this.createIOServer(port, options);
-        this.wsServer = new ws_1.Server({
-            server: this.httpServer,
-            path: options?.path || '/socket.io/',
-        });
-        if (port && typeof port === 'number' && this.httpServer) {
-            this.httpServer.listen(port, () => {
-                this.logger.log(`WebSocket server listening on port ${port}`);
+        try {
+            this.logger.log(`Creating WebSocket server on port ${port}`);
+            this.createHttpServer();
+            if (!this.httpServer) {
+                throw new Error('Failed to create HTTP server');
+            }
+            if (this.httpServer.listening) {
+                this.logger.log('HTTP server is already running, closing it first...');
+                this.close();
+            }
+            return new Promise((resolve, reject) => {
+                if (!this.httpServer) {
+                    return reject(new Error('HTTP server not initialized'));
+                }
+                const errorHandler = (error) => {
+                    this.logger.error(`Failed to bind to port ${port}:`, error);
+                    reject(error);
+                };
+                this.httpServer.once('error', errorHandler);
+                this.httpServer.listen(port, () => {
+                    this.httpServer?.removeListener('error', errorHandler);
+                    this.logger.log(`WebSocket server bound to port ${port}`);
+                    try {
+                        const io = this.createIOServer(port, options);
+                        this.io = io;
+                        process.on('SIGTERM', () => this.close());
+                        process.on('SIGINT', () => this.close());
+                        resolve(io);
+                    }
+                    catch (error) {
+                        this.logger.error('Failed to create Socket.IO server:', error);
+                        reject(error);
+                    }
+                });
             });
         }
-        io.httpServer = this.httpServer;
-        io.wsServer = this.wsServer;
-        return io;
+        catch (error) {
+            this.logger.error('Failed to create WebSocket server:', error);
+            throw error;
+        }
     }
     updateCors(app, origin = '*') {
         const io = app.getHttpServer().io;
@@ -72,23 +134,41 @@ let WsAdapter = WsAdapter_1 = class WsAdapter extends platform_socket_io_1.IoAda
         }
     }
     async close() {
-        if (this.wsServer) {
-            await new Promise((resolve) => {
-                this.wsServer?.close(() => {
+        try {
+            this.logger.log('Closing WebSocket server...');
+            if (this.io) {
+                await new Promise((resolve) => {
+                    this.io.close(() => {
+                        this.logger.log('Socket.IO server closed');
+                        resolve();
+                    });
+                });
+            }
+            if (this.wsServer) {
+                this.wsServer.close(() => {
                     this.logger.log('WebSocket server closed');
-                    resolve();
                 });
-            });
-            this.wsServer = null;
+                this.wsServer = null;
+            }
+            if (this.httpServer) {
+                await new Promise((resolve) => {
+                    this.httpServer?.close((err) => {
+                        if (err) {
+                            this.logger.error('Error closing HTTP server:', err);
+                        }
+                        else {
+                            this.logger.log('HTTP server closed');
+                        }
+                        resolve();
+                    });
+                });
+                this.httpServer = null;
+            }
+            this.logger.log('WebSocket server shutdown complete');
         }
-        if (this.httpServer) {
-            await new Promise((resolve) => {
-                this.httpServer?.close(() => {
-                    this.logger.log('HTTP server closed');
-                    resolve();
-                });
-            });
-            this.httpServer = null;
+        catch (error) {
+            this.logger.error('Error during WebSocket server shutdown:', error);
+            throw error;
         }
     }
 };

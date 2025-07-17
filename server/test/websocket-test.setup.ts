@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { WsAdapter } from '@nestjs/platform-ws';
+import { WsTestAdapter } from './ws-test.adapter';
 import { AppModule } from '../src/app.module';
 import { mockLogger } from './__mocks__/logger';
 
@@ -14,8 +14,8 @@ export async function setupTestApp() {
 
   app = moduleFixture.createNestApplication();
   
-  // Use WebSocket adapter
-  app.useWebSocketAdapter(new WsAdapter(app));
+  // Use custom test WebSocket adapter
+  app.useWebSocketAdapter(new WsTestAdapter(app));
   
   // Apply mock logger
   app.useLogger(mockLogger);

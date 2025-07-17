@@ -7,5 +7,8 @@ export declare class FilesService {
     getPresignedPair(dto: FileMetaDto, user: User): Promise<{
         putUrl: string;
         getUrl: string;
+    } | {
+        uploadUrl: string;
+        downloadUrl: string;
     }>;
 }

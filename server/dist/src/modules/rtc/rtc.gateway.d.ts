@@ -1,6 +1,6 @@
 import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket as BaseSocket } from 'socket.io';
-import { Logger } from '@nestjs/common';
+import { OnModuleInit } from '@nestjs/common';
 interface AuthenticatedSocket extends BaseSocket {
     handshake: {
         user?: {
@@ -28,10 +28,15 @@ declare module 'socket.io' {
         };
     }
 }
-export declare class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export declare class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
     private server;
     testServer?: any;
     private readonly logger;
+    private readonly missedPongs;
+    private readonly MAX_MISSED_PONGS;
+    private pingInterval;
+    onModuleInit(): void;
+    private setupPingInterval;
     private userSockets;
     private socketToUser;
     private rooms;
@@ -72,15 +77,11 @@ export declare class RtcGateway implements OnGatewayConnection, OnGatewayDisconn
     }): void;
     private getUserRooms;
     private sendToUser;
-    getUserSockets(): Map<string, Set<string>>;
-    getSocketToUser(): Map<string, string>;
-    getLogger(): Logger;
     registerWsServer(server: Server): void;
     to(room: string): any;
     emit(event: string, ...args: any[]): any;
     private cleanupDeadSockets;
     private cleanupRoomAssociations;
     private notifyRoomOfUserLeave;
-    emitToUser(userId: string, event: string, payload: any): boolean;
 }
 export {};

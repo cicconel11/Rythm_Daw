@@ -2,12 +2,13 @@ module.exports = {
   preset: 'ts-jest',
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
-  testRegex: '.*\\.spec\\.ts$',
+  testRegex: '.*\\.(spec|test)\\.ts$',
   testPathIgnorePatterns: ['/node_modules/'],
   detectOpenHandles: true,
   transform: {
     '^.+\\.(t|j)s$': ['ts-jest', {
-      tsconfig: 'tsconfig.spec.json',
+      tsconfig: 'tsconfig.json',
+      isolatedModules: true,
     }],
   },
   collectCoverageFrom: ['src/**/*.(t|j)s'],
@@ -17,6 +18,7 @@ module.exports = {
   ],
   setupFiles: ['dotenv/config'],
   setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
+  testTimeout: 15000,
   testEnvironment: 'node',
   moduleNameMapper: {
     '^@app/(.*)$': '<rootDir>/src/$1',

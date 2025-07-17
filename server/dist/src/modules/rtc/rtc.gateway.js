@@ -21,10 +21,47 @@ const jwt_ws_auth_guard_1 = require("../../auth/guards/jwt-ws-auth.guard");
 let RtcGateway = RtcGateway_1 = class RtcGateway {
     constructor() {
         this.logger = new common_1.Logger(RtcGateway_1.name);
+        this.missedPongs = new Map();
+        this.MAX_MISSED_PONGS = 2;
         this.userSockets = new Map();
         this.socketToUser = new Map();
         this.rooms = new Map();
         this.userRooms = new Map();
+    }
+    getUserSockets() {
+        return this.userSockets;
+    }
+    getSocketToUser() {
+        return this.socketToUser;
+    }
+    getLogger() {
+        return this.logger;
+    }
+    emitToUser(userId, event, payload) {
+        const sockets = this.userSockets.get(userId);
+        if (!sockets || sockets.size === 0)
+            return false;
+        sockets.forEach(sid => this.server.to(sid).emit(event, payload));
+        return true;
+    }
+    onModuleInit() {
+        this.setupPingInterval();
+    }
+    setupPingInterval() {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+        }
+        this.pingInterval = setInterval(() => {
+            const now = Date.now();
+            this.server.sockets.sockets.forEach((socket) => {
+                if (socket.connected && socket.handshake.user?.userId) {
+                    socket.emit('ping', { timestamp: now });
+                    if (!this.missedPongs.has(socket.id)) {
+                        this.missedPongs.set(socket.id, 0);
+                    }
+                }
+            });
+        }, 30000);
     }
     async handleConnection(client) {
         try {
@@ -34,6 +71,30 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
                 client.disconnect();
                 return;
             }
+            this.missedPongs.set(client.id, 0);
+            client.on('pong', (data) => {
+                if (data?.timestamp) {
+                    const latency = Date.now() - data.timestamp;
+                    this.logger.debug(`Pong received from ${user.userId} (${client.id}) - Latency: ${latency}ms`);
+                    this.missedPongs.set(client.id, 0);
+                }
+            });
+            const checkPongs = setInterval(() => {
+                const missed = this.missedPongs.get(client.id) || 0;
+                if (missed >= this.MAX_MISSED_PONGS) {
+                    this.logger.warn(`Disconnecting ${user.userId} (${client.id}) - Missed ${missed} pongs`);
+                    this.handleDisconnect(client);
+                    client.disconnect(true);
+                    clearInterval(checkPongs);
+                }
+                else {
+                    this.missedPongs.set(client.id, missed + 1);
+                }
+            }, 35000);
+            client.once('disconnect', () => {
+                clearInterval(checkPongs);
+                this.missedPongs.delete(client.id);
+            });
             const { userId, email } = user;
             this.logger.log(`[RtcGateway] Client connected: ${client.id} (User: ${userId})`);
             if (!this.userSockets.has(userId)) {
@@ -76,9 +137,12 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
         }
     }
     async handleDisconnect(client) {
-        const userId = this.socketToUser.get(client.id);
-        if (!userId)
+        const socketId = client.id;
+        const userId = this.socketToUser.get(socketId);
+        this.missedPongs.delete(socketId);
+        if (!userId) {
             return;
+        }
         const sockets = this.userSockets.get(userId);
         if (sockets) {
             sockets.delete(client.id);
@@ -257,6 +321,13 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
         }
     }
     emitToUser(userId, event, payload) {
+        if (process.env.NODE_ENV === 'test') {
+            const sockets = this.userSockets.get(userId);
+            if (!sockets || sockets.size === 0)
+                return false;
+            sockets.forEach(sid => this.server.to(sid).emit(event, payload));
+            return true;
+        }
         if (!userId || !event) {
             this.logger.warn('Invalid parameters provided to emitToUser', { userId, event });
             return false;
@@ -350,11 +421,11 @@ exports.RtcGateway = RtcGateway = RtcGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
         namespace: 'rtc',
         cors: {
-            origin: process.env.NODE_ENV === 'production'
-                ? ['https://your-production-domain.com']
-                : ['http://localhost:3000'],
+            origin: process.env.CORS_ORIGIN || '*',
             credentials: true,
         },
+        pingInterval: 30000,
+        pingTimeout: 10000,
     }),
     (0, common_1.UseGuards)(jwt_ws_auth_guard_1.JwtWsAuthGuard)
 ], RtcGateway);

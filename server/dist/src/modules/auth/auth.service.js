@@ -71,6 +71,7 @@ let AuthService = AuthService_1 = class AuthService {
                     email,
                     name: name || email.split('@')[0],
                     password: hashedPassword,
+                    isApproved: true,
                 },
             });
             const tokens = await this.getTokens(user.id, user.email, user.name || '');
@@ -131,26 +132,32 @@ let AuthService = AuthService_1 = class AuthService {
         }
     }
     async refreshTokens(userId, refreshToken) {
+        if (!refreshToken) {
+            throw new common_1.UnauthorizedException('Refresh token is required');
+        }
         try {
+            const payload = this.jwtService.verify(refreshToken, {
+                secret: this.configService.get('JWT_REFRESH_SECRET'),
+            });
             const user = await this.prisma.user.findUnique({
                 where: { id: userId },
             });
-            if (!user?.refreshToken) {
-                await this.revokeUserRefreshTokens(userId);
-                throw new common_1.ForbiddenException('Access Denied - Invalid Token');
+            if (!user) {
+                throw new common_1.UnauthorizedException('User not found');
             }
-            const refreshTokenMatches = await bcrypt.compare(refreshToken, user.refreshToken);
-            if (!refreshTokenMatches) {
-                await this.revokeUserRefreshTokens(userId);
-                throw new common_1.ForbiddenException('Access Denied - Token Mismatch');
+            if (user.refreshToken !== refreshToken) {
+                throw new common_1.UnauthorizedException('Invalid refresh token');
             }
-            const tokens = await this.getTokens(user.id, user.email, user.name || '');
-            await this.updateRefreshToken(user.id, tokens.refreshToken);
+            const tokens = await this.getTokens(user.id, user.email, user.name || undefined);
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { refreshToken: tokens.refreshToken },
+            });
             return tokens;
         }
         catch (error) {
-            this.logger.error(`Refresh tokens error: ${error.message}`, error.stack);
-            throw error;
+            this.logger.error(`Refresh token error: ${error.message}`, error.stack);
+            throw new common_1.UnauthorizedException('Invalid refresh token');
         }
     }
     async validateUser(email, password) {

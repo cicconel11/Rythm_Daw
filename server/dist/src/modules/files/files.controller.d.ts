@@ -7,5 +7,15 @@ export declare class FilesController {
     create(dto: FileMetaDto, user: User): Promise<{
         putUrl: string;
         getUrl: string;
+    } | {
+        uploadUrl: string;
+        downloadUrl: string;
+    }>;
+    uploadFile(dto: FileMetaDto, user: User): Promise<{
+        putUrl: string;
+        getUrl: string;
+    } | {
+        uploadUrl: string;
+        downloadUrl: string;
     }>;
 }

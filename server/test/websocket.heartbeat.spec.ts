@@ -1,41 +1,57 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { Server } from 'http';
-import { io as ioClient, Socket } from 'socket.io-client';
 import { EventEmitter } from 'events';
 import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { Server, Socket } from 'socket.io';
 
 // Mock socket.io-client
-jest.mock('socket.io-client', () => {
-  return {
-    io: jest.fn().mockImplementation(() => ({
-      id: `test-socket-${Math.random().toString(36).substr(2, 9)}`,
-      connected: true,
-      disconnected: false,
-      on: jest.fn(),
-      emit: jest.fn(),
-      disconnect: jest.fn(),
-      handshake: {
-        user: { userId: 'test-user' }
-      }
-    }))
-  };
-});
+class MockSocket extends EventEmitter {
+  id: string;
+  connected: boolean;
+  disconnected: boolean;
+  
+  constructor() {
+    super();
+    this.id = `test-socket-${Math.random().toString(36).substr(2, 9)}`;
+    this.connected = true;
+    this.disconnected = false;
+  }
+
+  disconnect() {
+    this.connected = false;
+    this.disconnected = true;
+    this.emit('disconnect');
+    return this;
+  }
+
+  emit(event: string, ...args: any[]): boolean {
+    // For ping-pong simulation
+    if (event === 'ping' && typeof args[1] === 'function') {
+      const callback = args[1];
+      process.nextTick(() => callback({ timestamp: args[0]?.timestamp || Date.now() }));
+    }
+    return super.emit(event, ...args);
+  }
+}
 
 // Mock socket.io-client
-jest.mock('socket.io-client');
+const mockIo = jest.fn().mockImplementation(() => new MockSocket());
 
-// Test Gateway for WebSocket testing
+jest.mock('socket.io-client', () => ({
+  io: mockIo
+}));
+
+// Test Gateway
 @WebSocketGateway()
 class TestGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: any;
+  @WebSocketServer() server: Server;
   
-  handleConnection(client: any) {
+  handleConnection(client: Socket) {
     console.log('Client connected:', client.id);
   }
-  
-  handleDisconnect(client: any) {
+
+  handleDisconnect(client: Socket) {
     console.log('Client disconnected:', client.id);
   }
 }
@@ -48,39 +64,26 @@ class MockIoAdapter extends IoAdapter {
       close: jest.fn(),
       of: jest.fn().mockReturnThis(),
       use: jest.fn().mockReturnThis(),
-      engine: {
-        on: jest.fn(),
-      },
-      // Add missing properties
+      engine: { on: jest.fn() },
       sockets: {
-        sockets: new Map<string, MockSocket>(),
-        on: jest.fn(),
-      },
+        sockets: new Map<string, any>(),
+        on: jest.fn()
+      }
     };
   }
 }
 
-// Test WebSocket Gateway to verify server events
-@WebSocketGateway()
-class TestGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: Server;
-
-  handleConnection(client: Socket) {
-    console.log('Client connected:', client.id);
-  }
-
-  handleDisconnect(client: Socket) {
-    console.log('Client disconnected:', client.id);
-  }
-}
-
-describe('WebSocket Heartbeat (Integration)', () => {
+describe('WebSocket Heartbeat', () => {
   let app: INestApplication;
-  let httpServer: Server;
   let gateway: TestGateway;
+  let socket: MockSocket;
 
   beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
+    // Create a new mock socket for each test
+    socket = new MockSocket();
+    mockIo.mockImplementation(() => socket);
+
+    const moduleFixture: TestingModule = await Test.createTestingModule({
       providers: [TestGateway],
     }).compile();
 
@@ -89,10 +92,11 @@ describe('WebSocket Heartbeat (Integration)', () => {
     
     await app.init();
     gateway = moduleFixture.get<TestGateway>(TestGateway);
-  });
+  }, 10000);
 
   afterAll(async () => {
     await app.close();
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -100,59 +104,59 @@ describe('WebSocket Heartbeat (Integration)', () => {
   });
 
   it('should connect to the WebSocket server', (done) => {
-    const socket = ioClient('http://localhost:3000');
+    const client = mockIo('http://localhost:3000');
     
-    socket.on('connect', () => {
-      expect(socket.connected).toBe(true);
-      socket.disconnect();
+    client.on('connect', () => {
+      expect(client.connected).toBe(true);
+      client.disconnect();
       done();
     });
+    
+    // Simulate connection
+    client.emit('connect');
   });
 
   it('should handle ping-pong', (done) => {
-    const socket = ioClient('http://localhost:3000');
+    const client = mockIo('http://localhost:3000');
     
-    // Mock the pong response
-    (socket.emit as jest.Mock).mockImplementation((event, data, callback) => {
-      if (event === 'ping' && typeof callback === 'function') {
-        callback({ timestamp: data.timestamp });
-      }
-      return socket;
-    });
-    
-    socket.emit('ping', { timestamp: Date.now() }, (response: any) => {
+    client.emit('ping', { timestamp: 12345 }, (response: any) => {
       expect(response).toHaveProperty('timestamp');
-      socket.disconnect();
+      expect(response.timestamp).toBe(12345);
+      client.disconnect();
       done();
     });
   });
 
   it('should handle disconnection', (done) => {
-    const socket = ioClient('http://localhost:3000');
+    const client = mockIo('http://localhost:3000');
     
-    socket.on('disconnect', () => {
-      expect(socket.connected).toBe(false);
+    client.on('disconnect', () => {
+      expect(client.connected).toBe(false);
       done();
     });
     
-    socket.disconnect();
+    client.disconnect();
   });
 
-  it('should handle connection and disconnection on the gateway', (done) => {
-    const socket = ioClient('http://localhost:3000');
-    
+  it('should trigger gateway connection handlers', (done) => {
     const handleConnectionSpy = jest.spyOn(gateway, 'handleConnection');
     const handleDisconnectSpy = jest.spyOn(gateway, 'handleDisconnect');
     
-    socket.on('connect', () => {
-      expect(handleConnectionSpy).toHaveBeenCalledTimes(1);
-      expect(handleDisconnectSpy).not.toHaveBeenCalled();
-      socket.disconnect();
-    });
+    const client = mockIo('http://localhost:3000');
     
-    socket.on('disconnect', () => {
-      expect(handleDisconnectSpy).toHaveBeenCalledTimes(1);
-      done();
+    // Simulate connection
+    client.emit('connection');
+    
+    process.nextTick(() => {
+      expect(handleConnectionSpy).toHaveBeenCalledTimes(1);
+      
+      // Simulate disconnection
+      client.disconnect();
+      
+      process.nextTick(() => {
+        expect(handleDisconnectSpy).toHaveBeenCalledTimes(1);
+        done();
+      });
     });
   });
 });

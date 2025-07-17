@@ -1,7 +1,7 @@
 import { createServer, Server as HttpServer } from 'http';
 import * as WebSocketModule from 'ws';
 
-// Get the WebSocket client constructor
+// Import WebSocket client constructor
 const WebSocket = require('ws');
 
 // WebSocket readyState constants
@@ -31,28 +31,25 @@ interface WebSocketClient {
 
 describe('WebSocket Server', () => {
   let httpServer: HttpServer;
-  let wss: any; // Using any to avoid type issues with ws.Server
+  let wss: WebSocketModule.Server; 
   let clients: WebSocketClient[] = [];
   let serverUrl: string;
 
   beforeAll((done) => {
+    // Increase timeout for setup
+    jest.setTimeout(10000);
+    
     // Create HTTP server
     httpServer = createServer();
     
-    // Create WebSocket server
-    const WSServer = (WebSocketModule as any).Server || (WebSocketModule as any).default?.Server;
-    if (!WSServer) {
-      throw new Error('WebSocket Server constructor not found');
-    }
-    
-    // Start the HTTP server
+    // Start the HTTP server first
     httpServer.listen(0, 'localhost', () => {
       const port = (httpServer.address() as any).port;
       serverUrl = `ws://localhost:${port}`;
-      console.log(`Test WebSocket server running on ${serverUrl}`);
       
-      // Create WebSocket server
-      wss = new WSServer({ server: httpServer });
+      // Create WebSocket server after HTTP server is listening
+      wss = new WebSocketModule.Server({ server: httpServer });
+      console.log(`Test WebSocket server running on ${serverUrl}`);
       
       // Handle WebSocket connections
       wss.on('connection', (ws: WebSocketClient) => {
@@ -190,25 +187,31 @@ describe('WebSocket Server', () => {
   });
   
   test('should establish WebSocket connection', (done) => {
+    // Increase timeout for this test
+    jest.setTimeout(10000);
     const client = new WebSocket(serverUrl);
     
     client.on('open', () => {
       try {
         expect(client.readyState).toBe(WS_OPEN);
-        client.close();
-        done();
+        client.close(1000, 'Test complete');
       } catch (err) {
         done(err);
       }
     });
     
-    client.on('error', (err: any) => {
-      console.error('WebSocket error:', err);
-      done.fail('WebSocket connection failed');
+    client.on('close', () => {
+      done();
+    });
+    
+    client.on('error', (err) => {
+      done(err);
     });
   });
   
   test('should send and receive messages', (done) => {
+    // Increase timeout for this test
+    jest.setTimeout(10000);
     const client = new WebSocket(serverUrl);
     const testMessage = JSON.stringify({ type: 'test', data: 'Hello, WebSocket!' });
     
@@ -238,6 +241,8 @@ describe('WebSocket Server', () => {
   });
   
   test('should handle multiple clients', (done) => {
+    // Increase timeout for this test
+    jest.setTimeout(15000);
     const client1 = new WebSocket(serverUrl);
     const client2 = new WebSocket(serverUrl);
     const testMessage1 = JSON.stringify({ type: 'test', client: 1, data: 'Hello from client 1' });

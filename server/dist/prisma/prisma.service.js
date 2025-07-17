@@ -9,6 +9,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PrismaService = void 0;
 const common_1 = require("@nestjs/common");
 const client_1 = require("@prisma/client");
+const modelNames = [
+    'User',
+    'Session',
+    'ActivityLog',
+    'Project',
+    'ProjectMember',
+    'ProjectInvitation',
+    'AudioFile',
+    'AudioTrack',
+    'AudioClip',
+    'Snapshot',
+    'Tag',
+    'ChatMessage',
+    'RTCPeerConnection',
+    'QoSMetrics'
+];
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     async onModuleInit() {
         await this.$connect();
@@ -19,11 +35,6 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
     async clearDatabase() {
         if (process.env.NODE_ENV === 'production')
             return;
-        const modelNames = [
-            'User',
-            'ActivityLog',
-            'Project',
-        ];
         return Promise.all(modelNames.map((modelName) => {
             const prismaModelKey = modelName[0].toLowerCase() + modelName.slice(1);
             return this[prismaModelKey]?.deleteMany?.({});
