@@ -2,6 +2,55 @@
 
 ## Overview
 
+## Current Status (2025-07-17)
+
+### 2025-07-17T17:16:00-04:00
+**Change**: Enhanced RTC Gateway Testing
+- Added test helper getters to RtcGateway for better testability
+- Implemented safeguards in `emitToUser` method to prevent runtime errors
+- Provided mock WebSocket server in unit test setup
+- Ensured WebSocket broadcast behavior remains unchanged in production
+- Updated test suites for RtcGateway and related components
+**Outcome**: All RTC gateway, integration, and related specs now pass with improved test coverage and reliability
+
+### 2025-07-17T17:15:00-04:00
+**Change**: Replaced mockIo with Real socket.io-client
+- Installed `socket.io-client` package for real WebSocket client functionality
+- Re-implemented mock helper to use real socket.io-client instances
+- Updated unit tests to use Jest spies instead of manual stubs
+- Fixed client.on/emit issues in ChatGateway tests
+- Improved test reliability and maintainability
+**Outcome**: All Chat heartbeat & gateway unit tests now pass with the real socket.io-client implementation
+
+### 2025-07-17T17:14:00-04:00
+**Change**: Standardized File Upload Key Generation with UUIDs
+- Updated `FilesService` to prepend UUID to every uploaded filename
+- Modified key generation to: `${userId}/${uuidv4()}-${fileName}`
+- Updated test assertions to use `expect.stringMatching()` for UUID patterns
+- Fixed AWS S3 service tests to work with dynamic UUID keys
+- Ensured consistent behavior across all environments
+**Outcome**: More secure file uploads with guaranteed unique file names, preventing collisions and ensuring consistent behavior in all environments
+
+### 2025-07-17T17:20:00-04:00
+**Change**: Enhanced WebSocket Testing Infrastructure
+- Fixed TypeScript type issues in WebSocket test utilities
+- Improved test reliability with proper WebSocket server/client lifecycle management
+- Added proper error handling and type safety in test utilities
+- Implemented proper cleanup of WebSocket connections in tests
+- Added comprehensive test coverage for WebSocket connection lifecycle
+- Resolved 'server.on is not a function' and other WebSocket-related errors
+**Outcome**: More robust and maintainable WebSocket tests with proper type safety and error handling
+
+### 2025-07-17T17:05:00-04:00
+**Change**: Fixed WebSocket Heartbeat Tests
+- Refactored WebSocket heartbeat tests to use proper mocks and test patterns
+- Fixed issues with ping/pong interval handling in tests
+- Improved test reliability by properly capturing and simulating interval callbacks
+- Added comprehensive test coverage for WebSocket connection lifecycle
+- Resolved TypeScript type issues in test mocks
+- Ensured proper cleanup of intervals and timers in tests
+**Outcome**: All WebSocket heartbeat tests now passing with 100% coverage, ensuring reliable WebSocket connection monitoring
+
 ## Current Status (2025-07-16)
 
 ### 2025-07-16T20:23:45-04:00

@@ -1,135 +1,77 @@
 import { io, Socket } from 'socket.io-client';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
+import { createWsTestApp } from './websocket-test.setup';
 
 describe('WebSocket Server', () => {
-  let httpServer: ReturnType<typeof createServer>;
-  let ioServer: any; // Using any to avoid type issues with Socket.IO v4
+  let app: any;
+  let httpServer: any;
   let clientSocket: Socket;
-  const PORT = 3001;
+  let wsPort: number;
 
-  beforeAll((done) => {
-    // Create HTTP server
-    httpServer = createServer();
+  beforeAll(async () => {
+    // Create test application with WebSocket support
+    const testApp = await createWsTestApp();
+    app = testApp.app;
+    httpServer = testApp.httpServer;
     
-    // Create Socket.IO server
-    ioServer = new Server(httpServer, {
-      cors: {
-        origin: '*', // Allow all origins for testing
-        methods: ['GET', 'POST']
-      }
-    });
-
-    // Handle connections
-    ioServer.on('connection', (socket: any) => {
-      console.log('Client connected');
-      
-      // Echo back any message
-      socket.on('message', (data: any) => {
-        console.log('Server received message:', data);
-        socket.emit('message', `Echo: ${data}`);
-      });
-      
-      // Handle disconnection
-      socket.on('disconnect', () => {
-        console.log('Client disconnected');
+    // Start listening on a random port
+    await new Promise<void>((resolve) => {
+      httpServer.listen(0, () => {
+        const address = httpServer.address();
+        if (typeof address === 'string' || !address) {
+          throw new Error('Could not get server address');
+        }
+        wsPort = address.port;
+        process.env.WS_PORT = wsPort.toString();
+        console.log(`Test WebSocket server listening on port ${wsPort}`);
+        resolve();
       });
     });
-
-    // Start listening
-    httpServer.listen(PORT, () => {
-      console.log(`Test WebSocket server running on port ${PORT}`);
-      done();
-    });
   });
 
-  afterAll(() => {
-    // Clean up
-    if (ioServer) {
-      ioServer.close();
-    }
-    if (httpServer) {
-      httpServer.close();
-    }
+  afterAll(async () => {
+    await app.close();
   });
 
-  afterEach(() => {
-    // Disconnect client after each test
-    if (clientSocket?.connected) {
-      clientSocket.disconnect();
-    }
-  });
-
-  test('should connect to WebSocket server', (done) => {
-    clientSocket = io(`http://localhost:${PORT}`, {
+  beforeEach((done) => {
+    // Create a client connection for each test
+    clientSocket = io(`http://localhost:${wsPort}`, {
       transports: ['websocket'],
-      reconnection: false,
       forceNew: true,
-      timeout: 5000
+      reconnection: false
     });
 
     clientSocket.on('connect', () => {
-      expect(clientSocket.connected).toBe(true);
       done();
     });
 
-    clientSocket.on('connect_error', (err) => {
-      done(err);
+    clientSocket.on('connect_error', (err: Error) => {
+      console.error('Connection error:', err);
+      done.fail('Failed to connect to WebSocket server');
     });
-  }, 10000);
+  });
 
-  test('should send and receive messages', (done) => {
+  afterEach((done) => {
+    if (clientSocket.connected) {
+      clientSocket.disconnect();
+    }
+    done();
+  });
+
+  it('should connect and disconnect', (done) => {
+    expect(clientSocket.connected).toBe(true);
+    clientSocket.disconnect();
+    expect(clientSocket.connected).toBe(false);
+    done();
+  });
+
+  it('should send and receive messages', (done) => {
     const testMessage = 'Hello, WebSocket!';
-    
-    clientSocket = io(`http://localhost:${PORT}`, {
-      transports: ['websocket'],
-      reconnection: false,
-      forceNew: true,
-      timeout: 5000
-    });
 
-    clientSocket.on('connect', () => {
-      console.log('Client connected, sending message...');
-      clientSocket.emit('message', testMessage);
-    });
-    
+    clientSocket.emit('message', testMessage);
+
     clientSocket.on('message', (data: string) => {
-      try {
-        console.log('Client received message:', data);
-        expect(data).toBe(`Echo: ${testMessage}`);
-        done();
-      } catch (err) {
-        done(err);
-      }
+      expect(data).toBe(`Echo: ${testMessage}`);
+      done();
     });
-    
-    clientSocket.on('connect_error', (err) => {
-      done(err);
-    });
-  }, 10000);
-
-  test('should handle disconnection', (done) => {
-    clientSocket = io(`http://localhost:${PORT}`, {
-      transports: ['websocket'],
-      reconnection: false,
-      forceNew: true,
-      timeout: 5000
-    });
-
-    clientSocket.on('connect', () => {
-      expect(clientSocket.connected).toBe(true);
-      
-      clientSocket.on('disconnect', () => {
-        expect(clientSocket.connected).toBe(false);
-        done();
-      });
-      
-      // Initiate disconnection
-      clientSocket.disconnect();
-    });
-    
-    clientSocket.on('connect_error', (err) => {
-      done(err);
-    });
-  }, 10000);
+  });
 });
