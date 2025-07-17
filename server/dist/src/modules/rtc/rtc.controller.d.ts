@@ -5,9 +5,9 @@ export declare class RtcController {
     private readonly rtcGateway;
     constructor(rtcGateway: RtcGateway);
     handleOffer(dto: RtcOfferDto): Promise<{
-        success: boolean;
+        success: any;
     }>;
     handleAnswer(dto: RtcAnswerDto): Promise<{
-        success: boolean;
+        success: any;
     }>;
 }

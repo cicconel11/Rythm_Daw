@@ -1,19 +1,33 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { RtcGateway } from './rtc.gateway';
 import { RtcController } from './rtc.controller';
+import { WsThrottlerGuard } from '../../common/guards/ws-throttler.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
+    ConfigModule,
     AuthModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'defaultSecret',
-      signOptions: { expiresIn: '15m' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET', 'defaultSecret'),
+        signOptions: { expiresIn: '15m' },
+      }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [RtcController],
-  providers: [RtcGateway],
+  providers: [
+    RtcGateway,
+    {
+      provide: APP_GUARD,
+      useClass: WsThrottlerGuard,
+    },
+  ],
   exports: [RtcGateway],
 })
 export class RtcModule {}

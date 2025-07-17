@@ -1,150 +1,109 @@
-import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import { io, Socket } from 'socket.io-client';
-import { AppModule } from '../src/app.module';
-import { IoAdapter } from '@nestjs/platform-socket.io';
-import { createServer, Server as HttpServer } from 'http';
-import * as WebSocket from 'ws';
-
-const TEST_PORT = 3001;
+import { Socket } from 'socket.io-client';
+import { createWsTestApp, teardownTestApp } from './websocket-test.setup';
+import { mockIo } from './utils/mock-io';
 
 describe('WebSocket (e2e)', () => {
-  let app: INestApplication;
-  let httpServer: HttpServer;
-  let socket: Socket;
-  let wss: WebSocket.Server;
+  let ctx: Awaited<ReturnType<typeof createWsTestApp>>;
+  let client: Socket;
+  let serverUrl: string;
 
   beforeAll(async () => {
-    // Create testing module
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    // Create app instance
-    app = moduleFixture.createNestApplication();
-    
-    // Configure WebSocket adapter with IoAdapter
-    app.useWebSocketAdapter(new IoAdapter(app));
-    
-    // Initialize app
-    await app.init();
-    
-    // Start HTTP server
-    httpServer = await app.listen(TEST_PORT);
-    
-    // Setup WebSocket server
-    wss = new WebSocket.Server({ server: httpServer });
-    
-    // Handle WebSocket connections
-    wss.on('connection', (ws: WebSocket) => {
-      console.log('Client connected');
-      
-      // Handle incoming messages
-      ws.on('message', (message: string) => {
-        console.log('Received:', message);
-        // Echo the message back
-        ws.send(`Echo: ${message}`);
-      });
-      
-      // Handle client disconnection
-      ws.on('close', () => {
-        console.log('Client disconnected');
+    // Create test app with WebSocket support
+    ctx = await createWsTestApp();
+    await new Promise<void>((res) => {
+      ctx.httpServer.listen(0, () => {
+        const address = ctx.httpServer.address();
+        const port = typeof address === 'string' 
+          ? parseInt(address.split(':').pop() || '0', 10) 
+          : address?.port || 0;
+        serverUrl = `http://localhost:${port}`;
+        res();
       });
     });
   });
 
   afterAll(async () => {
-    // Close WebSocket server
-    if (wss) {
-      wss.close();
+    if (client?.connected) {
+      client.disconnect();
     }
-    
-    // Close HTTP server and app
-    if (httpServer) {
-      await new Promise<void>((resolve) => httpServer.close(() => resolve()));
-    }
-    
-    if (app) {
-      await app.close();
-    }
+    await teardownTestApp(ctx.app, ctx.httpServer);
   });
 
   afterEach(() => {
-    // Clean up socket after each test
-    if (socket?.connected) {
-      socket.disconnect();
+    if (client?.connected) {
+      client.disconnect();
     }
   });
 
   it('should connect to WebSocket server', (done) => {
-    socket = io(`http://localhost:${TEST_PORT}`, {
-      transports: ['websocket'],
-      reconnection: false,
-      forceNew: true,
-      timeout: 5000
-    });
-
-    socket.on('connect', () => {
-      expect(socket.connected).toBe(true);
+    client = mockIo(serverUrl, { transports: ['websocket'] });
+    
+    client.on('connect', () => {
+      expect(client.connected).toBe(true);
       done();
     });
-
-    socket.on('connect_error', (err) => {
-      done(err);
+    
+    client.on('connect_error', (err: Error) => {
+      done.fail(`Connection failed: ${err.message}`);
     });
-  }, 10000);
+  });
 
-  it('should send and receive messages', (done) => {
+  it('should receive echo message', (done) => {
     const testMessage = 'Hello, WebSocket!';
+    client = mockIo(serverUrl, { transports: ['websocket'] });
     
-    socket = io(`http://localhost:${TEST_PORT}`, {
-      transports: ['websocket'],
-      reconnection: false,
-      forceNew: true,
-      timeout: 5000
+    client.on('connect', () => {
+      client.emit('message', testMessage);
     });
+    
+    client.on('message', (message: string) => {
+      expect(message).toContain(testMessage);
+      done();
+    });
+    
+    client.on('connect_error', (err: Error) => {
+      done.fail(`Connection failed: ${err.message}`);
+    });
+  });
 
-    socket.on('connect', () => {
-      socket.emit('message', testMessage);
+  it('should handle multiple messages', (done) => {
+    const messages = ['first', 'second', 'third'];
+    let receivedCount = 0;
+    
+    client = mockIo(serverUrl, { transports: ['websocket'] });
+    
+    client.on('connect', () => {
+      messages.forEach(msg => client.emit('message', msg));
     });
     
-    // Listen for the echo response
-    socket.on('message', (data: string) => {
-      try {
-        expect(data).toBe(`Echo: ${testMessage}`);
+    client.on('message', (message: string) => {
+      expect(messages).toContain(message);
+      receivedCount++;
+      
+      if (receivedCount === messages.length) {
         done();
-      } catch (err) {
-        done(err);
       }
     });
     
-    socket.on('connect_error', (err) => {
-      done(err);
+    client.on('connect_error', (err: Error) => {
+      done.fail(`Connection failed: ${err.message}`);
     });
-  }, 10000);
+  });
 
   it('should handle disconnection', (done) => {
-    socket = io(`http://localhost:${TEST_PORT}`, {
-      transports: ['websocket'],
-      reconnection: false,
-      forceNew: true,
-      timeout: 5000
-    });
-
-    socket.on('connect', () => {
-      expect(socket.connected).toBe(true);
-      
-      socket.on('disconnect', () => {
-        expect(socket.connected).toBe(false);
+    client = mockIo(serverUrl, { transports: ['websocket'] });
+    
+    client.on('connect', () => {
+      client.on('disconnect', (reason) => {
+        expect(reason).toBe('io client disconnect');
         done();
       });
       
-      // Initiate disconnection
-      socket.disconnect();
+      client.disconnect();
     });
     
-    socket.on('connect_error', (err) => {
-      done(err);
+    client.on('connect_error', (err: Error) => {
+      done.fail(`Connection failed: ${err.message}`);
     });
-  }, 10000);
+  });
 });

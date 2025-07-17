@@ -11,10 +11,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var ChatGateway_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
-const ws_1 = require("ws");
+const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
 const jwt_ws_auth_guard_1 = require("../auth/guards/jwt-ws-auth.guard");
 const auth_service_1 = require("../auth/auth.service");
@@ -22,85 +23,60 @@ const ws_throttler_guard_1 = require("./guards/ws-throttler.guard");
 const rate_limiter_flexible_1 = require("rate-limiter-flexible");
 const config_1 = require("@nestjs/config");
 const presence_service_1 = require("../presence/presence.service");
-let ChatGateway = class ChatGateway {
+const message_queue_1 = require("./message-queue");
+let ChatGateway = ChatGateway_1 = class ChatGateway {
     constructor(authService, configService, presenceService) {
         this.authService = authService;
         this.configService = configService;
         this.presenceService = presenceService;
-        this.logger = new common_1.Logger('ChatGateway');
-        this.clients = new Map();
+        this.logger = new common_1.Logger(ChatGateway_1.name);
+        this.clientQueues = new Map();
+        this.HEARTBEAT_INTERVAL = 30000;
+        this.heartbeatIntervals = new Map();
+        this.MAX_QUEUE_SIZE = 100;
         this.rateLimiter = new rate_limiter_flexible_1.RateLimiterMemory({
             points: 100,
             duration: 1,
         });
-        this.MAX_QUEUE_SIZE = 100;
-        this.HEARTBEAT_INTERVAL = 30000;
-        this.heartbeatInterval = setInterval(() => this.checkHeartbeat(), this.HEARTBEAT_INTERVAL);
     }
-    cleanup() {
-        if (this.heartbeatInterval) {
-            clearInterval(this.heartbeatInterval);
-        }
-        this.clients.forEach(client => {
-            if (client.readyState === ws_1.WebSocket.OPEN) {
-                client.terminate();
-            }
-        });
-        this.clients.clear();
+    onModuleInit() {
+        this.logger.log('ChatGateway initialized');
     }
     async handleConnection(client) {
         try {
-            client.id = Math.random().toString(36).substring(2, 15);
+            const messageQueue = new message_queue_1.MessageQueue(client);
+            this.clientQueues.set(client.id, messageQueue);
             client.isAlive = true;
             client.on('pong', () => {
                 client.isAlive = true;
+                client.lastPing = Date.now();
             });
-            client.sendMessage = async (data) => {
-                return new Promise((resolve, reject) => {
-                    if (client.readyState !== ws_1.WebSocket.OPEN) {
-                        return reject(new Error('WebSocket not open'));
-                    }
-                    if (client.bufferedAmount > this.MAX_QUEUE_SIZE * 1024) {
-                        client.pause();
-                        client.once('drain', () => {
-                            client.resume();
-                            client.send(JSON.stringify(data), (err) => {
-                                if (err)
-                                    reject(err);
-                                else
-                                    resolve();
-                            });
-                        });
-                    }
-                    else {
-                        client.send(JSON.stringify(data), (err) => {
-                            if (err)
-                                reject(err);
-                            else
-                                resolve();
-                        });
-                    }
-                });
-            };
-            this.clients.set(client, client);
-            this.logger.log(`Client connected: ${client.id}`);
+            this.presenceService.updateUserPresence(client.userId);
+            this.logger.log(`Client connected: ${client.id} (User: ${client.userId})`);
         }
         catch (error) {
-            this.logger.error(`Connection error: ${error.message}`, error.stack);
-            client.terminate();
+            this.logger.error('Error in handleConnection:', error);
+            if (client.connected) {
+                client.disconnect(true);
+            }
         }
     }
     async handleDisconnect(client) {
-        this.logger.log(`Client disconnected: ${client.id}`);
-        if (client.userId) {
-            try {
-                await this.presenceService.removeUserPresence(client.userId);
+        try {
+            const queue = this.clientQueues.get(client.id);
+            if (queue) {
+                queue.stop();
+                this.clientQueues.delete(client.id);
             }
-            catch (error) {
-                this.logger.error(`Error removing user presence: ${error.message}`, error.stack);
-            }
+            this.cleanupHeartbeat(client.id);
+            this.presenceService.removeUserPresence(client.userId);
+            this.logger.log(`Client disconnected: ${client.id} (User: ${client.userId})`);
         }
-        this.clients.delete(client);
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorStack = error instanceof Error ? error.stack : '';
+            this.logger.error(`Disconnection error: ${errorMessage}`, errorStack);
+        }
     }
     async handleAuth(client, data) {
         try {
@@ -110,7 +86,7 @@ let ChatGateway = class ChatGateway {
             }
             client.userId = payload.sub;
             client.projectId = data.projectId;
-            await client.sendMessage({
+            client.emit('auth_success', {
                 type: 'auth_success',
                 userId: client.userId,
                 projectId: client.projectId,
@@ -119,108 +95,124 @@ let ChatGateway = class ChatGateway {
         }
         catch (error) {
             this.logger.error(`Auth error: ${error.message}`);
-            client.terminate();
+            client.disconnect();
         }
     }
     async handleMessage(client, data) {
+        if (!data || !data.to || !data.content) {
+            throw new Error('Invalid message format');
+        }
         try {
-            if (!client.userId || !client.projectId) {
-                throw new Error('Not authenticated');
-            }
-            try {
-                await this.rateLimiter.consume(`ws:${client.userId}`);
-            }
-            catch (rateLimitError) {
-                this.logger.warn(`Rate limit exceeded for user ${client.userId}`);
-                await client.sendMessage({
-                    type: 'error',
-                    code: 'RATE_LIMIT_EXCEEDED',
-                    message: 'Too many messages. Please slow down.',
-                });
-                return;
-            }
-            const broadcastPromises = Array.from(this.clients.values())
-                .filter(c => c.projectId === client.projectId && c.id !== client.id)
-                .map(recipient => recipient.sendMessage({
-                type: 'message',
+            await this.rateLimiter.consume(client.id);
+            const timestamp = new Date().toISOString();
+            const message = {
                 from: client.userId,
-                projectId: client.projectId,
-                data,
-                timestamp: new Date().toISOString(),
-            }).catch(err => {
-                this.logger.error(`Failed to send message to ${recipient.id}: ${err.message}`);
-                if (err.message.includes('not open')) {
-                    this.clients.delete(recipient);
+                to: data.to,
+                content: data.content,
+                timestamp,
+                ...(data.metadata || {})
+            };
+            if (data.to.startsWith('room:')) {
+                this.server.to(data.to).emit('message', message);
+            }
+            else {
+                const recipientQueue = this.findRecipientQueue(data.to);
+                if (recipientQueue) {
+                    recipientQueue.enqueue('message', message);
                 }
-            }));
-            await Promise.all(broadcastPromises);
+                else {
+                    this.logger.warn(`Recipient ${data.to} not found`);
+                    this.emitToClient(client.id, 'error', {
+                        code: 'RECIPIENT_OFFLINE',
+                        message: 'The recipient is not connected',
+                        recipientId: data.to,
+                        timestamp
+                    });
+                }
+            }
+            return message;
         }
         catch (error) {
-            this.logger.error(`Message handling error: ${error.message}`, error.stack);
-            await client.sendMessage({
-                type: 'error',
-                code: 'MESSAGE_ERROR',
-                message: error.message,
-            });
+            this.logger.error('Error handling message:', error);
+            throw error;
         }
-    }
-    checkHeartbeat() {
-        this.clients.forEach((_, wsClient) => {
-            const client = wsClient;
-            if (!client.isAlive) {
-                this.logger.log(`Terminating unresponsive client: ${client.id}`);
-                return client.terminate();
-            }
-            client.isAlive = false;
-            client.ping(() => { });
-        });
     }
     async handleTyping(client, data) {
         try {
-            if (!client.userId || !client.projectId) {
-                throw new Error('Not authenticated');
-            }
-            const broadcastPromises = Array.from(this.clients.values())
-                .filter(c => c.projectId === client.projectId && c.id !== client.id)
-                .map(recipient => recipient.sendMessage({
-                type: 'user_typing',
+            await this.rateLimiter.consume(client.id);
+            this.server.emit('userTyping', {
                 userId: client.userId,
-                isTyping: data.isTyping,
-                timestamp: new Date().toISOString(),
-            }).catch(err => {
-                this.logger.error(`Failed to send typing status to ${recipient.id}: ${err.message}`);
-                if (err.message.includes('not open')) {
-                    this.clients.delete(recipient);
-                }
-            }));
-            await Promise.all(broadcastPromises);
-        }
-        catch (error) {
-            this.logger.error(`Typing status error: ${error.message}`, error.stack);
-            await client.sendMessage({
-                type: 'error',
-                code: 'TYPING_STATUS_ERROR',
-                message: error.message,
+                isTyping: data.isTyping
             });
         }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            const errorStack = error instanceof Error ? error.stack : '';
+            this.logger.error(`Typing error: ${errorMessage}`, errorStack);
+        }
+    }
+    emitToClient(clientId, event, data) {
+        const client = this.server.sockets.sockets.get(clientId);
+        if (client) {
+            client.emit(event, data);
+        }
+    }
+    getUserClients(userId) {
+        const clients = [];
+        this.server.sockets.sockets.forEach((socket) => {
+            const wsClient = socket;
+            if (wsClient.userId === userId) {
+                clients.push(wsClient);
+            }
+        });
+        return clients;
     }
     async broadcastToProject(projectId, message) {
-        const clients = Array.from(this.clients.values())
-            .filter(client => client.projectId === projectId && client.readyState === ws_1.WebSocket.OPEN);
-        await Promise.all(clients.map(client => client.sendMessage(message).catch(err => {
-            this.logger.error(`Broadcast failed to ${client.id}: ${err.message}`);
-        })));
+        const clients = this.getUserClients(projectId);
+        await Promise.all(clients.map(client => {
+            if (client.connected) {
+                return new Promise((resolve) => {
+                    client.emit('broadcast', message, () => {
+                        resolve();
+                    });
+                }).catch(err => {
+                    this.logger.error(`Broadcast failed to ${client.id}: ${err.message}`);
+                });
+            }
+            return Promise.resolve();
+        }));
+    }
+    cleanupHeartbeat(clientId) {
+        const interval = this.heartbeatIntervals.get(clientId);
+        if (interval) {
+            clearInterval(interval);
+            this.heartbeatIntervals.delete(clientId);
+        }
+    }
+    findRecipientQueue(userId) {
+        for (const [clientId, queue] of this.clientQueues.entries()) {
+            const client = this.server.sockets.sockets.get(clientId);
+            if (client?.userId === userId) {
+                return queue;
+            }
+        }
+        return undefined;
     }
     onModuleDestroy() {
-        clearInterval(this.heartbeatInterval);
-        this.clients.forEach((_, wsClient) => wsClient.terminate());
-        this.clients.clear();
+        this.heartbeatIntervals.forEach((interval) => {
+            clearInterval(interval);
+        });
+        this.heartbeatIntervals.clear();
+        this.clientQueues.forEach((queue) => {
+            queue.stop();
+        });
+        this.clientQueues.clear();
     }
 };
 exports.ChatGateway = ChatGateway;
 __decorate([
     (0, websockets_1.WebSocketServer)(),
-    __metadata("design:type", ws_1.Server)
+    __metadata("design:type", socket_io_1.Server)
 ], ChatGateway.prototype, "server", void 0);
 __decorate([
     (0, websockets_1.SubscribeMessage)('authenticate'),
@@ -246,16 +238,20 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleTyping", null);
-exports.ChatGateway = ChatGateway = __decorate([
+exports.ChatGateway = ChatGateway = ChatGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
-        path: '/ws/chat',
         cors: {
             origin: process.env.NODE_ENV === 'production'
-                ? ['https://rhythm.app', 'https://www.rhythm.app']
-                : '*',
+                ? ['https://your-production-domain.com']
+                : ['http://localhost:3000', 'http://localhost:3001'],
+            credentials: true,
         },
+        namespace: 'chat',
+        pingInterval: 30000,
+        pingTimeout: 10000,
     }),
     (0, common_1.UseGuards)(jwt_ws_auth_guard_1.JwtWsAuthGuard, ws_throttler_guard_1.WsThrottlerGuard),
+    __param(0, (0, common_1.Inject)((0, common_1.forwardRef)(() => auth_service_1.AuthService))),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
         config_1.ConfigService,
         presence_service_1.PresenceService])

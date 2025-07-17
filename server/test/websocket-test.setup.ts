@@ -1,108 +1,108 @@
-import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { INestApplication, Logger } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { AppModule } from '../src/app.module';
-import { mockLogger } from './__mocks__/logger';
-import * as http from 'http';
-import * as io from 'socket.io';
 import { ExpressAdapter } from '@nestjs/platform-express';
+import * as express from 'express';
+import { createServer, Server as HttpServer } from 'http';
+import { AppModule } from '../src/app.module';
 
-export interface TestAppContext {
+const logger = new Logger('WsTestSetup');
+
+export interface WsTestContext {
   app: INestApplication;
-  httpServer: http.Server;
-  port: number;
+  httpServer: HttpServer;
+  module: TestingModule;
+  serverUrl: string;
 }
-
-let testAppContext: TestAppContext | null = null;
 
 /**
  * Creates a test application with WebSocket support
- * @returns {Promise<TestAppContext>} The test application context
  */
-export async function createWsTestApp(): Promise<TestAppContext> {
-  if (testAppContext) {
-    return testAppContext;
-  }
+export async function createWsTestApp(): Promise<WsTestContext> {
+  const expressApp = express();
+  const httpServer = createServer(expressApp);
 
-  // Create Express app and HTTP server
-  const express = require('express');
-  const server = express();
-  const httpServer = http.createServer(server);
-  
-  // Create Socket.IO server
-  const ioServer = new io.Server(httpServer, {
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST']
-    }
-  });
-  
-  // Create testing module
-  const moduleFixture = await Test.createTestingModule({
+  // Create testing module with required dependencies
+  const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();
 
-  // Create app with Express adapter
-  const app = moduleFixture.createNestApplication(new ExpressAdapter(server));
-  
-  // Use IoAdapter with the Socket.IO server
-  app.useWebSocketAdapter(new IoAdapter(ioServer));
-  
-  // Apply mock logger
-  app.useLogger(mockLogger);
+  // Create Nest application with Express adapter
+  const app = moduleRef.createNestApplication(
+    new ExpressAdapter(expressApp as any),
+    { logger: ['error', 'warn', 'log'] }
+  ) as INestApplication;
+
+  // Configure WebSocket adapter
+  const ioAdapter = new IoAdapter(httpServer);
+  app.useWebSocketAdapter(ioAdapter);
   
   try {
-    // Initialize the app
+    // Initialize the application
     await app.init();
     
-    // Start listening on a random port
-    const port = await new Promise<number>((resolve, reject) => {
-      const listener = httpServer.listen(0, '0.0.0.0', () => {
-        const address = listener.address();
-        const port = typeof address === 'string' ? parseInt(address.split(':').pop() || '0', 10) : address?.port || 0;
-        console.log(`Test server listening on port ${port}`);
-        resolve(port);
+    // Start the HTTP server on a random port
+    await new Promise<void>((resolve) => {
+      httpServer.listen(0, () => {
+        logger.log(`Test server listening on port ${httpServer.address().port}`);
+        resolve();
       });
-      listener.on('error', reject);
     });
     
-    testAppContext = { app, httpServer, port };
-    return testAppContext;
+    // Get the server URL
+    const address = httpServer.address();
+    let port: number;
+    
+    if (address === null) {
+      port = 0;
+    } else if (typeof address === 'string') {
+      port = parseInt(address.split(':').pop() || '0', 10);
+    } else {
+      port = address.port || 0;
+    }
+    
+    return { 
+      app, 
+      httpServer, 
+      module: moduleRef,
+      serverUrl: `http://localhost:${port}`
+    };
   } catch (error) {
-    await app.close();
-    httpServer.close();
+    logger.error('Failed to create test app', error);
+    await teardownTestApp(app, httpServer);
     throw error;
   }
 }
 
-export async function teardownTestApp(): Promise<void> {
-  if (!testAppContext) {
-    return;
-  }
-
-  const { app, httpServer } = testAppContext;
-  
+/**
+ * Tears down the test application and releases resources
+ */
+export async function teardownTestApp(
+  app: INestApplication | null | undefined, 
+  httpServer: HttpServer | null | undefined
+): Promise<void> {
   try {
-    if (app) {
-      await app.close();
-    }
-  } catch (error) {
-    console.error('Error closing app:', error);
-  }
-
-  try {
+    // Close the HTTP server if it exists
     if (httpServer) {
       await new Promise<void>((resolve) => {
-        httpServer.close(() => {
-          console.log('Test server closed');
+        if (httpServer.listening) {
+          httpServer.close(() => {
+            logger.log('Test HTTP server closed');
+            resolve();
+          });
+        } else {
           resolve();
-        });
+        }
       });
     }
+    
+    // Close the Nest application if it exists
+    if (app) {
+      await app.close();
+      logger.log('Nest application closed');
+    }
   } catch (error) {
-    console.error('Error closing HTTP server:', error);
+    logger.error('Error during test teardown', error);
+    throw error;
   }
-
-  testAppContext = null;
-  await new Promise(resolve => setTimeout(resolve, 500)); // Short delay for cleanup
 }

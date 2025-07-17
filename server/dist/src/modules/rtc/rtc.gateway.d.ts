@@ -1,87 +1,37 @@
-import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-import { Server, Socket as BaseSocket } from 'socket.io';
 import { OnModuleInit } from '@nestjs/common';
-interface AuthenticatedSocket extends BaseSocket {
-    handshake: {
-        user?: {
-            userId: string;
-            email: string;
-            name?: string;
-        };
-        headers: Record<string, string>;
-        time: string;
-        address: string;
-        xdomain: boolean;
-        secure: boolean;
-        issued: number;
-        url: string;
-        query: Record<string, string>;
-        auth: Record<string, any>;
-    };
-}
-declare module 'socket.io' {
-    interface Handshake {
-        user?: {
-            userId: string;
-            email: string;
-            name?: string;
-        };
-    }
-}
+import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { AuthenticatedSocket } from './types/socket-events.types';
+import { TrackUpdate, PresenceUpdate, SignalingMessage } from './types/websocket.types';
 export declare class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
     private server;
-    testServer?: any;
     private readonly logger;
-    private readonly missedPongs;
-    private readonly MAX_MISSED_PONGS;
+    private readonly userSockets;
+    private readonly socketToUser;
+    private readonly userRooms;
+    private readonly roomUsers;
+    private readonly userPresence;
+    private readonly lastSeen;
+    private readonly missedPings;
+    private readonly MAX_MISSED_PINGS;
     private pingInterval;
+    get activeConnections(): number;
+    get activeRooms(): number;
+    get activeUsers(): number;
     onModuleInit(): void;
     private setupPingInterval;
-    private userSockets;
-    private socketToUser;
-    private rooms;
-    private userRooms;
     handleConnection(client: AuthenticatedSocket): Promise<void>;
     handleDisconnect(client: AuthenticatedSocket): Promise<void>;
-    handleJoinRoom(client: AuthenticatedSocket, data: {
+    handleJoinRoom(client: AuthenticatedSocket, payload: {
         roomId: string;
-    }): Promise<{
-        success: boolean;
+    }): Promise<void>;
+    joinRoom(userId: string, roomId: string): Promise<boolean>;
+    handleLeaveRoom(client: AuthenticatedSocket, payload: {
         roomId: string;
-        error?: undefined;
-    } | {
-        success: boolean;
-        error: any;
-        roomId?: undefined;
-    }>;
-    handleLeaveRoom(client: AuthenticatedSocket, data: {
-        roomId: string;
-    }): Promise<{
-        success: boolean;
-        error?: undefined;
-    } | {
-        success: boolean;
-        error: any;
-    }>;
-    handleOffer(client: AuthenticatedSocket, data: {
-        to: string;
-        offer: any;
-    }): void;
-    handleAnswer(client: AuthenticatedSocket, data: {
-        to: string;
-        answer: any;
-    }): void;
-    handleIceCandidate(client: AuthenticatedSocket, data: {
-        to: string;
-        candidate: any;
-    }): void;
-    private getUserRooms;
-    private sendToUser;
-    registerWsServer(server: Server): void;
-    to(room: string): any;
-    emit(event: string, ...args: any[]): any;
-    private cleanupDeadSockets;
-    private cleanupRoomAssociations;
-    private notifyRoomOfUserLeave;
+    }): Promise<void>;
+    leaveRoom(userId: string, roomId: string): Promise<boolean>;
+    handleTrackUpdate(client: AuthenticatedSocket, update: TrackUpdate): Promise<void>;
+    handlePresenceUpdate(client: AuthenticatedSocket, update: PresenceUpdate): Promise<void>;
+    handleSignal(client: AuthenticatedSocket, signal: SignalingMessage): Promise<void>;
+    private findSocketByUserId;
+    onModuleDestroy(): void;
 }
-export {};
