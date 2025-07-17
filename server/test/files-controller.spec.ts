@@ -1,11 +1,10 @@
 import { FilesController } from '../src/modules/files/files.controller';
 import { FilesService } from '../src/modules/files/files.service';
-import { AwsS3Service } from '../src/modules/files/aws-s3.service';
 import { User } from '../src/modules/users/entities/user.entity';
 
 describe('FilesController', () => {
   let filesController: FilesController;
-  let filesService: FilesService;
+  let filesService: jest.Mocked<FilesService>;
   
   // Mock user
   const mockUser: User = {
@@ -13,28 +12,24 @@ describe('FilesController', () => {
     email: 'test@example.com',
     name: 'Test User',
     isApproved: true,
-  };
+  } as User;
 
-  // Mock AwsS3Service
-  const mockAwsS3Service = {
-    getPresignedPair: jest.fn().mockResolvedValue({
-      putUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
-      getUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
-    }),
+  // Mock response
+  const mockResponse = {
+    uploadUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
+    downloadUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
   };
 
   beforeEach(() => {
-    // Create a new instance of FilesService with the mock AwsS3Service
-    filesService = new FilesService(mockAwsS3Service as unknown as AwsS3Service);
+    // Create a mock FilesService
+    filesService = {
+      getPresignedPair: jest.fn().mockResolvedValue(mockResponse),
+    } as unknown as jest.Mocked<FilesService>;
     
-    // Create a new instance of the controller with the service
+    // Create a new instance of the controller with the mock service
     filesController = new FilesController(filesService);
     
     // Clear all mocks before each test
-    jest.clearAllMocks();
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -43,7 +38,7 @@ describe('FilesController', () => {
     expect(filesService).toBeDefined();
   });
 
-  describe('create', () => {
+  describe('uploadFile', () => {
     it('should return presigned URLs for valid file data', async () => {
       const fileData = {
         name: 'test-file.txt',
@@ -51,19 +46,16 @@ describe('FilesController', () => {
         size: 1024,
       };
 
-      const result = await filesController.create(fileData, mockUser);
+      // Call the controller method directly (bypassing the HTTP layer)
+      const result = await filesController.uploadFile(fileData, mockUser);
       
       expect(result).toBeDefined();
-      expect(result).toHaveProperty('putUrl');
-      expect(result).toHaveProperty('getUrl');
-      expect(result.putUrl).toContain('test-file.txt');
+      expect(result).toEqual(mockResponse);
       
       // Verify the service method was called with the correct arguments
-      // The service should modify the filename to include the user ID and a UUID
-      expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(
-        expect.stringMatching(new RegExp(`^${mockUser.id}/[a-f0-9-]+-${fileData.name}$`)),
-        fileData.mime,
-        fileData.size
+      expect(filesService.getPresignedPair).toHaveBeenCalledWith(
+        fileData,
+        mockUser
       );
     });
   });

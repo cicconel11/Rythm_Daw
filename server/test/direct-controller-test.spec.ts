@@ -1,31 +1,28 @@
 import { FilesController } from '../src/modules/files/files.controller';
 import { FilesService } from '../src/modules/files/files.service';
-import { AwsS3Service } from '../src/modules/files/aws-s3.service';
 import { User } from '../src/modules/users/entities/user.entity';
 
 describe('FilesController (Direct Test)', () => {
   let controller: FilesController;
-  let filesService: FilesService;
-
-  const mockAwsS3Service = {
-    getPresignedPair: jest.fn().mockResolvedValue({
-      putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
-      getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
-    }),
-  };
+  let filesService: jest.Mocked<FilesService>;
 
   const mockUser: User = {
     id: 'test-user-id',
     email: 'test@example.com',
     name: 'Test User',
     isApproved: true,
-  };
+  } as User;
 
   beforeEach(() => {
-    // Create a new instance of FilesService with the mock AwsS3Service
-    filesService = new FilesService(mockAwsS3Service as unknown as AwsS3Service);
+    // Create a mock FilesService
+    filesService = {
+      getPresignedPair: jest.fn().mockResolvedValue({
+        uploadUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
+        downloadUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
+      }),
+    } as unknown as jest.Mocked<FilesService>;
     
-    // Create a new instance of the controller with the service
+    // Create a new instance of the controller with the mock service
     controller = new FilesController(filesService);
     
     // Clear all mocks before each test
@@ -47,9 +44,15 @@ describe('FilesController (Direct Test)', () => {
       const result = await controller.create(fileData, mockUser);
       
       expect(result).toBeDefined();
-      expect(result).toHaveProperty('putUrl');
-      expect(result).toHaveProperty('getUrl');
-      expect(result.putUrl).toContain('test-file.txt');
+      expect(result).toHaveProperty('uploadUrl');
+      expect(result).toHaveProperty('downloadUrl');
+      expect(result.uploadUrl).toContain('test-file.txt');
+      
+      // Verify the service was called with the correct parameters
+      expect(filesService.getPresignedPair).toHaveBeenCalledWith(
+        fileData,
+        mockUser
+      );
     });
   });
 });

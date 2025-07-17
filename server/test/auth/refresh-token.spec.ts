@@ -51,18 +51,31 @@ describe('AuthService', () => {
   // Create a mock JWT service with proper typing
   const mockJwtService = {
     sign: jest.fn().mockReturnValue('mocked-token'),
-    verify: jest.fn().mockImplementation((token: string, options: any) => {
-      if (token === 'test-refresh-token') {
-        if (options?.secret === 'test-refresh-secret') {
-          return { sub: 'test-user-id', email: 'test@example.com' };
-        }
-        throw new Error('Invalid secret');
-      } else if (token === 'non-existent-user-token') {
-        if (options?.secret === 'test-refresh-secret') {
-          return { sub: 'non-existent-user-id', email: 'nonexistent@example.com' };
-        }
-        throw new Error('Invalid secret');
+    signAsync: jest.fn().mockImplementation((payload: any, options: any) => {
+      if (options && options.secret === 'test-access-secret') {
+        return Promise.resolve('new-access-token');
+      } else if (options && options.secret === 'test-refresh-secret') {
+        return Promise.resolve('new-refresh-token');
       }
+      return Promise.resolve('mocked-token');
+    }),
+    verify: jest.fn().mockImplementation((token: string, options: any) => {
+      // For testing purposes, we'll accept any token that's not explicitly invalid
+      if (token === 'invalid-refresh-token') {
+        throw new Error('Invalid token');
+      }
+      
+      // For test-refresh-token, return a valid payload
+      if (token === 'test-refresh-token') {
+        return { sub: 'test-user-id', email: 'test@example.com' };
+      }
+      
+      // For non-existent-user-token, return a different user ID
+      if (token === 'non-existent-user-token') {
+        return { sub: 'non-existent-user-id', email: 'nonexistent@example.com' };
+      }
+      
+      // Default case
       throw new Error('Invalid token');
     }),
   };
@@ -84,18 +97,44 @@ describe('AuthService', () => {
   };
 
   beforeEach(async () => {
+    // Reset all mocks
+    jest.clearAllMocks();
+    
     // Create a new instance of AuthService with mocked dependencies
     authService = new AuthService(
       mockJwtService as any,
       mockPrismaService as any,
       mockConfigService as any
     );
-
-    // Mock the getTokens method
-    jest.spyOn(authService as any, 'getTokens').mockResolvedValue(mockTokens);
+    
+    // Mock the getTokens method to return our mock tokens
+    jest.spyOn(authService as any, 'getTokens').mockImplementation(async () => ({
+      accessToken: 'new-access-token',
+      refreshToken: 'new-refresh-token',
+      user: {
+        id: 'test-user-id',
+        email: 'test@example.com',
+        name: 'Test User'
+      }
+    }));
     
     // Mock the updateRefreshToken method
-    jest.spyOn(authService as any, 'updateRefreshToken').mockResolvedValue(undefined);
+    jest.spyOn(authService as any, 'updateRefreshToken').mockImplementation(async () => {
+      // Update the mock user's refresh token
+      mockPrismaService.user.findUnique.mockResolvedValueOnce({
+        ...mockUser,
+        refreshToken: 'new-refresh-token'
+      });
+    });
+    
+    // Mock the config service to return the correct secrets
+    (mockConfigService.get as jest.Mock).mockImplementation((key: string) => {
+      const config: Record<string, string> = {
+        'JWT_ACCESS_SECRET': 'test-access-secret',
+        'JWT_REFRESH_SECRET': 'test-refresh-secret',
+      };
+      return config[key] || null;
+    });
     
     // Assign mocks to the variables for test assertions
     jwtService = mockJwtService as any;
@@ -112,34 +151,38 @@ describe('AuthService', () => {
       const userId = 'test-user-id';
       const refreshToken = 'test-refresh-token';
       
-      // Mock the getTokens method to return our mock tokens
-      jest.spyOn(authService as any, 'getTokens').mockResolvedValueOnce({
-        accessToken: 'new-access-token',
-        refreshToken: 'new-refresh-token',
-        user: {
-          id: userId,
-          email: 'test@example.com',
-          name: 'Test User'
-        }
+      // Update the mock user to have the same refresh token
+      mockPrismaService.user.findUnique.mockResolvedValueOnce({
+        ...mockUser,
+        refreshToken: refreshToken, // Make sure this matches the token we're passing
       });
       
+      // Mock the update method to return the updated user
+      mockPrismaService.user.update.mockResolvedValueOnce({
+        ...mockUser,
+        refreshToken: 'new-refresh-token',
+      });
+      
+      // Call the method
       const result = await authService.refreshTokens(userId, refreshToken);
       
+      // Verify the result
       expect(result).toEqual({
         accessToken: 'new-access-token',
         refreshToken: 'new-refresh-token',
         user: {
-          id: userId,
+          id: 'test-user-id',
           email: 'test@example.com',
-          name: 'Test User'
-        }
+          name: 'Test User',
+        },
       });
       
+      // Verify the service method was called with the correct arguments
+      expect(jwtService.verify).toHaveBeenCalledWith(refreshToken, expect.objectContaining({
+        secret: 'test-refresh-secret',
+      }));
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { id: userId },
-      });
-      expect(jwtService.verify).toHaveBeenCalledWith(refreshToken, {
-        secret: 'test-refresh-secret',
       });
       expect(prismaService.user.update).toHaveBeenCalledWith({
         where: { id: userId },
@@ -151,18 +194,15 @@ describe('AuthService', () => {
       const userId = 'test-user-id';
       const refreshToken = 'invalid-refresh-token';
       
-      // Mock JWT verify to throw an error for invalid token
-      (jwtService.verify as jest.Mock).mockImplementationOnce(() => {
-        throw new Error('Invalid token');
-      });
-      
+      // Call the method and expect an exception
       await expect(authService.refreshTokens(userId, refreshToken)).rejects.toThrow(
         new UnauthorizedException('Invalid refresh token')
       );
       
-      expect(jwtService.verify).toHaveBeenCalledWith(refreshToken, {
+      // Verify the service method was called with the correct arguments
+      expect(jwtService.verify).toHaveBeenCalledWith(refreshToken, expect.objectContaining({
         secret: 'test-refresh-secret',
-      });
+      }));
     });
 
     it('should throw UnauthorizedException with generic message when user not found', async () => {
@@ -171,15 +211,16 @@ describe('AuthService', () => {
       
       // Mock user not found
       (prismaService.user.findUnique as jest.Mock).mockResolvedValueOnce(null);
-
-      // The service wraps all errors in a generic 'Invalid refresh token' message
+      
+      // Call the method and expect an exception
       await expect(authService.refreshTokens(userId, refreshToken)).rejects.toThrow(
         new UnauthorizedException('Invalid refresh token')
       );
       
-      expect(jwtService.verify).toHaveBeenCalledWith(refreshToken, {
+      // Verify the service method was called with the correct arguments
+      expect(jwtService.verify).toHaveBeenCalledWith(refreshToken, expect.objectContaining({
         secret: 'test-refresh-secret',
-      });
+      }));
       expect(prismaService.user.findUnique).toHaveBeenCalledWith({
         where: { id: userId },
       });

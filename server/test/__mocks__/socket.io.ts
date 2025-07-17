@@ -1,239 +1,111 @@
-import { Server as HttpServer } from 'http';
-import { Server as IoServer, Socket as BaseSocket, Namespace, ServerOptions } from 'socket.io';
-import { DefaultEventsMap } from 'socket.io/dist/typed-events';
+// @ts-nocheck  → skip TS parsing inside this test-only stub
+import { jest } from '@jest/globals';
 
-// Create a proper mock for the socket
-export const createMockSocket = (id: string, server: any) => {
-  const listeners: Record<string, Array<(...args: any[]) => void>> = {};
-  let connected = true;
-  
-  const mockSocket: any = {
-    id,
-    connected: true,
-    disconnected: false,
-    data: {},
-    handshake: {
-      query: {},
-      headers: {},
-      auth: {},
-      time: new Date().toISOString(),
-      issued: Date.now(),
-      url: '',
-      address: '127.0.0.1',
-      xdomain: false,
-      secure: false,
-    },
-    rooms: new Set(),
-    server,
-    adapter: {
-      rooms: new Map(),
-      sids: new Map(),
-      addAll: jest.fn(),
-      del: jest.fn(),
-      delAll: jest.fn(),
-      broadcast: jest.fn(),
-      sockets: jest.fn(),
-      fetchSockets: jest.fn().mockResolvedValue([]),
-      addSockets: jest.fn(),
-      delSockets: jest.fn(),
-      disconnectSockets: jest.fn(),
-    },
-    nsp: {
-      name: '/',
-      server,
-      sockets: new Map(),
-    },
-    client: {
-      conn: {
-        id,
-        server,
-        client: {},
-        request: {},
-      },
-      conns: new Map(),
-    },
-    conn: {
-      id,
-      server,
-      client: {},
-      request: {},
-    },
-    request: {},
-    _events: {},
-    _eventsCount: 0,
-    _maxListeners: undefined,
-    // Socket.IO methods
-    on: function(event: string, listener: (...args: any[]) => void) {
-      if (!listeners[event]) {
-        listeners[event] = [];
-      }
-      listeners[event].push(listener);
-      return this;
-    },
-    
-    once: function(event: string, listener: (...args: any[]) => void) {
-      const onceWrapper = (...args: any[]) => {
-        this.off(event, onceWrapper);
-        listener(...args);
-      };
-      return this.on(event, onceWrapper);
-    },
-    
-    off: function(event: string, listener?: (...args: any[]) => void) {
-      if (!listeners[event]) return this;
-      if (!listener) {
-        delete listeners[event];
-        return this;
-      }
-      listeners[event] = listeners[event].filter(l => l !== listener);
-      if (listeners[event].length === 0) {
-        delete listeners[event];
-      }
-      return this;
-    },
-    
-    emit: function(event: string, ...args: any[]) {
-      if (event === 'ping' && typeof args[0] === 'object' && args[0].timestamp) {
-        // Simulate pong response
-        setTimeout(() => {
-          if (listeners['pong']) {
-            listeners['pong'].forEach(cb => cb({ timestamp: args[0].timestamp }));
-          }
-        }, 100);
-      }
-      
-      if (listeners[event]) {
-        listeners[event].forEach(cb => cb(...args));
-      }
-      return true;
-    },
-    
-    disconnect: function(close = false) {
-      connected = false;
-      mockSocket.connected = false;
-      mockSocket.disconnected = true;
-      
-      if (listeners['disconnect']) {
-        listeners['disconnect'].forEach(cb => cb());
-      }
-      
-      // Remove from server's connected sockets
-      if (server?.sockets?.connected) {
-        server.sockets.connected.delete(id);
-      }
-      
-      return this;
-    },
-    
-    join: function(room: string) {
-      if (!mockSocket.rooms) {
-        mockSocket.rooms = new Set();
-      }
-      mockSocket.rooms.add(room);
-      return this;
-    },
-    
-    to: function(room: string) {
-      return {
-        emit: (event: string, ...args: any[]) => {
-          // In a real implementation, this would emit to all sockets in the room
-          return true;
-        }
-      };
-    },
-    
-    broadcast: {
-      to: function(room: string) {
-        return {
-          emit: jest.fn()
-        };
-      }
-    },
-    
-    listeners: function(event: string) {
-      return listeners[event] || [];
-    },
-    
-    // Add other required Socket.IO methods with mock implementations
-    removeAllListeners: function() { return this; },
-    addListener: function() { return this; },
-    removeListener: function() { return this; },
-    setMaxListeners: function() { return this; },
-    getMaxListeners: function() { return 0; },
-    eventNames: function() { return []; },
-    listenerCount: function() { return 0; },
-    prependListener: function() { return this; },
-    prependOnceListener: function() { return this; },
-    rawListeners: function() { return []; },
-  };
-  
-  // Add the socket to the server's connected sockets
-  if (server?.sockets?.connected) {
-    server.sockets.connected.set(id, mockSocket);
+export class MockSocket {
+  id: string;
+  connected = true;
+  disconnected = false;
+  rooms = new Set<string>();
+  data: any = { user: { userId: 'test-user-id', email: 'test@example.com' } };
+  private _listeners: Record<string, Array<(...args: any[]) => void>> = {};
+  private _onceListeners: Record<string, Array<(...args: any[]) => void>> = {};
+
+  constructor(id?: string) {
+    this.id = id || `mock-${Math.random().toString(36).slice(2)}`;
   }
-  
-  return mockSocket as unknown as BaseSocket;
+
+  // Socket.IO methods
+  on = jest.fn((event: string, cb: (...args: any[]) => void) => {
+    this._listeners[event] = this._listeners[event] || [];
+    this._listeners[event].push(cb);
+    return this;
+  });
+
+  once = jest.fn((event: string, cb: (...args: any[]) => void) => {
+    this._onceListeners[event] = this._onceListeners[event] || [];
+    this._onceListeners[event].push(cb);
+    return this;
+  });
+
+  off = jest.fn((event: string, cb?: (...args: any[]) => void) => {
+    if (!event) {
+      this._listeners = {};
+      this._onceListeners = {};
+    } else if (!cb) {
+      delete this._listeners[event];
+      delete this._onceListeners[event];
+    } else {
+      this._listeners[event] = (this._listeners[event] || []).filter(l => l !== cb);
+      this._onceListeners[event] = (this._onceListeners[event] || []).filter(l => l !== cb);
+    }
+    return this;
+  });
+
+  emit = jest.fn((event: string, ...args: any[]) => {
+    // Trigger regular listeners
+    (this._listeners[event] || []).forEach(cb => cb(...args));
+    // Trigger once listeners and remove them
+    (this._onceListeners[event] || []).forEach(cb => cb(...args));
+    delete this._onceListeners[event];
+    return this;
+  });
+
+  disconnect = jest.fn(() => {
+    this.connected = false;
+    this.disconnected = true;
+    this.emit('disconnect');
+    return this;
+  });
+
+  join = jest.fn((room: string) => {
+    this.rooms.add(room);
+    return this;
+  });
+
+  leave = jest.fn((room: string) => {
+    this.rooms.delete(room);
+    return this;
+  });
+
+  to = jest.fn(() => this);
+  in = jest.fn(() => this);
+
+  // Test helpers
+  _trigger(event: string, ...args: any[]) {
+    this.emit(event, ...args);
+  }
 }
 
-export const createMockServer = (): any => {
-  const server: any = {
-    sockets: {
-      sockets: new Map(),
-      connected: new Map(),
-      adapter: {
-        rooms: new Map(),
-        sids: new Map(),
-        addAll: jest.fn(),
-        del: jest.fn(),
-        delAll: jest.fn(),
-        broadcast: jest.fn(),
-        sockets: jest.fn(),
-        fetchSockets: jest.fn().mockResolvedValue([]),
-        addSockets: jest.fn(),
-        delSockets: jest.fn(),
-        disconnectSockets: jest.fn(),
-      },
-      socketsJoin: jest.fn(),
-      socketsLeave: jest.fn(),
-      disconnectSockets: jest.fn(),
-      fetchSockets: jest.fn().mockResolvedValue([]),
-    },
-    
-    // Server methods
-    emit: function(event: string, ...args: any[]) {
-      return true;
-    },
-    
-    to: function(room: string) {
-      return {
-        emit: jest.fn()
-      };
-    },
-    
-    in: function(room: string) {
-      return this.to(room);
-    },
-    
-    // Mock other required Server methods
-    of: function() { return this; },
-    close: jest.fn(),
-    attach: jest.fn(),
-    bind: jest.fn(),
-    onconnection: jest.fn(),
-    engine: {
-      on: jest.fn(),
-      clientsCount: 0,
-    },
-    
-    // Helper method to create a connected socket
-    createConnectedSocket: function(id: string) {
-      return createMockSocket(id, this);
-    }
-  };
-  
-  return server;
-};
+export class MockServer {
+  sockets = { sockets: new Map<string, MockSocket>() };
+  to = jest.fn(() => this);
+  in = jest.fn(() => this);
+  emit = jest.fn();
+  use = jest.fn(() => this);
+  of = jest.fn(() => this);
+  close = jest.fn();
+  listen = jest.fn();
 
-// Export mock functions with aliases for backward compatibility
-export const Server = createMockServer;
-export const Socket = createMockSocket;
+  // Test helpers
+  _addSocket(socket: MockSocket) {
+    this.sockets.sockets.set(socket.id, socket);
+    return socket;
+  }
+}
+
+// Helper functions for tests
+export function createMockSocket(id?: string): any {
+  return new MockSocket(id);
+}
+
+export function createMockServer(): any {
+  return new MockServer();
+}
+
+// Export everything
+module.exports = { 
+  Server: MockServer, 
+  Socket: MockSocket,
+  createMockSocket,
+  createMockServer
+};

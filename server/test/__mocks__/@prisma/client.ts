@@ -1,11 +1,42 @@
-import { PrismaClient as OriginalPrismaClient } from '@prisma/client';
-
-// Define the shape of our mock Prisma client
-type MockPrismaClient = {
+// Mock Prisma Client Implementation
+class MockPrismaClient {
+  constructor() {
+    // Setup default mock implementations
+    this.$connect = jest.fn().mockResolvedValue(undefined);
+    this.$disconnect = jest.fn().mockResolvedValue(undefined);
+    this.$on = jest.fn();
+    this.$transaction = jest.fn((fn) => fn(this));
+    this.$executeRaw = jest.fn();
+    this.$executeRawUnsafe = jest.fn();
+    this.$queryRaw = jest.fn();
+    this.$queryRawUnsafe = jest.fn();
+    
+    // User model
+    this.user = {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      upsert: jest.fn(),
+      count: jest.fn(),
+    };
+    
+    // Add other models as needed
+  }
+  
+  // Add methods that might be called on the instance
   $connect: jest.Mock<Promise<void>>;
   $disconnect: jest.Mock<Promise<void>>;
   $on: jest.Mock;
-  $transaction: <T>(fn: (prisma: MockPrismaClient) => Promise<T>) => Promise<T>;
+  $transaction: jest.Mock;
+  $executeRaw: jest.Mock;
+  $executeRawUnsafe: jest.Mock;
+  $queryRaw: jest.Mock;
+  $queryRawUnsafe: jest.Mock;
+  
+  // Add model types
   user: {
     findUnique: jest.Mock;
     findFirst: jest.Mock;
@@ -13,38 +44,29 @@ type MockPrismaClient = {
     create: jest.Mock;
     update: jest.Mock;
     delete: jest.Mock;
+    upsert: jest.Mock;
     count: jest.Mock;
   };
-  // Add other models as needed
-};
+}
 
-// Create a typed mock Prisma client
-const prisma: MockPrismaClient = {
-  $connect: jest.fn().mockResolvedValue(undefined),
-  $disconnect: jest.fn().mockResolvedValue(undefined),
-  $on: jest.fn(),
-  $transaction: jest.fn((fn) => fn(prisma)),
-  
-  // Add your models here with their CRUD operations
-  user: {
-    findUnique: jest.fn(),
-    findFirst: jest.fn(),
-    findMany: jest.fn(),
-    create: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-    count: jest.fn(),
-  },
-  // Add other models as needed
-};
+// Create a single instance of the mock
+const mockPrismaClient = new MockPrismaClient();
 
-// Mock the PrismaClient constructor
-const PrismaClient = jest.fn((): MockPrismaClient => prisma) as unknown as typeof OriginalPrismaClient;
+// Export the mock Prisma client
+export const prisma = mockPrismaClient;
 
-// Mock the Prisma namespace
+// Export the PrismaClient class
+export class PrismaClient {
+  constructor() {
+    return mockPrismaClient as unknown as PrismaClient;
+  }
+}
+
+// Export the Prisma namespace
 export const Prisma = {
   PrismaClient,
   // Add other Prisma exports as needed
 };
 
-export default prisma;
+// Default export
+export default Prisma;

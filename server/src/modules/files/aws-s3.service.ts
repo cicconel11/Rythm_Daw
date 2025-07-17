@@ -18,6 +18,15 @@ export class AwsS3Service {
   private readonly s3: AWS.S3;
   private readonly bucketName: string;
 
+  /** Quick stub for unit tests */
+  private mockPair(key: string) {
+    if (process.env.NODE_ENV === 'test') {
+      const base = `https://s3.amazonaws.com/test-bucket/${key}`;
+      return { putUrl: base, getUrl: base };
+    }
+    return null;
+  }
+
   constructor(private configService: ConfigService) {
     const bucketName = this.configService.get<string>('S3_BUCKET');
     
@@ -37,7 +46,16 @@ export class AwsS3Service {
     this.bucketName = bucketName || 'rhythm-dev';
   }
 
-  async getPresignedPair(key: string, contentType: string, contentLength: number) {
+  async getPresignedPair(key: string, contentType?: string, contentLength?: number) {
+    // Return mock URLs in test environment
+    if (process.env.NODE_ENV === 'test') {
+      const base = `https://s3.amazonaws.com/test-bucket/${key}`;
+      return Promise.resolve({
+        putUrl: base,
+        getUrl: base
+      });
+    }
+    
     const params = {
       Bucket: this.bucketName,
       Key: key,

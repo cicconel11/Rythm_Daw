@@ -1,38 +1,46 @@
+import { Test, TestingModule } from '@nestjs/testing';
 import { FilesController } from '../src/modules/files/files.controller';
 import { FilesService } from '../src/modules/files/files.service';
-import { AwsS3Service } from '../src/modules/files/aws-s3.service';
+import { User } from '../src/modules/users/entities/user.entity';
 
-// Mock AwsS3Service
-const mockAwsS3Service = {
-  getPresignedPair: jest.fn().mockImplementation((key: string, mime: string, size: number) => {
-    return Promise.resolve({
-      putUrl: `https://s3.amazonaws.com/test-bucket/${key}`,
-      getUrl: `https://s3.amazonaws.com/test-bucket/${key}`,
-    });
-  })
-} as unknown as AwsS3Service;
-
-describe('FilesController (Direct Test)', () => {
+describe('FilesController', () => {
   let controller: FilesController;
-  let filesService: FilesService;
+  let filesService: jest.Mocked<FilesService>;
 
-  beforeEach(() => {
-    // Create a new instance of FilesService with the mock AwsS3Service
-    filesService = new FilesService(mockAwsS3Service);
-    
-    // Create a new instance of the controller with the service
-    controller = new FilesController(filesService);
-    
-    // Clear all mocks before each test
-    jest.clearAllMocks();
+  const mockUser: User = {
+    id: 'test-user-id',
+    email: 'test@example.com',
+    name: 'Test User',
+    isApproved: true,
+  } as User;
+
+  const mockResponse = {
+    uploadUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
+    downloadUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [FilesController],
+      providers: [
+        {
+          provide: FilesService,
+          useValue: {
+            getPresignedPair: jest.fn().mockResolvedValue(mockResponse)
+          }
+        }
+      ]
+    }).compile();
+
+    controller = module.get<FilesController>(FilesController);
+    filesService = module.get(FilesService);
   });
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
-    expect(filesService).toBeDefined();
   });
 
-  describe('create', () => {
+  describe('uploadFile', () => {
     it('should return presigned URLs for valid file data', async () => {
       const fileData = {
         name: 'test-file.txt',
@@ -40,20 +48,14 @@ describe('FilesController (Direct Test)', () => {
         size: 1024,
       };
 
-      const user = {
-        id: 'test-user-id',
-        email: 'test@example.com',
-        name: 'Test User',
-        isApproved: true,
-      };
-
-      const result = await controller.create(fileData, user);
+      const result = await controller.uploadFile(fileData, mockUser);
       
       expect(result).toBeDefined();
-      expect(result).toHaveProperty('putUrl');
-      expect(result).toHaveProperty('getUrl');
-      expect(result.putUrl).toContain('test-file.txt');
-      expect(result.putUrl).toContain('test-user-id');
+      expect(result).toEqual(mockResponse);
+      expect(filesService.getPresignedPair).toHaveBeenCalledWith(
+        fileData,
+        mockUser
+      );
     });
   });
 });

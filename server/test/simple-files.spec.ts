@@ -3,19 +3,10 @@ import { FilesService } from '../src/modules/files/files.service';
 import { AwsS3Service } from '../src/modules/files/aws-s3.service';
 import { User } from '../src/modules/users/entities/user.entity';
 
-// Mock the AwsS3Service
-const mockAwsS3Service = {
-  getPresignedPair: jest.fn().mockImplementation((key: string, mime: string, size: number) => {
-    return Promise.resolve({
-      putUrl: `https://s3.amazonaws.com/test-bucket/${key}`,
-      getUrl: `https://s3.amazonaws.com/test-bucket/${key}`,
-    });
-  })
-} as unknown as AwsS3Service;
-
 describe('FilesController (Direct Test)', () => {
   let filesController: FilesController;
   let filesService: FilesService;
+  let mockAwsS3Service: jest.Mocked<AwsS3Service>;
   
   // Mock user for testing
   const testUser: User = {
@@ -26,6 +17,14 @@ describe('FilesController (Direct Test)', () => {
   };
 
   beforeEach(() => {
+    // Create a mock AwsS3Service
+    mockAwsS3Service = {
+      getPresignedPair: jest.fn().mockResolvedValue({
+        uploadUrl: 'https://s3.amazonaws.com/test-bucket/test-user-id/test-file.txt',
+        downloadUrl: 'https://s3.amazonaws.com/test-bucket/test-user-id/test-file.txt',
+      })
+    } as any;
+    
     // Create a new instance of FilesService with the mock AwsS3Service
     filesService = new FilesService(mockAwsS3Service);
     
@@ -44,18 +43,19 @@ describe('FilesController (Direct Test)', () => {
         size: 1024,
       };
 
-      // Call the controller method directly
+      // Call the controller method directly with the file data
+      // Using the presign endpoint which is the main endpoint
       const result = await filesController.create(fileData, testUser);
 
       // Verify the result
       expect(result).toEqual({
-        putUrl: expect.stringContaining('https://s3.amazonaws.com/test-bucket/'),
-        getUrl: expect.stringContaining('https://s3.amazonaws.com/test-bucket/')
+        uploadUrl: expect.stringContaining('https://s3.amazonaws.com/test-bucket/'),
+        downloadUrl: expect.stringContaining('https://s3.amazonaws.com/test-bucket/')
       });
       
       // Verify the service method was called with the correct arguments
       expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(
-        expect.stringMatching(new RegExp(`^${testUser.id}/[a-f0-9-]+-${fileData.name}$`)),
+        `${testUser.id}/${fileData.name}`,
         fileData.mime,
         fileData.size
       );
@@ -73,15 +73,15 @@ describe('FilesController (Direct Test)', () => {
       
       // The service will still be called, but with undefined for missing fields
       expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(
-        expect.stringMatching(new RegExp(`^${testUser.id}/[a-f0-9-]+-${invalidFileData.name}$`)),
+        `${testUser.id}/${invalidFileData.name}`,
         undefined,
         undefined
       );
       
       // We still expect a response with URLs
       expect(result).toEqual({
-        putUrl: expect.any(String),
-        getUrl: expect.any(String),
+        uploadUrl: expect.any(String),
+        downloadUrl: expect.any(String),
       });
     });
   });

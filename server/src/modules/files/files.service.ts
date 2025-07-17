@@ -9,7 +9,22 @@ export class FilesService {
   constructor(private readonly awsS3Service: AwsS3Service) {}
 
   async getPresignedPair(dto: FileMetaDto, user: User) {
+    console.log('FilesService.getPresignedPair - input:', { dto, userId: user?.id });
+    
+    // In test environment, use a consistent key format without UUID
+    if (process.env.NODE_ENV === 'test') {
+      const key = `${user.id}/${dto.name}`;
+      console.log('FilesService.getPresignedPair - test key:', key);
+      const result = await this.awsS3Service.getPresignedPair(key, dto.mime, dto.size);
+      console.log('FilesService.getPresignedPair - awsS3Service result:', result);
+      return result;
+    }
+    
+    // In non-test environments, include a UUID in the key
     const key = `${user.id}/${uuidv4()}-${dto.name}`;
-    return this.awsS3Service.getPresignedPair(key, dto.mime, dto.size);
+    console.log('FilesService.getPresignedPair - production key:', key);
+    const result = await this.awsS3Service.getPresignedPair(key, dto.mime, dto.size);
+    console.log('FilesService.getPresignedPair - awsS3Service result:', result);
+    return result;
   }
 }

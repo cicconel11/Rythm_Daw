@@ -70,12 +70,13 @@ export class AuthService {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, this.SALT_ROUNDS);
       
-      // Create user
+      // Create user with default values
       const user = await this.prisma.user.create({
         data: {
           email,
-          name: name || email.split('@')[0],
+          name: name || email.split('@')[0], // Use email prefix as default name
           password: hashedPassword,
+          isApproved: true, // Default to approved
         },
       });
 

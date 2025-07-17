@@ -1,15 +1,12 @@
 import { ChatGateway } from '../src/modules/chat/chat.gateway';
+import { presenceServiceMock } from './utils/presence-mock';
 
 // Mock dependencies
-const mockPresenceService = {
-  updateUserPresence: jest.fn(),
-  removeUserPresence: jest.fn(),
-  isOnline: jest.fn(),
-};
-
 const mockRtcGateway = {
   registerWsServer: jest.fn(),
 };
+
+
 
 describe('ChatGateway (Unit)', () => {
   let gateway: ChatGateway;
@@ -18,7 +15,7 @@ describe('ChatGateway (Unit)', () => {
   beforeEach(() => {
     // Create a new instance of the gateway with mocked dependencies
     gateway = new ChatGateway(
-      mockPresenceService as any,
+      presenceServiceMock as any,
       mockRtcGateway as any,
     );
 
@@ -43,16 +40,24 @@ describe('ChatGateway (Unit)', () => {
   describe('handleConnection', () => {
     it('should update user presence when a user connects', async () => {
       const mockSocket = {
+        id: 'test-socket-id',
         data: {
           user: {
             userId: 'test-user',
           },
         },
+        on: jest.fn(),
+        join: jest.fn(),
+        leave: jest.fn(),
+        emit: jest.fn(),
+        to: jest.fn().mockReturnThis(),
+        disconnect: jest.fn(),
+        connected: true,
       };
 
       await gateway.handleConnection(mockSocket as any);
       
-      expect(mockPresenceService.updateUserPresence).toHaveBeenCalledWith('test-user');
+      expect(presenceServiceMock.updateUserPresence).toHaveBeenCalledWith('test-user');
       expect(mockServer.emit).toHaveBeenCalledWith('userOnline', { userId: 'test-user' });
     });
   });
@@ -60,11 +65,19 @@ describe('ChatGateway (Unit)', () => {
   describe('handleDisconnect', () => {
     it('should notify when a user disconnects', async () => {
       const mockSocket = {
+        id: 'test-socket-id',
         data: {
           user: {
             userId: 'test-user',
           },
         },
+        on: jest.fn(),
+        join: jest.fn(),
+        leave: jest.fn(),
+        emit: jest.fn(),
+        to: jest.fn().mockReturnThis(),
+        disconnect: jest.fn(),
+        connected: false,
       };
 
       await gateway.handleDisconnect(mockSocket as any);
@@ -75,11 +88,19 @@ describe('ChatGateway (Unit)', () => {
   describe('handleMessage', () => {
     it('should broadcast message to room', async () => {
       const mockSocket = {
+        id: 'test-socket-id',
         data: {
           user: {
             userId: 'test-user',
           },
         },
+        on: jest.fn(),
+        join: jest.fn(),
+        leave: jest.fn(),
+        emit: jest.fn(),
+        to: jest.fn().mockReturnThis(),
+        disconnect: jest.fn(),
+        connected: true,
       };
 
       const messageData = {
@@ -104,11 +125,19 @@ describe('ChatGateway (Unit)', () => {
   describe('handleTyping', () => {
     it('should broadcast typing status', () => {
       const mockSocket = {
+        id: 'test-socket-id',
         data: {
           user: {
             userId: 'test-user',
           },
         },
+        on: jest.fn(),
+        join: jest.fn(),
+        leave: jest.fn(),
+        emit: jest.fn(),
+        to: jest.fn().mockReturnThis(),
+        disconnect: jest.fn(),
+        connected: true,
       };
 
       const typingData = {
