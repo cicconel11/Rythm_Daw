@@ -19,15 +19,8 @@ let FilesService = class FilesService {
     }
     async getPresignedPair(dto, user) {
         console.log('FilesService.getPresignedPair - input:', { dto, userId: user?.id });
-        if (process.env.NODE_ENV === 'test') {
-            const key = `${user.id}/${dto.name}`;
-            console.log('FilesService.getPresignedPair - test key:', key);
-            const result = await this.awsS3Service.getPresignedPair(key, dto.mime, dto.size);
-            console.log('FilesService.getPresignedPair - awsS3Service result:', result);
-            return result;
-        }
         const key = `${user.id}/${(0, uuid_1.v4)()}-${dto.name}`;
-        console.log('FilesService.getPresignedPair - production key:', key);
+        console.log('FilesService.getPresignedPair - generated key:', key);
         const result = await this.awsS3Service.getPresignedPair(key, dto.mime, dto.size);
         console.log('FilesService.getPresignedPair - awsS3Service result:', result);
         return result;
