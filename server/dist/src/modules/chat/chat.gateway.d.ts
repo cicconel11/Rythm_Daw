@@ -7,8 +7,13 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     private readonly presenceService;
     private readonly rtc;
     server: Server;
+    private readonly logger;
+    private readonly missedPongs;
+    private readonly MAX_MISSED_PONGS;
+    private pingInterval;
     constructor(presenceService: PresenceService, rtc: RtcGateway);
     onModuleInit(): void;
+    private setupPingInterval;
     handleConnection(client: Socket): Promise<void>;
     handleDisconnect(client: Socket): Promise<void>;
     handleMessage(client: Socket, data: {

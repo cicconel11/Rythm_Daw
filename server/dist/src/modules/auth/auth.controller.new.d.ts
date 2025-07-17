@@ -9,5 +9,9 @@ export declare class AuthController {
     login(loginDto: LoginDto, res: Response): Promise<AuthResponse>;
     refreshTokens(userId: string, refreshToken: string, res: Response): Promise<AuthResponse>;
     logout(userId: string, res: Response): Promise<boolean>;
-    getProfile(req: Request): Express.User | undefined;
+    getProfile(req: Request): {
+        userId: string;
+        email: string;
+        name?: string;
+    } | undefined;
 }

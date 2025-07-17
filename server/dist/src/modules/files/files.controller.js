@@ -23,7 +23,13 @@ let FilesController = class FilesController {
     constructor(filesService) {
         this.filesService = filesService;
     }
-    create(dto, user) {
+    async create(dto, user) {
+        console.log('FilesController.create - input:', { dto, userId: user?.id });
+        const result = await this.filesService.getPresignedPair(dto, user);
+        console.log('FilesController.create - result:', result);
+        return result;
+    }
+    async uploadFile(dto, user) {
         return this.filesService.getPresignedPair(dto, user);
     }
 };
@@ -34,8 +40,16 @@ __decorate([
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [file_meta_dto_1.FileMetaDto, user_entity_1.User]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], FilesController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [file_meta_dto_1.FileMetaDto, user_entity_1.User]),
+    __metadata("design:returntype", Promise)
+], FilesController.prototype, "uploadFile", null);
 exports.FilesController = FilesController = __decorate([
     (0, common_1.Controller)('files'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var ChatGateway_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
@@ -19,24 +20,68 @@ const common_1 = require("@nestjs/common");
 const ws_jwt_guard_1 = require("../auth/guards/ws-jwt.guard");
 const presence_service_1 = require("../presence/presence.service");
 const rtc_gateway_1 = require("../rtc/rtc.gateway");
-let ChatGateway = class ChatGateway {
+let ChatGateway = ChatGateway_1 = class ChatGateway {
     constructor(presenceService, rtc) {
         this.presenceService = presenceService;
         this.rtc = rtc;
+        this.logger = new common_1.Logger(ChatGateway_1.name);
+        this.missedPongs = new Map();
+        this.MAX_MISSED_PONGS = 2;
     }
     onModuleInit() {
         this.rtc.registerWsServer(this.server);
+        this.setupPingInterval();
+    }
+    setupPingInterval() {
+        if (this.pingInterval) {
+            clearInterval(this.pingInterval);
+        }
+        this.pingInterval = setInterval(() => {
+            const now = Date.now();
+            this.server.sockets.sockets.forEach((socket) => {
+                if (socket.connected && socket.data?.user?.userId) {
+                    socket.emit('ping', { timestamp: now });
+                    if (!this.missedPongs.has(socket.id)) {
+                        this.missedPongs.set(socket.id, 0);
+                    }
+                }
+            });
+        }, 30000);
     }
     async handleConnection(client) {
         const user = client.data?.user;
         if (user) {
             this.presenceService.updateUserPresence(user.userId);
             this.server.emit('userOnline', { userId: user.userId });
+            this.missedPongs.set(client.id, 0);
+            client.on('pong', (data) => {
+                if (data?.timestamp) {
+                    const latency = Date.now() - data.timestamp;
+                    this.logger.debug(`Pong received from ${user.userId} (${client.id}) - Latency: ${latency}ms`);
+                    this.missedPongs.set(client.id, 0);
+                }
+            });
+            const checkPongs = setInterval(() => {
+                const missed = this.missedPongs.get(client.id) || 0;
+                if (missed >= this.MAX_MISSED_PONGS) {
+                    this.logger.warn(`Disconnecting ${user.userId} (${client.id}) - Missed ${missed} pongs`);
+                    client.disconnect(true);
+                    clearInterval(checkPongs);
+                }
+                else {
+                    this.missedPongs.set(client.id, missed + 1);
+                }
+            }, 35000);
+            client.once('disconnect', () => {
+                clearInterval(checkPongs);
+                this.missedPongs.delete(client.id);
+            });
         }
     }
     async handleDisconnect(client) {
         const user = client.data?.user;
         if (user) {
+            this.missedPongs.delete(client.id);
             this.server.emit('userOffline', { userId: user.userId });
         }
     }
@@ -89,13 +134,13 @@ __decorate([
     __metadata("design:paramtypes", [socket_io_1.Socket, Object]),
     __metadata("design:returntype", void 0)
 ], ChatGateway.prototype, "handleTyping", null);
-exports.ChatGateway = ChatGateway = __decorate([
+exports.ChatGateway = ChatGateway = ChatGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: {
             origin: process.env.CORS_ORIGIN || '*',
             credentials: true,
         },
-        pingInterval: 25000,
+        pingInterval: 30000,
         pingTimeout: 10000,
     }),
     (0, common_1.UseGuards)(ws_jwt_guard_1.WsJwtGuard),
