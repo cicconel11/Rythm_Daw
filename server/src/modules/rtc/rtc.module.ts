@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { RtcGateway } from './rtc.gateway';
+import { RtcEnhancedGateway } from './rtc-enhanced.gateway';
 import { RtcController } from './rtc.controller';
 import { WsThrottlerGuard } from '../../common/guards/ws-throttler.guard';
 import { APP_GUARD } from '@nestjs/core';
@@ -23,11 +24,12 @@ import { APP_GUARD } from '@nestjs/core';
   controllers: [RtcController],
   providers: [
     RtcGateway,
+    RtcEnhancedGateway,
     {
       provide: APP_GUARD,
       useClass: WsThrottlerGuard,
     },
   ],
-  exports: [RtcGateway],
+  exports: [RtcGateway, RtcEnhancedGateway],
 })
 export class RtcModule {}

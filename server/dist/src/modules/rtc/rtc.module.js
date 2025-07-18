@@ -12,6 +12,7 @@ const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
 const auth_module_1 = require("../auth/auth.module");
 const rtc_gateway_1 = require("./rtc.gateway");
+const rtc_enhanced_gateway_1 = require("./rtc-enhanced.gateway");
 const rtc_controller_1 = require("./rtc.controller");
 const ws_throttler_guard_1 = require("../../common/guards/ws-throttler.guard");
 const core_1 = require("@nestjs/core");
@@ -35,12 +36,13 @@ exports.RtcModule = RtcModule = __decorate([
         controllers: [rtc_controller_1.RtcController],
         providers: [
             rtc_gateway_1.RtcGateway,
+            rtc_enhanced_gateway_1.RtcEnhancedGateway,
             {
                 provide: core_1.APP_GUARD,
                 useClass: ws_throttler_guard_1.WsThrottlerGuard,
             },
         ],
-        exports: [rtc_gateway_1.RtcGateway],
+        exports: [rtc_gateway_1.RtcGateway, rtc_enhanced_gateway_1.RtcEnhancedGateway],
     })
 ], RtcModule);
 //# sourceMappingURL=rtc.module.js.map
