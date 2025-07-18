@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { JwtService } from '@nestjs/jwt';
-import { setupTestApp, teardownTestApp } from './websocket-test.setup';
+import { createWsTestApp, teardownTestApp } from './websocket-test.setup';
 import { INestApplication } from '@nestjs/common';
 import { Server } from 'socket.io';
 
@@ -24,7 +24,7 @@ describe('WebSocket Smoke Test', () => {
   
   beforeAll(async () => {
     // Setup test application
-    const testApp = await setupTestApp();
+    const testApp = await createWsTestApp();
     app = testApp.app;
     port = app.getHttpServer().address().port;
     

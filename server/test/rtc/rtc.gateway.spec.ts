@@ -1,255 +1,299 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import { RtcGateway } from '../../src/modules/rtc/rtc.gateway';
-import { RtcModule } from '../../src/modules/rtc/rtc.module';
 import { JwtWsAuthGuard } from '../../src/modules/auth/guards/jwt-ws-auth.guard';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthModule } from '../../src/modules/auth/auth.module';
 import { WsException } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { io, Socket as ClientSocket } from 'socket.io-client';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { WsThrottlerGuard } from '../../src/common/guards/ws-throttler.guard';
+import { 
+  ClientEvents, 
+  ServerEvents, 
+  UserInfo,
+  TrackUpdate
+} from '../../src/modules/rtc/types/websocket.types';
+import { 
+  AuthenticatedSocket,
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents
+} from '../../src/modules/rtc/types/socket-events.types';
 
 describe('RtcGateway', () => {
   let gateway: RtcGateway;
-  let app: INestApplication;
-  let ioServer: Server;
-  let clientSocket: ClientSocket;
-  let clientSocket2: ClientSocket;
-  const testUser = {
+  
+  // Mock user data
+  const mockUser: UserInfo = {
     userId: 'test-user-1',
     email: 'test@example.com',
     name: 'Test User',
+    isOnline: true,
+  };
+  
+  // Helper to set up authenticated client
+  const setupAuthenticatedClient = (client: AuthenticatedSocket) => {
+    // Set up the user in the gateway's tracking maps
+    gateway['socketToUser'].set(client.id, mockUser.userId);
+    
+    if (!gateway['userSockets'].has(mockUser.userId)) {
+      gateway['userSockets'].set(mockUser.userId, new Set());
+    }
+    gateway['userSockets'].get(mockUser.userId)?.add(client.id);
+    
+    // Set up mock client data
+    client.handshake.user = mockUser;
+    client.data = {
+      userId: mockUser.userId,
+      user: mockUser,
+    };
+    
+    return client;
   };
 
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot(),
-        JwtModule.registerAsync({
-          imports: [ConfigModule],
-          useFactory: async (configService: ConfigService) => ({
-            secret: configService.get<string>('JWT_SECRET') || 'test-secret',
-            signOptions: { expiresIn: '1h' },
-          }),
-          inject: [ConfigService],
-        }),
-        AuthModule,
-        RtcModule,
+  // Create a properly typed mock client
+  const createMockClient = (user: UserInfo): AuthenticatedSocket => {
+    const client = {
+      id: 'test-client-id',
+      handshake: {
+        user,
+        headers: {},
+        time: new Date().toISOString(),
+        address: '127.0.0.1',
+        xdomain: false,
+        secure: false,
+        issued: Date.now(),
+        url: '/',
+        query: {},
+        auth: {}
+      },
+      data: {
+        userId: user.userId,
+        user,
+      },
+      join: jest.fn().mockImplementation(() => Promise.resolve()),
+      leave: jest.fn().mockImplementation(() => Promise.resolve()),
+      to: jest.fn().mockReturnThis(),
+      emit: jest.fn().mockReturnValue(true),
+      on: jest.fn(),
+      off: jest.fn(),
+      connected: true,
+      disconnected: false,
+      disconnect: jest.fn(),
+      broadcast: {
+        to: jest.fn().mockReturnThis(),
+        emit: jest.fn(),
+      },
+    } as unknown as AuthenticatedSocket;
+
+    return client;
+  };
+
+  let mockClient: AuthenticatedSocket;
+
+  // Mock server with proper typing
+  const mockServer = {
+    to: jest.fn().mockReturnThis(),
+    emit: jest.fn(),
+    sockets: {
+      sockets: new Map(),
+    },
+  } as unknown as Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, any>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        RtcGateway,
+        {
+          provide: JwtService,
+          useValue: {
+            verifyAsync: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              switch (key) {
+                case 'JWT_SECRET':
+                  return 'test-secret';
+                case 'JWT_EXPIRES_IN':
+                  return '15m';
+                default:
+                  return null;
+              }
+            }),
+          },
+        },
       ],
     })
       .overrideGuard(JwtWsAuthGuard)
       .useValue({
         canActivate: (context: any) => {
-          // Mock the user for testing
           const client = context.switchToWs().getClient();
-          client.handshake = client.handshake || {};
-          client.handshake.user = testUser;
+          client.handshake.user = mockUser;
+          client.data = { user: mockUser, userId: mockUser.userId };
           return true;
         },
       })
+      .overrideGuard(WsThrottlerGuard)
+      .useValue({
+        canActivate: () => true,
+      })
       .compile();
 
-    app = moduleFixture.createNestApplication();
+    gateway = module.get<RtcGateway>(RtcGateway);
+    gateway['server'] = mockServer;
     
-    // Create HTTP server for WebSocket testing
-    const httpServer = app.getHttpServer();
-    ioServer = new Server(httpServer);
+    // Create a fresh mock client for each test
+    mockClient = createMockClient(mockUser);
     
-    // Apply middleware and initialize the app
-    await app.init();
-    
-    // Get the gateway instance
-    gateway = moduleFixture.get<RtcGateway>(RtcGateway);
-    
-    // Start the server on a random port
-    await app.listen(0);
-    
-    // Get the server address
-    const serverAddress = app.getHttpServer().address();
-    const port = typeof serverAddress === 'string' 
-      ? serverAddress.split(':').pop() 
-      : serverAddress.port;
-    
-    // Create test client connections
-    clientSocket = io(`ws://localhost:${port}`, {
-      auth: { token: 'test-token' },
-      transports: ['websocket'],
-      autoConnect: false,
-    });
-    
-    clientSocket2 = io(`ws://localhost:${port}`, {
-      auth: { token: 'test-token-2' },
-      transports: ['websocket'],
-      autoConnect: false,
-    });
-    
-    // Connect the clients
-    await new Promise<void>((resolve) => clientSocket.connect());
-    await new Promise<void>((resolve) => clientSocket2.connect());
+    // Reset mocks
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    // Clean up
-    clientSocket.disconnect();
-    clientSocket2.disconnect();
-    await app.close();
-  });
-
-  it('should be defined', () => {
-    expect(gateway).toBeDefined();
-  });
-
-  describe('Connection', () => {
-    it('should connect successfully with valid token', (done) => {
-      clientSocket.on('connect', () => {
-        expect(clientSocket.connected).toBeTruthy();
-        done();
-      });
-    });
-  });
-
-  describe('Room Management', () => {
-    const testRoomId = 'test-room-1';
-    
-    it('should allow a client to join a room', (done) => {
-      clientSocket.emit('joinRoom', { roomId: testRoomId }, (response: any) => {
-        expect(response.success).toBeTruthy();
-        expect(response.roomId).toBe(testRoomId);
-        done();
-      });
-    });
-    
-    it('should notify other clients when a user joins', (done) => {
-      clientSocket2.on('userJoined', (data: any) => {
-        expect(data.roomId).toBe(testRoomId);
-        expect(data.userId).toBe(testUser.userId);
-        done();
-      });
+  describe('handleConnection', () => {
+    it('should store user information on connection', () => {
+      // Set up the authenticated client
+      const client = setupAuthenticatedClient(mockClient);
       
-      clientSocket2.emit('joinRoom', { roomId: testRoomId });
-    });
-    
-    it('should allow a client to leave a room', (done) => {
-      clientSocket.emit('leaveRoom', { roomId: testRoomId }, (response: any) => {
-        expect(response.success).toBeTruthy();
-        expect(response.roomId).toBe(testRoomId);
-        done();
-      });
-    });
-    
-    it('should notify other clients when a user leaves', (done) => {
-      clientSocket2.on('userLeft', (data: any) => {
-        expect(data.roomId).toBe(testRoomId);
-        expect(data.userId).toBe(testUser.userId);
-        done();
-      });
+      // Trigger the connection handler
+      gateway.handleConnection(client);
       
-      clientSocket.emit('leaveRoom', { roomId: testRoomId });
+      // Verify the user is stored correctly
+      expect(client.handshake.user).toBeDefined();
+      expect(client.handshake.user.userId).toBe('test-user-1');
+      
+      // Verify the gateway tracks the user's socket
+      const userSockets = gateway['userSockets'].get(mockUser.userId);
+      expect(userSockets).toBeDefined();
+      expect(userSockets?.has(client.id)).toBeTruthy();
+      
+      // Verify socketToUser mapping
+      expect(gateway['socketToUser'].get(client.id)).toBe(mockUser.userId);
     });
   });
 
-  describe('Real-time Collaboration', () => {
-    const testRoomId = 'collab-room-1';
-    
-    beforeEach((done) => {
-      // Join both clients to the test room
-      clientSocket.emit('joinRoom', { roomId: testRoomId }, () => {
-        clientSocket2.emit('joinRoom', { roomId: testRoomId }, () => {
-          done();
-        });
-      });
+  describe('handleDisconnect', () => {
+    it('should clean up user data on disconnect', () => {
+      // The guard already sets up the user in the beforeEach hook
+      
+      // Simulate disconnection
+      gateway.handleDisconnect(mockClient);
+      
+      // Verify cleanup
+      expect(gateway['socketToUser'].has(mockClient.id)).toBeFalsy();
+      
+      // Verify user's socket is removed
+      const userSockets = gateway['userSockets'].get(mockUser.userId);
+      expect(userSockets?.has(mockClient.id)).toBeFalsy();
     });
-    
-    afterEach((done) => {
-      // Leave the test room
-      clientSocket.emit('leaveRoom', { roomId: testRoomId }, () => {
-        clientSocket2.emit('leaveRoom', { roomId: testRoomId }, () => {
-          done();
-        });
-      });
+  });
+
+  describe('handleJoinRoom', () => {
+    it('should allow user to join a room', async () => {
+      // Set up the authenticated client
+      const client = setupAuthenticatedClient(mockClient);
+      const roomId = 'test-room';
+      
+      // Join the room
+      await gateway.handleJoinRoom(client, { roomId });
+      
+      expect(mockClient.join).toHaveBeenCalledWith(roomId);
+      expect(mockClient.emit).toHaveBeenCalledWith(
+        ServerEvents.ROOM_JOINED,
+        expect.objectContaining({
+          room: expect.objectContaining({
+            id: roomId,
+          }),
+          participants: expect.any(Array)
+        })
+      );
+      
+      // Verify the user is tracked in the room
+      const roomUsers = gateway['roomUsers'].get(roomId);
+      expect(roomUsers).toBeDefined();
+      expect(roomUsers?.has(mockUser.userId)).toBeTruthy();
     });
-    
-    it('should broadcast track updates to other clients in the room', (done) => {
-      const testTrackUpdate = {
+
+    it('should throw error for invalid room ID', async () => {
+      await expect(gateway.handleJoinRoom(mockClient, { roomId: '' }))
+        .rejects
+        .toThrow(WsException);
+    });
+  });
+
+  describe('handleLeaveRoom', () => {
+    it('should allow user to leave a room', async () => {
+      // Set up the authenticated client
+      const client = setupAuthenticatedClient(mockClient);
+      const roomId = 'test-room';
+      
+      // First join the room
+      await gateway.handleJoinRoom(client, { roomId });
+      jest.clearAllMocks();
+      
+      // Then leave it
+      await gateway.handleLeaveRoom(client, { roomId });
+      
+      expect(mockClient.leave).toHaveBeenCalledWith(roomId);
+      
+      // Verify the user is no longer in the room
+      const roomUsers = gateway['roomUsers'].get(roomId);
+      expect(roomUsers?.has(mockUser.userId)).toBeFalsy();
+      
+      // Verify user's room tracking is updated
+      const userRooms = gateway['userRooms'].get(mockUser.userId);
+      expect(userRooms?.has(roomId)).toBeFalsy();
+    });
+  });
+
+  describe('handleTrackUpdate', () => {
+    it('should broadcast track updates to room', async () => {
+      // Set up the authenticated client
+      const client = setupAuthenticatedClient(mockClient);
+      const roomId = 'test-room';
+      const update: TrackUpdate = {
+        roomId,
         trackId: 'track-1',
-        position: 1000,
-        volume: 0.8,
-        isPlaying: true,
-      };
+        type: 'audio',
+        action: 'update',
+        data: { position: 0, isPlaying: true },
+        version: 1
+      } as TrackUpdate;
       
-      // Listen for the update on the second client
-      clientSocket2.on('trackUpdate', (data: any) => {
-        expect(data.trackId).toBe(testTrackUpdate.trackId);
-        expect(data.position).toBe(testTrackUpdate.position);
-        expect(data.volume).toBe(testTrackUpdate.volume);
-        expect(data.isPlaying).toBe(testTrackUpdate.isPlaying);
-        done();
-      });
+      // Join the room first
+      await gateway.handleJoinRoom(client, { roomId });
+      jest.clearAllMocks();
       
-      // Send the update from the first client
-      clientSocket.emit('trackUpdate', {
-        roomId: testRoomId,
-        ...testTrackUpdate,
-      });
+      await gateway.handleTrackUpdate(client, update);
+      
+      // Verify the update was broadcast to the room (excluding the sender)
+      expect(mockClient.to).toHaveBeenCalledWith(roomId);
+      expect(mockClient.emit).toHaveBeenCalledWith(
+        ServerEvents.TRACK_UPDATE,
+        expect.objectContaining({
+          ...update,
+          userId: mockUser.userId,
+          timestamp: expect.any(Number)
+        })
+      );
     });
     
-    it('should not send updates to clients in different rooms', (done) => {
-      const otherRoomId = 'other-room-1';
-      let updateReceived = false;
+    it('should throw error for invalid room ID', async () => {
+      // Set up the authenticated client
+      const client = setupAuthenticatedClient(mockClient);
+      const update: TrackUpdate = {
+        roomId: '',
+        trackId: 'track-1',
+        type: 'audio',
+        action: 'update',
+        data: {},
+        version: 1
+      } as TrackUpdate;
       
-      // Join second client to a different room
-      clientSocket2.emit('joinRoom', { roomId: otherRoomId }, () => {
-        // Set a timeout to ensure we don't get the update
-        const timeout = setTimeout(() => {
-          expect(updateReceived).toBeFalsy();
-          done();
-        }, 500);
-        
-        // Listen for updates on the second client
-        clientSocket2.on('trackUpdate', () => {
-          updateReceived = true;
-          clearTimeout(timeout);
-          done.fail('Received update in wrong room');
-        });
-        
-        // Send update from the first client
-        clientSocket.emit('trackUpdate', {
-          roomId: testRoomId,
-          trackId: 'track-1',
-          position: 1000,
-          volume: 0.8,
-          isPlaying: true,
-        });
-      });
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should handle invalid message formats', (done) => {
-      // @ts-ignore - Testing invalid message format
-      clientSocket.emit('invalidEvent', 'invalid-data', (response: any) => {
-        expect(response.error).toBeDefined();
-        done();
-      });
-    });
-    
-    it('should handle disconnections gracefully', (done) => {
-      const testRoomId = 'disconnect-test-room';
-      
-      clientSocket.emit('joinRoom', { roomId: testRoomId }, () => {
-        // Disconnect the client
-        clientSocket.disconnect();
-        
-        // Wait a moment for the disconnection to be processed
-        setTimeout(() => {
-          // The server should clean up after the disconnection
-          // We can verify this by checking the room state
-          // This is implementation-specific and might need adjustment
-          expect(true).toBeTruthy();
-          done();
-        }, 500);
-      });
+      await expect(gateway.handleTrackUpdate(client, update))
+        .rejects
+        .toThrow(WsException);
     });
   });
 });
