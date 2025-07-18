@@ -13,7 +13,7 @@ export declare class JwtStrategy extends JwtStrategy_base {
     private prisma;
     constructor(configService: ConfigService);
     validate(payload: JwtPayload): Promise<{
-        userId: any;
+        userId: string;
         email: string;
         name: string | undefined;
     }>;
