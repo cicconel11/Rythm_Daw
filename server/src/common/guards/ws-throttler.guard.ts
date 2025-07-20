@@ -3,36 +3,61 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 
+// Custom context to handle WebSocket connections
+class WsThrottlerContext {
+  constructor(private readonly context: ExecutionContext) {}
+
+  getRequest() {
+    return this.context.switchToWs().getClient<Socket>();
+  }
+
+  getResponse() {
+    return this.context.switchToHttp().getResponse();
+  }
+
+  getType() {
+    return 'ws';
+  }
+}
+
 @Injectable()
 export class WsThrottlerGuard extends ThrottlerGuard {
   private readonly logger = new Logger(WsThrottlerGuard.name);
 
-  async handleRequest(
-    context: ExecutionContext,
-    limit: number,
-    ttl: number,
-  ): Promise<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // Create a custom context for WebSocket
+    const wsContext = new WsThrottlerContext(context);
+    
     try {
-      const client = context.switchToWs().getClient<Socket>();
-      const ip = client.handshake?.address || 'unknown';
-      const key = this.generateKey(context, ip);
-      
-      // Get the storage service through the storage getter
-      const storage = this.storageService;
-      
-      // Increment the request count
-      const { totalHits } = await storage.increment(key, ttl);
-
-      if (totalHits > limit) {
-        this.logger.warn(`Rate limit exceeded for IP: ${ip}`);
-        throw new WsException('Too many requests');
-      }
-
-      return true;
+      // Call parent's canActivate with our custom context
+      const canActivate = await super.canActivate(wsContext as any);
+      return canActivate as boolean;
     } catch (error) {
-      this.logger.error('Error in WsThrottlerGuard:', error);
-      throw new WsException('Rate limiting error');
+      // Handle rate limit exceeded
+      if (error.getStatus?.() === 429) {
+        const socket = wsContext.getRequest();
+        const ip = socket.handshake.address || 'unknown';
+        
+        this.logger.warn(`WebSocket rate limit exceeded for IP: ${ip}`);
+        throw new WsException({
+          status: 'error',
+          message: 'Too many requests',
+          retryAfter: 60, // 1 minute cooldown
+        });
+      }
+      
+      // Re-throw other errors
+      throw error;
     }
+  }
+  
+  // Override to handle WebSocket connections
+  protected getRequestResponse(context: ExecutionContext) {
+    const wsContext = new WsThrottlerContext(context);
+    return {
+      req: wsContext.getRequest(),
+      res: wsContext.getResponse(),
+    };
   }
 
   protected generateKey(context: ExecutionContext, suffix: string): string {

@@ -11,28 +11,51 @@ exports.WsThrottlerGuard = void 0;
 const common_1 = require("@nestjs/common");
 const throttler_1 = require("@nestjs/throttler");
 const websockets_1 = require("@nestjs/websockets");
+class WsThrottlerContext {
+    constructor(context) {
+        this.context = context;
+    }
+    getRequest() {
+        return this.context.switchToWs().getClient();
+    }
+    getResponse() {
+        return this.context.switchToHttp().getResponse();
+    }
+    getType() {
+        return 'ws';
+    }
+}
 let WsThrottlerGuard = WsThrottlerGuard_1 = class WsThrottlerGuard extends throttler_1.ThrottlerGuard {
     constructor() {
         super(...arguments);
         this.logger = new common_1.Logger(WsThrottlerGuard_1.name);
     }
-    async handleRequest(context, limit, ttl) {
+    async canActivate(context) {
+        const wsContext = new WsThrottlerContext(context);
         try {
-            const client = context.switchToWs().getClient();
-            const ip = client.handshake?.address || 'unknown';
-            const key = this.generateKey(context, ip);
-            const storage = this.storageService;
-            const { totalHits } = await storage.increment(key, ttl);
-            if (totalHits > limit) {
-                this.logger.warn(`Rate limit exceeded for IP: ${ip}`);
-                throw new websockets_1.WsException('Too many requests');
-            }
-            return true;
+            const canActivate = await super.canActivate(wsContext);
+            return canActivate;
         }
         catch (error) {
-            this.logger.error('Error in WsThrottlerGuard:', error);
-            throw new websockets_1.WsException('Rate limiting error');
+            if (error.getStatus?.() === 429) {
+                const socket = wsContext.getRequest();
+                const ip = socket.handshake.address || 'unknown';
+                this.logger.warn(`WebSocket rate limit exceeded for IP: ${ip}`);
+                throw new websockets_1.WsException({
+                    status: 'error',
+                    message: 'Too many requests',
+                    retryAfter: 60,
+                });
+            }
+            throw error;
         }
+    }
+    getRequestResponse(context) {
+        const wsContext = new WsThrottlerContext(context);
+        return {
+            req: wsContext.getRequest(),
+            res: wsContext.getResponse(),
+        };
     }
     generateKey(context, suffix) {
         const prefix = 'ws-throttle';

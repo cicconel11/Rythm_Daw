@@ -1,5 +1,16 @@
-import { Socket } from 'socket.io';
-import { UserInfo, RoomInfo, TrackUpdate, PresenceUpdate, SignalingMessage, WsErrorResponse, ClientEvents, ServerEvents } from './websocket.types';
+// Define base socket interface
+export interface BaseSocket {
+  id: string;
+  rooms: Set<string>;
+  connected: boolean;
+  emit: <T>(event: string, ...args: any[]) => T;
+  on: (event: string, listener: (...args: any[]) => void) => void;
+  join: (room: string) => Promise<void>;
+  leave: (room: string) => Promise<void>;
+  disconnect: (close?: boolean) => void;
+}
+import type { UserInfo, RoomInfo, TrackUpdate, PresenceUpdate, SignalingMessage, WsErrorResponse } from './websocket.types';
+import { ClientEvents, ServerEvents } from './websocket.types';
 
 // Client to Server events
 export type ClientToServerEvents = {
@@ -36,21 +47,43 @@ export interface SocketData {
   user: UserInfo;
 }
 
-// Base socket type with our custom events
-type BaseSocket = Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> & {
+// Server type with our custom events
+export interface Server {
+  // Add any custom server methods here
+  to(room: string): any;
+  emit(event: string, ...args: any[]): boolean;
+  in(room: string): any;
+  sockets: {
+    sockets: Map<string, BaseSocket>;
+    join(room: string): Promise<void>;
+    leave(room: string): Promise<void>;
+    disconnect(socketId: string, close?: boolean): void;
+  };
+}
+
+export interface Socket extends BaseSocket {
+  id: string;
+  rooms: Set<string>;
+  connected: boolean;
   emit: <T>(event: string, ...args: any[]) => T;
-};
+  on(event: string, listener: (...args: any[]) => void): this;
+  join(room: string): Promise<void>;
+  leave(room: string): Promise<void>;
+  disconnect(close?: boolean): void;
+}
 
 // Authenticated socket type with our custom properties
-export type AuthenticatedSocket = BaseSocket & {
+export type AuthenticatedSocket = Socket & {
   handshake: {
     user: UserInfo;
+    auth: Record<string, unknown>;
   };
   data: SocketData;
-  join: (room: string) => void;
-  leave: (room: string) => void;
-  to: (room: string) => BaseSocket;
+  join: (room: string) => Promise<void>;
+  leave: (room: string) => Promise<void>;
+  disconnect: (close?: boolean) => void;
+  to: (room: string) => AuthenticatedSocket;
   broadcast: {
-    to: (room: string) => BaseSocket;
+    to: (room: string) => AuthenticatedSocket;
   };
 };

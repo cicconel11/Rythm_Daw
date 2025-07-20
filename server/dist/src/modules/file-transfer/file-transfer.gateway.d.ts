@@ -23,7 +23,7 @@ export declare class FileTransferGateway implements OnGatewayConnection, OnGatew
     }): Promise<{
         event: string;
         data: {
-            uploadUrl: any;
+            uploadUrl: string;
             fileKey: string;
             stunServers: RTCIceServer[];
             message?: undefined;

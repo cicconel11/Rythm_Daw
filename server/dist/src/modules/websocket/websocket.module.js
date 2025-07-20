@@ -12,12 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WebSocketModule = void 0;
 const common_1 = require("@nestjs/common");
 const chat_gateway_1 = require("./chat.gateway");
-const ws_throttler_guard_1 = require("./guards/ws-throttler.guard");
+const ws_throttler_guard_1 = require("../../common/guards/ws-throttler.guard");
 const core_1 = require("@nestjs/core");
 const jwt_ws_auth_guard_1 = require("../auth/guards/jwt-ws-auth.guard");
 const auth_module_1 = require("../auth/auth.module");
 const jwt_1 = require("@nestjs/jwt");
 const config_1 = require("@nestjs/config");
+const throttler_1 = require("@nestjs/throttler");
 let WebSocketModule = class WebSocketModule {
     constructor(gateway) {
         this.gateway = gateway;
@@ -32,10 +33,21 @@ let WebSocketModule = class WebSocketModule {
 };
 exports.WebSocketModule = WebSocketModule;
 exports.WebSocketModule = WebSocketModule = __decorate([
+    (0, common_1.Global)(),
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule,
             auth_module_1.AuthModule,
+            throttler_1.ThrottlerModule.forRootAsync({
+                imports: [config_1.ConfigModule],
+                inject: [config_1.ConfigService],
+                useFactory: (config) => ({
+                    throttlers: [{
+                            ttl: config.get('THROTTLE_TTL', 60) * 1000,
+                            limit: config.get('THROTTLE_LIMIT', 100),
+                        }],
+                }),
+            }),
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: async (configService) => ({
@@ -47,6 +59,10 @@ exports.WebSocketModule = WebSocketModule = __decorate([
         ],
         providers: [
             chat_gateway_1.ChatGateway,
+            {
+                provide: 'WS_CONNECTIONS',
+                useValue: new Map(),
+            },
             {
                 provide: core_1.APP_GUARD,
                 useClass: jwt_ws_auth_guard_1.JwtWsAuthGuard,

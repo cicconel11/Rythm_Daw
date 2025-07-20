@@ -33,6 +33,17 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
         this.missedPings = new Map();
         this.MAX_MISSED_PINGS = 3;
     }
+    getServer() {
+        if (!this.server) {
+            throw new Error('WebSocket server not initialized');
+        }
+        return this.server;
+    }
+    getSocket(socketId) {
+        if (!this.server?.sockets)
+            return undefined;
+        return this.server.sockets.sockets.get(socketId);
+    }
     get activeConnections() {
         return this.socketToUser.size;
     }
@@ -279,6 +290,37 @@ let RtcGateway = RtcGateway_1 = class RtcGateway {
             }
         }
         return undefined;
+    }
+    async emitToUser(userId, event, payload) {
+        try {
+            const server = this.getServer();
+            const userSockets = this.userSockets.get(userId);
+            if (!userSockets || userSockets.size === 0) {
+                this.logger.warn(`No active sockets found for user ${userId}`);
+                return false;
+            }
+            let success = false;
+            for (const socketId of userSockets) {
+                try {
+                    const socket = server.sockets.sockets.get(socketId);
+                    if (socket && socket.connected) {
+                        socket.emit(event, payload);
+                        success = true;
+                    }
+                }
+                catch (error) {
+                    this.logger.error(`Error emitting to socket ${socketId}:`, error);
+                }
+            }
+            if (!success) {
+                this.logger.warn(`Failed to emit to any socket for user ${userId}`);
+            }
+            return success;
+        }
+        catch (error) {
+            this.logger.error('Error in emitToUser:', error);
+            return false;
+        }
     }
     onModuleDestroy() {
         if (this.pingInterval) {

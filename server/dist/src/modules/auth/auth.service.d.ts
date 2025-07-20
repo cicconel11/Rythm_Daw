@@ -51,10 +51,6 @@ export declare class AuthService {
     private getTokens;
     setRefreshTokenCookie(res: Response, refreshToken: string): void;
     clearRefreshTokenCookie(res: Response): void;
-    getUserById(userId: string): Promise<{
-        email: string;
-        name: string | null;
-        id: string;
-    }>;
+    getUserById(userId: string): Promise<any>;
 }
 export {};

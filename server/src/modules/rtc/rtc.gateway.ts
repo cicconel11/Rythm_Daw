@@ -1,22 +1,26 @@
 import { Logger, UseFilters, UseGuards, OnModuleInit } from '@nestjs/common';
 import { 
-  WebSocketGateway,
-  WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
+  WebSocketGateway, 
+  WebSocketServer, 
+  SubscribeMessage, 
+  MessageBody, 
+  ConnectedSocket, 
+  WsException, 
+  OnGatewayConnection, 
+  OnGatewayDisconnect, 
   OnGatewayInit,
-  SubscribeMessage,
-  MessageBody,
-  ConnectedSocket,
-  WsException,
+  WsResponse
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Server as SocketIOServer, Socket, Server as IoServer } from 'socket.io';
 import { 
-  ClientToServerEvents, 
-  ServerToClientEvents, 
-  InterServerEvents, 
-  SocketData, 
-  AuthenticatedSocket 
+  type ClientToServerEvents, 
+  type ServerToClientEvents, 
+  type InterServerEvents, 
+  type SocketData, 
+  type AuthenticatedSocket,
+  type Server as RtcServer,
+  type Socket as RtcSocket,
+  type BaseSocket
 } from './types/socket-events.types';
 import { JwtWsAuthGuard } from '../../auth/guards/jwt-ws-auth.guard';
 import { WsExceptionFilter } from '../../common/filters/ws-exception.filter';
@@ -48,7 +52,35 @@ import {
 @UseFilters(WsExceptionFilter)
 export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
   @WebSocketServer()
-  private server: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
+  private io: any; // Using any to avoid complex type conflicts
+  
+  // Alias for backward compatibility
+  get server(): any {
+    return this.io;
+  }
+
+  /**
+   * Registers a WebSocket server instance
+   * @param server - The WebSocket server instance
+   */
+  registerWsServer(server: any) {
+    this.io = server;
+  }
+
+  // Helper to safely access server
+  private getServer() {
+    if (!this.server) {
+      throw new Error('WebSocket server not initialized');
+    }
+    return this.server;
+  }
+  
+  // Helper to safely get socket by ID
+  private getSocket(socketId: string): Socket | undefined {
+    if (!this.server?.sockets) return undefined;
+    // Access the sockets map from the namespace
+    return this.server.sockets.sockets.get(socketId);
+  }
 
   private readonly logger = new Logger(RtcGateway.name);
   private readonly userSockets = new Map<string, Set<string>>(); // userId -> Set<socketId>
@@ -418,6 +450,39 @@ export class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect, OnM
       }
     }
     return undefined;
+  }
+
+  public async emitToUser<T>(userId: string, event: string, payload: T): Promise<boolean> {
+    try {
+      const server = this.getServer();
+      const userSockets = this.userSockets.get(userId);
+      
+      if (!userSockets || userSockets.size === 0) {
+        this.logger.warn(`No active sockets found for user ${userId}`);
+        return false;
+      }
+
+      let success = false;
+      for (const socketId of userSockets) {
+        try {
+          const socket = server.sockets.sockets.get(socketId) as unknown as AuthenticatedSocket;
+          if (socket && socket.connected) {
+            socket.emit(event, payload);
+            success = true;
+          }
+        } catch (error) {
+          this.logger.error(`Error emitting to socket ${socketId}:`, error);
+        }
+      }
+
+      if (!success) {
+        this.logger.warn(`Failed to emit to any socket for user ${userId}`);
+      }
+      return success;
+    } catch (error) {
+      this.logger.error('Error in emitToUser:', error);
+      return false;
+    }
   }
 
   // Clean up on module destroy

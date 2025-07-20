@@ -15,12 +15,13 @@ var ChatGateway_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
-const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
+const socket_io_1 = require("socket.io");
+const uuid_1 = require("uuid");
+const rate_limiter_flexible_1 = require("rate-limiter-flexible");
 const jwt_ws_auth_guard_1 = require("../auth/guards/jwt-ws-auth.guard");
 const auth_service_1 = require("../auth/auth.service");
 const ws_throttler_guard_1 = require("./guards/ws-throttler.guard");
-const rate_limiter_flexible_1 = require("rate-limiter-flexible");
 const config_1 = require("@nestjs/config");
 const presence_service_1 = require("../presence/presence.service");
 const message_queue_1 = require("./message-queue");
@@ -34,16 +35,72 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
         this.HEARTBEAT_INTERVAL = 30000;
         this.heartbeatIntervals = new Map();
         this.MAX_QUEUE_SIZE = 100;
+        this.connectedClients = new Map();
+        this.messageQueues = new Map();
+        this.rooms = new Map();
         this.rateLimiter = new rate_limiter_flexible_1.RateLimiterMemory({
             points: 100,
-            duration: 1,
+            duration: 60,
         });
+        this.logger = new common_1.Logger(ChatGateway_1.name);
+        this.logger.log('ChatGateway initialized');
     }
     onModuleInit() {
         this.logger.log('ChatGateway initialized');
     }
     async handleConnection(client) {
         try {
+            client.isAlive = true;
+            client.lastPing = Date.now();
+            const userId = client.handshake.query.userId;
+            const username = client.handshake.query.username;
+            if (!userId) {
+                this.logger.warn(`Connection rejected: Missing userId`);
+                client.disconnect(true);
+                return;
+            }
+            this.connectedClients.set(client.id, {
+                socket: client,
+                userId,
+                username: username || 'anonymous',
+                isAlive: true,
+                lastPing: Date.now()
+            });
+            this.logger.log(`Client connected: ${client.id} (User: ${username || 'anonymous'})`);
+            const pingInterval = setInterval(() => {
+                const clientData = this.connectedClients.get(client.id);
+                if (!clientData?.isAlive) {
+                    client.disconnect(true);
+                    return clearInterval(pingInterval);
+                }
+                clientData.isAlive = false;
+                client.emit('ping');
+            }, 30000);
+            client.once('disconnect', () => clearInterval(pingInterval));
+            client.on('pong', () => {
+                const clientData = this.connectedClients.get(client.id);
+                if (clientData) {
+                    clientData.isAlive = true;
+                    clientData.lastPing = Date.now();
+                }
+            });
+            if (!this.messageQueues.has(client.id)) {
+                const messageQueue = new message_queue_1.MessageQueue(client);
+                this.messageQueues.set(client.id, messageQueue);
+            }
+            this.setupHeartbeat(client);
+            this.presenceService.updateUserPresence(userId);
+            if (this.server) {
+                this.server.emit('userConnected', {
+                    userId,
+                    username: username || 'anonymous',
+                    timestamp: new Date().toISOString(),
+                });
+            }
+            const connectedUsers = Array.from(this.connectedClients.values())
+                .filter(c => c.userId)
+                .map(({ userId, username }) => ({ userId, username }));
+            client.emit('userList', connectedUsers);
             const messageQueue = new message_queue_1.MessageQueue(client);
             this.clientQueues.set(client.id, messageQueue);
             client.isAlive = true;
@@ -51,162 +108,228 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
                 client.isAlive = true;
                 client.lastPing = Date.now();
             });
-            this.presenceService.updateUserPresence(client.userId);
-            this.logger.log(`Client connected: ${client.id} (User: ${client.userId})`);
+            const presenceUserId = client.handshake.query.userId;
+            if (presenceUserId) {
+                this.presenceService.updateUserPresence(presenceUserId);
+            }
         }
         catch (error) {
             this.logger.error('Error in handleConnection:', error);
-            if (client.connected) {
-                client.disconnect(true);
-            }
+            client.disconnect(true);
         }
     }
     async handleDisconnect(client) {
         try {
-            const queue = this.clientQueues.get(client.id);
-            if (queue) {
-                queue.stop();
-                this.clientQueues.delete(client.id);
+            const disconnectedClient = this.connectedClients.get(client.id);
+            if (disconnectedClient) {
+                const { userId, username } = disconnectedClient;
+                this.server.emit('userDisconnected', {
+                    userId,
+                    username,
+                    timestamp: new Date().toISOString(),
+                });
+                this.connectedClients.delete(client.id);
+                this.logger.log(`Client disconnected: ${client.id} (User: ${username || 'anonymous'})`);
+                const queue = this.clientQueues.get(client.id);
+                if (queue) {
+                    queue.stop();
+                    this.clientQueues.delete(client.id);
+                }
+                this.clearHeartbeat(client.id);
+                if (userId) {
+                    this.presenceService.removeUserPresence(userId);
+                }
             }
-            this.cleanupHeartbeat(client.id);
-            this.presenceService.removeUserPresence(client.userId);
-            this.logger.log(`Client disconnected: ${client.id} (User: ${client.userId})`);
         }
         catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            const errorStack = error instanceof Error ? error.stack : '';
-            this.logger.error(`Disconnection error: ${errorMessage}`, errorStack);
+            this.logger.error('Error in handleDisconnect:', error);
+        }
+    }
+    async onModuleDestroy() {
+        this.logger.log('Cleaning up WebSocket resources...');
+        this.heartbeatIntervals.forEach((interval, clientId) => {
+            clearInterval(interval);
+            this.heartbeatIntervals.delete(clientId);
+        });
+        this.connectedClients.forEach(client => {
+            try {
+                if (client?.socket) {
+                    client.socket.disconnect(true);
+                }
+            }
+            catch (err) {
+                this.logger.error(`Error disconnecting client: ${err}`);
+            }
+        });
+        this.connectedClients.clear();
+        this.messageQueues.clear();
+        this.rooms.clear();
+        this.clientQueues.clear();
+        this.logger.log('WebSocket resources cleaned up');
+    }
+    async sendToClient(client, event, data) {
+        try {
+            const queue = this.clientQueues.get(client.id);
+            if (queue) {
+                await queue.enqueue(event, data);
+            }
+            else {
+                client.emit(event, data);
+            }
+        }
+        catch (error) {
+            this.logger.error(`Error sending to client ${client.id}:`, error);
         }
     }
     async handleAuth(client, data) {
         try {
-            const payload = await this.authService.verifyToken(data.token);
-            if (!payload) {
+            const user = await this.authService.verifyToken(data.token);
+            if (!user) {
                 throw new Error('Invalid token');
             }
-            client.userId = payload.sub;
-            client.projectId = data.projectId;
-            client.emit('auth_success', {
-                type: 'auth_success',
-                userId: client.userId,
-                projectId: client.projectId,
-            });
-            this.logger.log(`Client authenticated: ${client.id} (User: ${client.userId})`);
+            client.user = user;
+            if (data.projectId) {
+                await client.join(`project:${data.projectId}`);
+                client.projectId = data.projectId;
+            }
+            return { success: true, user: { id: user.id, username: user.username } };
         }
         catch (error) {
-            this.logger.error(`Auth error: ${error.message}`);
-            client.disconnect();
+            this.logger.error('Authentication error:', error);
+            throw new Error('Authentication failed');
+        }
+    }
+    clearHeartbeat(clientId) {
+        const interval = this.heartbeatIntervals.get(clientId);
+        if (interval) {
+            clearInterval(interval);
+            this.heartbeatIntervals.delete(clientId);
+            this.logger.debug(`Cleared heartbeat for client ${clientId}`);
+        }
+    }
+    setupHeartbeat(client) {
+        const clientId = client.id;
+        this.clearHeartbeat(clientId);
+        const interval = setInterval(() => {
+            const clientData = this.connectedClients.get(clientId);
+            if (!clientData?.isAlive) {
+                this.logger.warn(`Client ${clientId} heartbeat timeout`);
+                return client.disconnect(true);
+            }
+            clientData.isAlive = false;
+            client.emit('ping');
+        }, this.HEARTBEAT_INTERVAL);
+        this.heartbeatIntervals.set(clientId, interval);
+        const onPong = () => {
+            const clientData = this.connectedClients.get(clientId);
+            if (clientData) {
+                clientData.isAlive = true;
+                clientData.lastPing = Date.now();
+            }
+        };
+        const onDisconnect = () => {
+            this.clearHeartbeat(clientId);
+            client.off('pong', onPong);
+            client.off('disconnect', onDisconnect);
+        };
+        client.on('pong', onPong);
+        client.once('disconnect', onDisconnect);
+    }
+    async handleRateLimit(client) {
+        try {
+            await this.rateLimiter.consume(client.id);
+            return true;
+        }
+        catch (error) {
+            this.logger.warn(`Rate limit exceeded for client ${client.id}`);
+            client.emit('error', { message: 'Rate limit exceeded. Please try again later.' });
+            client.disconnect(true);
+            return false;
         }
     }
     async handleMessage(client, data) {
-        if (!data || !data.to || !data.content) {
-            throw new Error('Invalid message format');
+        const userId = client.handshake.query.userId;
+        const username = client.handshake.query.username || 'Anonymous';
+        if (!userId) {
+            client.emit('error', { message: 'Not authenticated' });
+            return;
         }
         try {
-            await this.rateLimiter.consume(client.id);
+            const canProceed = await this.handleRateLimit(client);
+            if (!canProceed)
+                return;
             const timestamp = new Date().toISOString();
             const message = {
-                from: client.userId,
-                to: data.to,
+                id: (0, uuid_1.v4)(),
                 content: data.content,
+                userId,
+                username,
                 timestamp,
-                ...(data.metadata || {})
             };
-            if (data.to.startsWith('room:')) {
-                this.server.to(data.to).emit('message', message);
+            if (data.roomId) {
+                await this.broadcastToRoom(data.roomId, 'message', message, client.id);
             }
             else {
-                const recipientQueue = this.findRecipientQueue(data.to);
-                if (recipientQueue) {
-                    recipientQueue.enqueue('message', message);
-                }
-                else {
-                    this.logger.warn(`Recipient ${data.to} not found`);
-                    this.emitToClient(client.id, 'error', {
-                        code: 'RECIPIENT_OFFLINE',
-                        message: 'The recipient is not connected',
-                        recipientId: data.to,
-                        timestamp
-                    });
+                if (this.server) {
+                    this.server.emit('message', message);
                 }
             }
-            return message;
+            client.emit('messageAck', { id: message.id, timestamp });
         }
         catch (error) {
             this.logger.error('Error handling message:', error);
-            throw error;
+            client.emit('error', { message: 'Failed to send message' });
         }
     }
-    async handleTyping(client, data) {
-        try {
-            await this.rateLimiter.consume(client.id);
-            this.server.emit('userTyping', {
-                userId: client.userId,
-                isTyping: data.isTyping
-            });
-        }
-        catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            const errorStack = error instanceof Error ? error.stack : '';
-            this.logger.error(`Typing error: ${errorMessage}`, errorStack);
-        }
-    }
-    emitToClient(clientId, event, data) {
-        const client = this.server.sockets.sockets.get(clientId);
-        if (client) {
-            client.emit(event, data);
+    broadcastToRoom(roomId, event, data, excludeSocketId) {
+        const room = this.rooms.get(roomId);
+        if (!room)
+            return;
+        for (const socketId of room) {
+            if (socketId === excludeSocketId)
+                continue;
+            const client = this.connectedClients.get(socketId);
+            if (client) {
+                client.socket.emit(event, data);
+            }
         }
     }
     getUserClients(userId) {
         const clients = [];
-        this.server.sockets.sockets.forEach((socket) => {
-            const wsClient = socket;
-            if (wsClient.userId === userId) {
-                clients.push(wsClient);
-            }
-        });
+        if (this.server?.sockets?.sockets) {
+            this.server.sockets.sockets.forEach((socket) => {
+                const socketUserId = socket.handshake.query.userId || '';
+                if (socketUserId === userId) {
+                    clients.push(socket);
+                }
+            });
+        }
         return clients;
     }
     async broadcastToProject(projectId, message) {
         const clients = this.getUserClients(projectId);
         await Promise.all(clients.map(client => {
-            if (client.connected) {
+            try {
                 return new Promise((resolve) => {
-                    client.emit('broadcast', message, () => {
-                        resolve();
-                    });
-                }).catch(err => {
-                    this.logger.error(`Broadcast failed to ${client.id}: ${err.message}`);
+                    client.emit('broadcast', message, () => resolve());
+                }).catch((err) => {
+                    this.logger.error(`Broadcast failed: ${err.message}`);
                 });
             }
-            return Promise.resolve();
+            catch (err) {
+                this.logger.error('Error in broadcastToProject:', err);
+                return Promise.resolve();
+            }
         }));
-    }
-    cleanupHeartbeat(clientId) {
-        const interval = this.heartbeatIntervals.get(clientId);
-        if (interval) {
-            clearInterval(interval);
-            this.heartbeatIntervals.delete(clientId);
-        }
     }
     findRecipientQueue(userId) {
         for (const [clientId, queue] of this.clientQueues.entries()) {
-            const client = this.server.sockets.sockets.get(clientId);
+            const client = this.connectedClients.get(clientId);
             if (client?.userId === userId) {
                 return queue;
             }
         }
         return undefined;
-    }
-    onModuleDestroy() {
-        this.heartbeatIntervals.forEach((interval) => {
-            clearInterval(interval);
-        });
-        this.heartbeatIntervals.clear();
-        this.clientQueues.forEach((queue) => {
-            queue.stop();
-        });
-        this.clientQueues.clear();
     }
 };
 exports.ChatGateway = ChatGateway;
@@ -230,20 +353,11 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], ChatGateway.prototype, "handleMessage", null);
-__decorate([
-    (0, websockets_1.SubscribeMessage)('typing'),
-    __param(0, (0, websockets_1.ConnectedSocket)()),
-    __param(1, (0, websockets_1.MessageBody)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
-], ChatGateway.prototype, "handleTyping", null);
 exports.ChatGateway = ChatGateway = ChatGateway_1 = __decorate([
     (0, websockets_1.WebSocketGateway)({
         cors: {
-            origin: process.env.NODE_ENV === 'production'
-                ? ['https://your-production-domain.com']
-                : ['http://localhost:3000', 'http://localhost:3001'],
+            origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+            methods: ['GET', 'POST'],
             credentials: true,
         },
         namespace: 'chat',

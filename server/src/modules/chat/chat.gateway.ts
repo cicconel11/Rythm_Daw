@@ -67,7 +67,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }, 30000); // 30 seconds
   }
 
-  async handleConnection(client: Socket) {
+  private async sendToClient(client: Socket, event: string, data: unknown): Promise<void> {
+    client.emit(event, data);
+  }
+
+  async handleConnection(client: Socket & { data: any }) {
     const user = client.data?.user;
     if (user) {
       this.presenceService.updateUserPresence(user.userId);
@@ -105,7 +109,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   }
 
-  async handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket & { data: any }) {
     const user = client.data?.user;
     if (user) {
       // Clean up ping/pong tracking

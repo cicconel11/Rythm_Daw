@@ -1,9 +1,11 @@
 import { OnModuleInit } from '@nestjs/common';
 import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
-import { AuthenticatedSocket } from './types/socket-events.types';
+import { type AuthenticatedSocket } from './types/socket-events.types';
 import { TrackUpdate, PresenceUpdate, SignalingMessage } from './types/websocket.types';
 export declare class RtcGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit {
     private server;
+    private getServer;
+    private getSocket;
     private readonly logger;
     private readonly userSockets;
     private readonly socketToUser;
@@ -33,5 +35,6 @@ export declare class RtcGateway implements OnGatewayConnection, OnGatewayDisconn
     handlePresenceUpdate(client: AuthenticatedSocket, update: PresenceUpdate): Promise<void>;
     handleSignal(client: AuthenticatedSocket, signal: SignalingMessage): Promise<void>;
     private findSocketByUserId;
+    emitToUser<T>(userId: string, event: string, payload: T): Promise<boolean>;
     onModuleDestroy(): void;
 }
