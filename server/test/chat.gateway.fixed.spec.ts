@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { ChatGateway } from '../src/modules/chat/chat.gateway';
 import { PresenceService } from '../src/modules/presence/presence.service';
 import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
+import { attachMockServer } from './utils/gateway';
 
 // Mock the dependencies
 const mockPresenceService: jest.Mocked<PresenceService> = {
@@ -25,10 +26,10 @@ describe('ChatGateway', () => {
     );
     
     // Mock the WebSocket server
-    gateway['server'] = {
+    attachMockServer(gateway, {
       emit: jest.fn(),
       to: jest.fn().mockReturnThis(),
-    } as any;
+    });
   });
 
   afterEach(() => {

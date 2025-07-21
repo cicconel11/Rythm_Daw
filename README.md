@@ -180,3 +180,33 @@ pnpm prisma:studio
 
 ## 📜 License
 Free Beta — proprietary (contact <lociccone11@gmail.com> for details).
+
+---
+
+## 🐳 Docker & Deployment
+
+### Environment Variables
+
+| Variable              | Description                        | Example Value                                      |
+|----------------------|------------------------------------|----------------------------------------------------|
+| NODE_ENV             | Node environment                    | production                                         |
+| PORT                 | App port                            | 3000                                               |
+| DATABASE_URL         | Postgres connection string          | postgresql://postgres:postgres@db:5432/rhythm       |
+| REDIS_URL            | Redis connection string             | redis://redis:6379                                 |
+| JWT_ACCESS_SECRET    | JWT access token secret             | your_jwt_access_secret                             |
+| JWT_REFRESH_SECRET   | JWT refresh token secret            | your_jwt_refresh_secret                            |
+| JWT_ACCESS_EXPIRES_IN| JWT access token expiry             | 15m                                                |
+| JWT_REFRESH_EXPIRES_IN| JWT refresh token expiry           | 7d                                                 |
+| BCRYPT_SALT_ROUNDS   | Bcrypt salt rounds                  | 12                                                 |
+
+### Quick Start
+
+```bash
+docker compose up --build
+```
+
+- The app will be available at [http://localhost:3000](http://localhost:3000)
+- Health check: [http://localhost:3000/](http://localhost:3000/) or `/healthz` if implemented
+- Postgres: port 5432, Redis: port 6379
+
+---

@@ -1,4 +1,4 @@
-import { Server as WebSocketServer, WebSocket } from 'ws';
+import WebSocket, { Server as WebSocketServer } from 'ws';
 import { createServer, Server as HttpServer } from 'http';
 
 // Mock the WebSocket client

@@ -1,10 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const ws_adapter_1 = require("./ws/ws-adapter");
+const helmet_1 = __importDefault(require("helmet"));
 process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
     process.exit(1);
@@ -22,6 +26,22 @@ async function bootstrap() {
             logger: ['error', 'warn', 'log', 'debug', 'verbose'],
         });
         logger.log('NestJS application instance created successfully');
+        app.use((0, helmet_1.default)({
+            contentSecurityPolicy: {
+                useDefaults: true,
+                directives: {
+                    "default-src": ["'self'"],
+                    "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+                    "object-src": ["'none'"],
+                    "img-src": ["'self'", "data:", "blob:"],
+                    "style-src": ["'self'", "'unsafe-inline'"],
+                    "frame-ancestors": ["'none'"],
+                },
+            },
+            frameguard: { action: 'deny' },
+            hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+            hidePoweredBy: true,
+        }));
         app.enableCors({
             origin: process.env.CORS_ORIGINS?.split(',') || '*',
             credentials: true,
@@ -41,6 +61,10 @@ async function bootstrap() {
             logger.error('Failed to initialize WebSocket adapter:', error);
             throw error;
         }
+        const expressApp = app.getHttpAdapter().getInstance();
+        expressApp.get('/', (req, res) => {
+            res.status(200).send('OK');
+        });
         if (process.env.NODE_ENV !== 'production') {
             const config = new swagger_1.DocumentBuilder()
                 .setTitle('RHYTHM API')

@@ -1,22 +1,29 @@
 import { OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { Server as SocketIOServer, Socket } from 'socket.io';
+import { Server as IoServer, Socket } from 'socket.io';
 import { AuthService } from '../auth/auth.service';
 import { ConfigService } from '@nestjs/config';
 import { PresenceService } from '../presence/presence.service';
-declare module 'socket.io' {
-    interface Socket {
-        userId?: string;
-        username?: string;
-        isAlive?: boolean;
-        lastPing?: number;
-    }
+interface CustomSocket extends Socket {
+    userId?: string;
+    username?: string;
+    isAlive: boolean;
+    lastPing: number;
+    handshake: {
+        query: {
+            userId?: string;
+            username?: string;
+            [key: string]: any;
+        };
+        [key: string]: any;
+    };
 }
 export declare class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
     private readonly authService;
     private readonly configService;
     private readonly presenceService;
-    server: SocketIOServer;
+    private io;
+    get server(): IoServer;
     private readonly logger;
     private readonly rateLimiter;
     private readonly clientQueues;
@@ -27,12 +34,14 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     private readonly messageQueues;
     private readonly rooms;
     constructor(authService: AuthService, configService: ConfigService, presenceService: PresenceService);
+    afterInit(server: IoServer): void;
     onModuleInit(): void;
-    handleConnection(client: Socket): Promise<void>;
-    handleDisconnect(client: Socket): Promise<void>;
+    handleConnection(client: CustomSocket): Promise<void>;
+    handleDisconnect(client: CustomSocket): Promise<void>;
+    private cleanupClientResources;
     onModuleDestroy(): Promise<void>;
     private sendToClient;
-    handleAuth(client: any, data: {
+    handleAuth(client: CustomSocket, data: {
         token: string;
         projectId?: string;
     }): Promise<{
@@ -45,12 +54,13 @@ export declare class ChatGateway implements OnGatewayConnection, OnGatewayDiscon
     private clearHeartbeat;
     private setupHeartbeat;
     private handleRateLimit;
-    handleMessage(client: any, data: {
-        content: string;
+    private broadcastToRoom;
+    handleMessage(client: CustomSocket, data: {
+        content?: string;
         roomId?: string;
     }): Promise<void>;
-    private broadcastToRoom;
     private getUserClients;
     broadcastToProject(projectId: string, message: unknown): Promise<void>;
     private findRecipientQueue;
 }
+export {};

@@ -1,8 +1,10 @@
-// Simple mock implementation for socket.io-client
-interface MockSocket {
+import { EventEmitter } from 'events';
+
+// Mock Socket class that extends EventEmitter
+class MockSocketClient extends EventEmitter {
   id: string;
-  connected: boolean;
-  disconnected: boolean;
+  connected: boolean = true;
+  disconnected: boolean = false;
   io: any;
   _pid: string;
   _lastOffset: string;
@@ -13,105 +15,114 @@ interface MockSocket {
     query: Record<string, any>;
     user: Record<string, any>;
   };
-  on: jest.Mock<MockSocket, [event: string, callback: (...args: any[]) => void]>;
-  off: jest.Mock<MockSocket, [event?: string, callback?: (...args: any[]) => void]>;
-  emit: jest.Mock<MockSocket, [event: string, ...args: any[]]>;
-  close: jest.Mock<MockSocket, []>;
-  disconnect: jest.Mock<MockSocket, []>;
-  listeners: jest.Mock<any[], [event: string]>;
-  hasListeners: jest.Mock<boolean, [event: string]>;
-  removeAllListeners: jest.Mock<MockSocket, [event?: string]>;
-  join: jest.Mock<MockSocket, [room: string]>;
-  leave: jest.Mock<MockSocket, [room: string]>;
-  to: jest.Mock<MockSocket, [room: string]>;
-  in: jest.Mock<MockSocket, [room: string]>;
-  compress: jest.Mock<MockSocket, [compress: boolean]>;
-  volatile: MockSocket;
-  broadcast: MockSocket;
-}
 
-// Create a type-safe mock socket
-const createMockSocket = (): MockSocket => {
-  // Create a base object with all the required properties
-  const baseSocket: Omit<MockSocket, 'volatile' | 'broadcast'> = {
-    id: `test-socket-${Math.random().toString(36).substr(2, 9)}`,
-    connected: true,
-    disconnected: false,
-    io: {
+  constructor(url: string, options?: any) {
+    super();
+    this.id = `test-socket-${Math.random().toString(36).substr(2, 9)}`;
+    this.io = {
       reconnection: jest.fn().mockReturnThis(),
       reconnectionAttempts: jest.fn().mockReturnThis(),
       reconnectionDelay: jest.fn().mockReturnThis(),
       reconnectionDelayMax: jest.fn().mockReturnThis(),
       timeout: jest.fn().mockReturnThis(),
-    },
-    _pid: 'test-pid',
-    _lastOffset: '0',
-    recovered: false,
-    handshake: {
+    };
+    this._pid = 'test-pid';
+    this._lastOffset = '0';
+    this.recovered = false;
+    this.handshake = {
       auth: {},
       headers: {},
       query: {},
       user: {}
-    },
-    on: jest.fn<MockSocket, [string, (...args: any[]) => void]>((event, callback) => {
-      if (event === 'connect') {
-        process.nextTick(() => callback());
-      }
-      return socket as MockSocket;
-    }),
-    off: jest.fn<MockSocket, [string, (...args: any[]) => void]>(() => socket as MockSocket),
-    emit: jest.fn<MockSocket, [string, ...any[]]>((event, ...args) => {
-      // Simulate event emission
-      if (baseSocket.on.mock.calls) {
-        baseSocket.on.mock.calls.forEach((call) => {
-          const [e, cb] = call as [string, (...args: any[]) => void];
-          if (e === event) {
-            cb(...args);
-          }
-        });
-      }
-      return socket as MockSocket;
-    }),
-    close: jest.fn<MockSocket, []>(() => {
-      baseSocket.connected = false;
-      baseSocket.disconnected = true;
-      return socket as MockSocket;
-    }),
-    disconnect: jest.fn<MockSocket, []>(() => {
-      baseSocket.connected = false;
-      baseSocket.disconnected = true;
-      return socket as MockSocket;
-    }),
-    listeners: jest.fn<any[], [string]>(() => []),
-    hasListeners: jest.fn<boolean, [string]>(() => false),
-    removeAllListeners: jest.fn<MockSocket, [string]>(() => socket as MockSocket),
-    join: jest.fn<MockSocket, [string]>(() => socket as MockSocket),
-    leave: jest.fn<MockSocket, [string]>(() => socket as MockSocket),
-    to: jest.fn<MockSocket, [string]>(() => socket as MockSocket),
-    in: jest.fn<MockSocket, [string]>(() => socket as MockSocket),
-    compress: jest.fn<MockSocket, [boolean]>(() => socket as MockSocket),
-  };
+    };
 
-  // Create the socket with circular references
-  const socket = {
-    ...baseSocket,
-    get volatile() { return this as unknown as MockSocket; },
-    get broadcast() { return this as unknown as MockSocket; },
-  } as MockSocket;
+    // Simulate connection
+    process.nextTick(() => {
+      this.emit('connect');
+    });
+  }
 
-  return socket;
-};
+  emit(event: string, ...args: any[]): boolean {
+    super.emit(event, ...args);
+    return true;
+  }
+
+  on(event: string, listener: (...args: any[]) => void): MockSocketClient {
+    super.on(event, listener);
+    return this;
+  }
+
+  off(event: string, listener: (...args: any[]) => void): MockSocketClient {
+    super.off(event, listener);
+    return this;
+  }
+
+  close(): MockSocketClient {
+    this.connected = false;
+    this.disconnected = true;
+    this.emit('disconnect');
+    return this;
+  }
+
+  disconnect(): MockSocketClient {
+    this.connected = false;
+    this.disconnected = true;
+    this.emit('disconnect');
+    return this;
+  }
+
+  listeners(event: string): any[] {
+    return super.listeners(event);
+  }
+
+  hasListeners(event: string): boolean {
+    return super.listenerCount(event) > 0;
+  }
+
+  removeAllListeners(event?: string): MockSocketClient {
+    super.removeAllListeners(event);
+    return this;
+  }
+
+  join(room: string): MockSocketClient {
+    return this;
+  }
+
+  leave(room: string): MockSocketClient {
+    return this;
+  }
+
+  to(room: string): MockSocketClient {
+    return this;
+  }
+
+  in(room: string): MockSocketClient {
+    return this;
+  }
+
+  compress(compress: boolean): MockSocketClient {
+    return this;
+  }
+
+  get volatile(): MockSocketClient {
+    return this;
+  }
+
+  get broadcast(): MockSocketClient {
+    return this;
+  }
+}
 
 // Mock the io function
-const io = jest.fn<MockSocket, [string, any]>((url: string, options?: any) => {
-  return createMockSocket();
+const io = jest.fn<MockSocketClient, [string, any]>((url: string, options?: any) => {
+  return new MockSocketClient(url, options);
 });
 
 // Add static properties
 (io as any).protocol = 4;
 (io as any).Manager = jest.fn();
-(io as any).Socket = jest.fn();
+(io as any).Socket = MockSocketClient;
 (io as any).connect = io;
 
-export { io };
+export { io, MockSocketClient };
 export default io;

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WsAdapter } from './ws/ws-adapter';
+import helmet from 'helmet';
 
 // Global error handlers
 process.on('uncaughtException', (error) => {
@@ -28,6 +29,26 @@ async function bootstrap() {
     
     logger.log('NestJS application instance created successfully');
     
+    // Enable Helmet security middleware
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          useDefaults: true,
+          directives: {
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            "object-src": ["'none'"],
+            "img-src": ["'self'", "data:", "blob:"],
+            "style-src": ["'self'", "'unsafe-inline'"],
+            "frame-ancestors": ["'none'"],
+          },
+        },
+        frameguard: { action: 'deny' },
+        hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+        hidePoweredBy: true,
+      })
+    );
+
     // Enable CORS
     app.enableCors({
       origin: process.env.CORS_ORIGINS?.split(',') || '*',
@@ -53,6 +74,12 @@ async function bootstrap() {
       logger.error('Failed to initialize WebSocket adapter:', error);
       throw error;
     }
+
+    // Add a simple root route for e2e/security testing
+    const expressApp = app.getHttpAdapter().getInstance();
+    expressApp.get('/', (req, res) => {
+      res.status(200).send('OK');
+    });
 
     // Swagger documentation
     if (process.env.NODE_ENV !== 'production') {

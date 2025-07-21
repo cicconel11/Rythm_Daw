@@ -1,7 +1,7 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthController } from '../../src/modules/auth/auth.controller';
 import { AuthService } from '../../src/modules/auth/auth.service';
-import { Response } from 'express';
+import { createMockResponse, type MockResponse } from '../unit/__mocks__/express.mock';
 
 const TEST_USER = {
   id: 'test-user-id',
@@ -11,18 +11,17 @@ const TEST_USER = {
 };
 
 // Mock the response object
-const mockResponse = () => ({
-  cookie: jest.fn(),
-  clearCookie: jest.fn(),
-  status: jest.fn().mockReturnThis(),
-  json: jest.fn(),
-  send: jest.fn()
-} as unknown as Response);
+const mockResponse = (): MockResponse => {
+  const res = createMockResponse();
+  res.cookie = jest.fn();
+  res.clearCookie = jest.fn();
+  return res;
+};
 
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: jest.Mocked<AuthService>;
-  let res: ReturnType<typeof mockResponse>;
+  let res: MockResponse;
 
   // Create a mock auth service with all required methods
   const createMockAuthService = (): jest.Mocked<AuthService> => ({
@@ -61,8 +60,6 @@ describe('AuthController', () => {
       },
     });
   });
-
-  res = mockResponse();
 
   afterEach(() => {
     jest.restoreAllMocks();

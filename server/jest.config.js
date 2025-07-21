@@ -2,7 +2,7 @@ module.exports = {
   preset: 'ts-jest',
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
-  testRegex: '.*\\.(spec|test)\\.ts$',
+  testMatch: ['**/*.(spec|test).ts'],
   testPathIgnorePatterns: ['/node_modules/'],
   detectOpenHandles: true,
   transform: {
@@ -16,7 +16,7 @@ module.exports = {
     '/node_modules/'
   ],
   setupFiles: ['dotenv/config'],
-  setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/../jest.setup.ts', '<rootDir>/test/test.setup.ts'],
   testTimeout: 15000,
   testEnvironment: 'node',
   moduleNameMapper: {
@@ -25,11 +25,11 @@ module.exports = {
     '^@prisma/client$': '<rootDir>/test/__mocks__/@prisma/client',
     'aws-sdk': '<rootDir>/test/__mocks__/aws-sdk',
     'socket.io-client': '<rootDir>/test/__mocks__/socket.io-client',
+    'ws': '<rootDir>/test/__mocks__/ws',
     '^@prisma/client/(.*)$': '<rootDir>/node_modules/@prisma/client/$1',
   },
   modulePaths: ['<rootDir>', '<rootDir>/node_modules'],
   moduleDirectories: ['node_modules', 'src'],
-  globals: {},
   transformIgnorePatterns: [
     '/node_modules/(?!@nestjs|@nestjs/.*|@prisma/client|@?\\.(js|mjs|cjs)$)'
   ],

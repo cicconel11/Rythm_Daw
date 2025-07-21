@@ -1,5 +1,4 @@
-import { createServer, Server as HttpServer } from 'http';
-import * as WebSocketModule from 'ws';
+import WebSocket, { Server as WebSocketServer } from 'ws';
 
 // Use the real WebSocket implementation for these tests
 const WebSocket = WebSocketModule.WebSocket;

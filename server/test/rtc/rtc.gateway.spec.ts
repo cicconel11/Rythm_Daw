@@ -18,6 +18,7 @@ import {
   ServerToClientEvents,
   InterServerEvents
 } from '../../src/modules/rtc/types/socket-events.types';
+import { attachMockServer } from '../utils/gateway';
 
 describe('RtcGateway', () => {
   let gateway: RtcGateway;
@@ -142,7 +143,7 @@ describe('RtcGateway', () => {
       .compile();
 
     gateway = module.get<RtcGateway>(RtcGateway);
-    gateway['server'] = mockServer;
+    attachMockServer(gateway, mockServer);
     
     // Create a fresh mock client for each test
     mockClient = createMockClient(mockUser);

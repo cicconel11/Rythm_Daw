@@ -6,6 +6,8 @@ import { PresenceService } from '../src/modules/presence/presence.service';
 import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
 import { WsJwtGuard } from '../src/modules/auth/guards/ws-jwt.guard';
 import { Server, Socket, Namespace } from 'socket.io';
+import { MockIoServer } from './__mocks__/socket-io';
+import { attachMockServer } from './utils/gateway';
 
 // Mock the entire socket.io module
 jest.mock('socket.io', () => ({
@@ -108,15 +110,7 @@ describe('ChatGateway Heartbeat (Unit)', () => {
     intervalId = 0;
     
     // Create a mock server
-    mockServer = {
-      on: jest.fn(),
-      emit: jest.fn(),
-      to: jest.fn().mockReturnThis(),
-      in: jest.fn().mockReturnThis(),
-      sockets: {
-        sockets: new Map()
-      }
-    };
+    mockServer = new MockIoServer();
 
     // Mock PresenceService
     mockPresenceService = {
@@ -157,7 +151,7 @@ describe('ChatGateway Heartbeat (Unit)', () => {
 
     // Get gateway instance
     gateway = module.get<ChatGateway>(ChatGateway);
-    gateway.server = mockServer as unknown as Server;
+    attachMockServer(gateway, mockServer as unknown as Server);
 
     // Mock setInterval and clearInterval
     setIntervalSpy = jest.spyOn(global, 'setInterval').mockImplementation((callback: any) => {
