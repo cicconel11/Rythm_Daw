@@ -76,7 +76,7 @@ export class EventDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)
-  type: string;
+  type!: string;
 
   @IsString()
   @IsOptional()
@@ -119,7 +119,7 @@ export class EventDto {
 export class TrackEventsBulkDto {
   @IsArray()
   @Type(() => EventDto)
-  events: EventDto[];
+  events!: EventDto[];
 
   @IsBoolean()
   @IsOptional()

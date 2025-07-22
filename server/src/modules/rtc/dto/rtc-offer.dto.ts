@@ -1,12 +1,9 @@
 import { IsString } from 'class-validator';
 
 export class RtcOfferDto {
-  @IsString()
-  type: string;
+  type!: string;
 
-  @IsString()
-  sdp: string;
+  sdp!: string;
 
-  @IsString()
-  to: string;
+  to!: string;
 }

@@ -1,11 +1,13 @@
 {
   "dependencies": {
-    "@types/node": "^20.11.0",
+    "@headlessui/react": "^2.2.4",
     "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
     "aws-cdk": "^2.1021.0",
     "aws-cdk-lib": "^2.206.0",
     "constructs": "^10.4.2",
+    "lucide-react": "^0.523.0",
+    "next": "^15.4.2",
     "react-window": "^1.8.11",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
@@ -13,6 +15,7 @@
     "uuid": "^11.1.0",
     "ws": "^7.5.9"
   },
+  "packageManager": "pnpm@10.13.1",
   "type": "module",
   "scripts": {
     "db:generate": "pnpm --filter server exec prisma generate",
@@ -31,7 +34,8 @@
     "typecheck": "tsc --noEmit",
     "storybook": "start-storybook -p 6006",
     "storybook:build": "build-storybook",
-    "cdk": "cdk --app \"npx ts-node --prefer-ts-exts infra/bin/infra.ts\""
+    "cdk": "cdk --app \"npx ts-node --prefer-ts-exts infra/bin/infra.ts\"",
+    "build": "tsc -b"
   },
   "devDependencies": {
     "@babel/core": "^7.28.0",
@@ -43,16 +47,16 @@
     "@babel/preset-typescript": "^7.27.1",
     "@pact-foundation/pact": "^12.1.1",
     "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.5.0",
+    "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
     "@testing-library/user-event": "^14.4.3",
     "@types/bcrypt": "^5.0.2",
     "@types/jest": "^29.5.14",
     "@types/jest-axe": "^3.5.9",
     "@types/jsonwebtoken": "^9.0.2",
-    "@types/node": "^20.5.0",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/node": "^20.19.8",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
     "artillery": "^2.0.0",
     "babel-jest": "^30.0.4",
     "bcrypt": "5.1.1",

@@ -8,8 +8,7 @@ export enum UserStatus {
 }
 
 export class HeartbeatDto {
-  @IsEnum(UserStatus)
-  status: UserStatus;
+  status!: UserStatus;
   
   @IsOptional()
   @IsString()

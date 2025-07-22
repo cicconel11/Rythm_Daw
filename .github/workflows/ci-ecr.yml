@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --prod --frozen-lockfile
 
       # ---------- AWS ECR login ----------
       - name: 🔐  Login to Amazon ECR

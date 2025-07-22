@@ -77,7 +77,7 @@ async function bootstrap() {
 
     // Add a simple root route for e2e/security testing
     const expressApp = app.getHttpAdapter().getInstance();
-    expressApp.get('/', (req, res) => {
+    expressApp.get('/', (req: any, res: any) => {
       res.status(200).send('OK');
     });
 
@@ -108,7 +108,7 @@ async function bootstrap() {
       const server = app.getHttpServer();
       const router = server._events.request._router;
       const routes = router.stack
-        .map(layer => {
+        .map((layer: any) => {
           if (layer.route) {
             return {
               route: {
@@ -118,7 +118,7 @@ async function bootstrap() {
             };
           }
         })
-        .filter(item => item !== undefined);
+        .filter((item: any) => item !== undefined);
       
       logger.log('Registered routes:', JSON.stringify(routes, null, 2));
       

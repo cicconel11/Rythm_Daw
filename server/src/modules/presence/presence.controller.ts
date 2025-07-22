@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { HeartbeatDto } from './dto/heartbeat.dto';
 import { PresenceService } from './presence.service';
-import { RequestWithUser } from '../../constants/request-with-user';
+import type { RequestWithUser } from '../../constants/request-with-user';
 
 @ApiTags('presence')
 @Controller('presence')

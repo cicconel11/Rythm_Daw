@@ -2,13 +2,13 @@ import { IsArray, IsNotEmpty, IsObject, IsOptional, IsString, IsUUID } from 'cla
 
 export class FileMetadataDto {
   @IsString()
-  path: string;
+  path!: string;
 
   @IsString()
-  hash: string;
+  hash!: string;
 
   @IsString()
-  mimeType: string;
+  mimeType!: string;
 
   @IsOptional()
   size?: number;
@@ -16,18 +16,18 @@ export class FileMetadataDto {
 
 export class CreateSnapshotDto {
   @IsUUID()
-  projectId: string;
+  projectId!: string;
 
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsOptional()
   description?: string;
 
   @IsObject()
-  metadata: Record<string, any>;
+  metadata!: Record<string, any>;
 
   @IsArray()
   @IsOptional()

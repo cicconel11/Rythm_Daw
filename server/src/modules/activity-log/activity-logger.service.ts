@@ -45,7 +45,7 @@ export class ActivityLoggerService implements OnModuleInit {
   private readonly logger = new Logger(ActivityLoggerService.name);
   
   @WebSocketServer()
-  private server: Server;
+  private server!: Server;
 
   constructor(
     private prisma: PrismaService,
@@ -153,7 +153,7 @@ export class ActivityLoggerService implements OnModuleInit {
       
       return activityWithUser;
     } catch (error) {
-      this.logger.error(`Failed to log activity: ${error.message}`, error.stack);
+      this.logger.error(`Failed to log activity: ${(error as any).message}`, (error as any).stack);
       throw error;
     }
   }

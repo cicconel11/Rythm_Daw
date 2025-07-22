@@ -13,11 +13,33 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["website/src/*"],
-      "@tests/*": ["tests/*"],
-      "@/types/*": ["website/src/types/*"]
-    }
+      "@/*": [
+        "website/src/*"
+      ],
+      "@tests/*": [
+        "tests/*"
+      ],
+      "@/types/*": [
+        "website/src/types/*"
+      ]
+    },
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": [
+      "node",
+      "jest",
+      "@testing-library/jest-dom"
+    ]
   },
-  "include": ["website/src/**/*", "server/src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": [
+    "website/src/**/*",
+    "server/src/**/*",
+    "tests/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SyncInventoryDto } from './dto/sync-inventory.dto';
 import { InventoryService } from './inventory.service';
-import { RequestWithUser } from '../../constants/request-with-user';
+import type { RequestWithUser } from '../../constants/request-with-user';
 
 @ApiTags('inventory')
 @Controller('inventory')

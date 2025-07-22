@@ -15,8 +15,7 @@ import { PresenceService } from './presence.service';
 })
 @UseGuards(WsJwtAuthGuard)
 export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private userSockets = new Map<string, string>();
   private projectRooms = new Map<string, Set<string>>();

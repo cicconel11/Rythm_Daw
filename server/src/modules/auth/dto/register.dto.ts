@@ -3,7 +3,7 @@ import { IsEmail, IsString, MinLength, MaxLength, IsNotEmpty, Matches, IsOptiona
 export class RegisterDto {
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @IsString()
   @MinLength(2)
@@ -21,5 +21,5 @@ export class RegisterDto {
         'Password must contain at least 1 uppercase, 1 lowercase, 1 number and 1 special character (!@#$%^&*)',
     },
   )
-  password: string;
+  password!: string;
 }

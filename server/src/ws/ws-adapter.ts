@@ -1,5 +1,6 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { INestApplication, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { ServerOptions, Server as SocketIOServer, Socket } from 'socket.io';
 import { createServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http';
 import { Server as WsServer } from 'ws';
@@ -79,7 +80,7 @@ export class WsAdapter extends IoAdapter {
         });
       });
 
-      io.engine.on('connection_error', (error) => {
+      io.engine.on('connection_error', (error: any) => {
         this.logger.error('Socket.IO connection error:', error);
       });
       

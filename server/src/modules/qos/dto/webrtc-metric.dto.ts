@@ -17,7 +17,7 @@ export class WebRtcMetricDto {
   })
   @IsString()
   @IsNotEmpty()
-  userId: string;
+  userId!: string;
 
   @ApiProperty({
     description: 'Project ID',
@@ -70,14 +70,14 @@ export class WebRtcMetricDto {
     enum: MetricCategory,
   })
   @IsEnum(MetricCategory)
-  category: MetricCategory;
+  category!: MetricCategory;
 
   @ApiProperty({
     description: 'Metric value',
     example: 1.0,
   })
   @IsNumber()
-  value: number;
+  value!: number;
 
   @ApiProperty({
     description: 'Network type',

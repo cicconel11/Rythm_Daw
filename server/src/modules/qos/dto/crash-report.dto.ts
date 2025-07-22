@@ -9,7 +9,7 @@ export class CrashReportDto {
   })
   @IsString()
   @IsIn(['uncaught', 'unhandledrejection', 'window_error', 'promise_rejection', 'resource_error', 'other'])
-  type: string;
+  type!: string;
 
   @ApiProperty({
     description: 'Error name',

@@ -1,12 +1,9 @@
 import { IsString } from 'class-validator';
 
 export class RtcAnswerDto {
-  @IsString()
-  type: string;
+  type!: string;
 
-  @IsString()
-  sdp: string;
+  sdp!: string;
 
-  @IsString()
-  to: string;
+  to!: string;
 }

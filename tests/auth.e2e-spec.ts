@@ -1,3 +1,4 @@
+// @ts-ignore
 import { testRequest } from '../jest.e2e.setup';
 
 describe('Auth E2E', () => {

@@ -45,11 +45,11 @@ export class TagsService {
       },
     });
 
-    const existingTagNames = new Set(existingTags.map((et) => et.tag.name));
+    const existingTagNames = new Set(existingTags.map((et: any) => et.tag.name));
     const newTagNames = normalizedTags.filter((name) => !existingTagNames.has(name));
 
     // Remove tags that are no longer present
-    const tagsToRemove = existingTags.filter((et) => !normalizedTags.includes(et.tag.name));
+    const tagsToRemove = existingTags.filter((et: any) => !normalizedTags.includes(et.tag.name));
 
     // Create any new tags that don't exist
     const newTags = await Promise.all(
@@ -66,14 +66,14 @@ export class TagsService {
     );
 
     // Use a transaction to ensure data consistency
-    await this.prisma.$transaction(async (prisma) => {
+    await this.prisma.$transaction(async (prisma: any) => {
       // Remove old tags that are not in the new list
       if (tagsToRemove.length > 0) {
         await prisma.entityTag.deleteMany({
           where: {
             entityType,
             entityId,
-            tagId: { in: tagsToRemove.map((t) => t.id) },
+            tagId: { in: tagsToRemove.map((t: any) => t.id) },
           },
         });
       }
@@ -90,7 +90,7 @@ export class TagsService {
           select: { tagId: true },
         });
 
-        const existingTagIds = new Set(existingEntityTags.map((et) => et.tagId));
+        const existingTagIds = new Set(existingEntityTags.map((et: any) => et.tagId));
         const tagsToCreate = newTags.filter((tag) => !existingTagIds.has(tag.id));
 
         if (tagsToCreate.length > 0) {
@@ -108,7 +108,7 @@ export class TagsService {
 
     // Return all tags for the entity after update
     const result = await Promise.all(
-      existingTags.map(async (et) => {
+      existingTags.map(async (et: any) => {
         const tag = await this.prisma.tag.findUnique({
           where: { id: et.tagId },
         });
@@ -168,7 +168,7 @@ export class TagsService {
       },
     });
 
-    return entityTags.map((et) => ({
+    return entityTags.map((et: any) => ({
       id: et.tag.id,
       name: et.tag.name,
       color: et.tag.color,
@@ -202,7 +202,7 @@ export class TagsService {
       take: filter?.limit,
     });
     
-    return tags.map((tag) => ({
+    return tags.map((tag: any) => ({
       id: tag.id,
       name: tag.name,
       description: tag.description,

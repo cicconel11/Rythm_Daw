@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class User {
   @ApiProperty({ description: 'The unique identifier of the user' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ description: 'The email of the user' })
-  email: string;
+  email!: string;
 
   @ApiProperty({ description: 'The name of the user', required: false })
   name?: string;
