@@ -1,0 +1,13 @@
+{
+    "name": "infra",
+    "private": true,
+    "scripts": {
+        "cdk": "cdk --app 'npx ts-node --prefer-ts-exts bin/infra.ts'"
+    },
+    "devDependencies": {
+        "aws-cdk-lib": "^2.0.0",
+        "constructs": "^10.0.0",
+        "ts-node": "^10.0.0",
+        "typescript": "^4.0.0"
+    }
+}
