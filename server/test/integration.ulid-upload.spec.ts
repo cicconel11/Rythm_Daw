@@ -1,4 +1,4 @@
-import { ulid } from 'ulid';
+import { monotonicFactory } from 'ulid';
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -8,6 +8,7 @@ import { AppModule } from '../src/app.module';
 // If not installed, run 'pnpm add -w ulid'.
 describe('ULID Upload (integration)', () => {
   it('should generate monotonic, ordered ULIDs', () => {
+    const ulid = monotonicFactory();
     const ids = Array.from({ length: 10 }, () => ulid());
     for (let i = 1; i < ids.length; i++) {
       expect(ids[i] > ids[i - 1]).toBe(true);

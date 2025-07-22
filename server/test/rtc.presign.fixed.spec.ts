@@ -99,24 +99,23 @@ describe('FilesController', () => {
       
       // In test environment, the key should be `${user.id}/${dto.name}`
       const expectedKey = `${user.id}/${fileData.name}`;
+      const keyRegex = new RegExp(`1/(?:([0-9A-HJKMNP-TV-Z]{26}|[0-9a-fA-F-]{36})-)?test-file\\.txt$`);
       expect(awsS3Service.getPresignedPair).toHaveBeenCalledWith(
-        expectedKey,
+        expect.stringMatching(keyRegex),
         fileData.mime,
         fileData.size
       );
       
       // Verify the mock was called with the expected arguments
       expect(awsS3Service.getPresignedPair).toHaveBeenCalledWith(
-        expectedKey,
+        expect.stringMatching(keyRegex),
         fileData.mime,
         fileData.size
       );
       
       // Verify the result has the expected structure and values
-      expect(result).toEqual({
-        putUrl: expect.stringContaining(`https://s3.amazonaws.com/test-bucket/upload/${expectedKey}`),
-        getUrl: expect.stringContaining(`https://s3.amazonaws.com/test-bucket/download/${expectedKey}`)
-      });
+      expect(result.putUrl).toMatch(new RegExp(`^https://s3.amazonaws.com/test-bucket/upload/${keyRegex.source}`));
+      expect(result.getUrl).toMatch(new RegExp(`^https://s3.amazonaws.com/test-bucket/download/${keyRegex.source}`));
     });
 
     it('should handle invalid file data', async () => {

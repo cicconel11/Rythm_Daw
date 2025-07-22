@@ -1,5 +1,6 @@
 // Global test setup
 import 'dotenv/config';
+import { ensureTestBucket } from "./server/test/ensure-s3-bucket";
 
 // Mock WebSocket for Node.js environment
 global.WebSocket = class MockWebSocket extends EventTarget {
@@ -45,7 +46,8 @@ global.WebSocket = class MockWebSocket extends EventTarget {
 
 // Mock console methods to reduce noise in tests
 const originalConsole = { ...console };
-beforeAll(() => {
+beforeAll(() => ensureTestBucket());
+beforeAll(async () => {
   console.log = jest.fn();
   console.warn = jest.fn();
   console.error = jest.fn();

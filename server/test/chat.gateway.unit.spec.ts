@@ -15,22 +15,15 @@ describe('ChatGateway (Unit)', () => {
   let mockServer: any;
 
   beforeEach(() => {
-    // Create a new instance of the gateway with mocked dependencies
+    mockServer = {
+      emit : jest.fn(),
+      to   : jest.fn().mockReturnThis(),
+      sockets: { sockets: new Map() },
+    };
     gateway = new ChatGateway(presenceServiceMock, mockRtcGateway);
-
-    // Create a mock WebSocket server
-    mockServer = new MockIoServer();
-
-    // Only define the property if it hasn't been defined yet
-    if (!Object.getOwnPropertyDescriptor(gateway, 'server')) {
-      Object.defineProperty(gateway, 'server', { get: () => mockServer });
-    }
-    // Initialize required maps (use type assertion if needed)
-    (gateway as any).userSockets = new Map();
+    Object.defineProperty(gateway, 'server', { get: () => mockServer });
+    (gateway as any).userSockets  = new Map();
     (gateway as any).socketToUser = new Map();
-    // Ensure mocks are Jest mocks
-    mockServer.emit = jest.fn();
-    mockServer.to = jest.fn().mockReturnThis();
     presenceServiceMock.updateUserPresence = jest.fn();
   });
 

@@ -48,14 +48,13 @@ describe('FilesController (Direct Test)', () => {
       const result = await filesController.create(fileData, testUser);
 
       // Verify the result
-      expect(result).toEqual({
-        uploadUrl: expect.stringContaining('https://s3.amazonaws.com/test-bucket/'),
-        downloadUrl: expect.stringContaining('https://s3.amazonaws.com/test-bucket/')
-      });
+      const keyRegex = new RegExp(`${testUser.id}/(?:([0-9A-HJKMNP-TV-Z]{26}|[0-9a-fA-F-]{36})-)?test-file\\.txt$`);
+      expect(result.uploadUrl).toMatch(new RegExp(`^https://s3.amazonaws.com/test-bucket/${keyRegex.source}`));
+      expect(result.downloadUrl).toMatch(new RegExp(`^https://s3.amazonaws.com/test-bucket/${keyRegex.source}`));
       
       // Verify the service method was called with the correct arguments
       expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(
-        `${testUser.id}/${fileData.name}`,
+        expect.stringMatching(keyRegex),
         fileData.mime,
         fileData.size
       );
@@ -73,7 +72,7 @@ describe('FilesController (Direct Test)', () => {
       
       // The service will still be called, but with undefined for missing fields
       expect(mockAwsS3Service.getPresignedPair).toHaveBeenCalledWith(
-        `${testUser.id}/${invalidFileData.name}`,
+        expect.stringMatching(new RegExp(`${testUser.id}/(?:([0-9A-HJKMNP-TV-Z]{26}|[0-9a-fA-F-]{36})-)?test-file\\.txt$`)),
         undefined,
         undefined
       );

@@ -12,6 +12,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { Redis } from 'ioredis';
 import { PingController } from './common/ping.controller';
 import { AuthLoginController } from './common/auth-login.controller';
+import { FilesUploadController } from './common/files-upload.controller';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { AuthLoginController } from './common/auth-login.controller';
     RootController,
     PingController,
     AuthLoginController,
+    FilesUploadController,
   ],
   providers: [
     {

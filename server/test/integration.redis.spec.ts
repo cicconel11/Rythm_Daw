@@ -43,16 +43,16 @@ describe('Redis Adapter Broadcast (integration)', () => {
   }, 20000);
 
   afterAll(async () => {
-    await appA.close();
-    await appB.close();
-    ioA.close();
-    ioB.close();
-    httpA.close();
-    httpB.close();
-    await pubA.disconnect();
-    await subA.disconnect();
-    await pubB.disconnect();
-    await subB.disconnect();
+    if (appA) await appA.close();
+    if (appB) await appB.close();
+    ioA?.close?.();
+    ioB?.close?.();
+    httpA?.close?.();
+    httpB?.close?.();
+    await pubA?.quit?.();
+    await subA?.quit?.();
+    await pubB?.quit?.();
+    await subB?.quit?.();
   });
 
   it('should broadcast messages between instances', done => {

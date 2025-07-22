@@ -17,19 +17,19 @@ const mockRtcGateway: jest.Mocked<RtcGateway> = {
 
 describe('ChatGateway', () => {
   let gateway: ChatGateway;
+  let mockServer: any;
   
   beforeEach(() => {
-    // Create a new instance of the gateway with mocked dependencies
-    gateway = new ChatGateway(
-      mockPresenceService,
-      mockRtcGateway
-    );
-    
-    // Mock the WebSocket server
-    attachMockServer(gateway, {
-      emit: jest.fn(),
-      to: jest.fn().mockReturnThis(),
-    });
+    mockServer = {
+      emit : jest.fn(),
+      to   : jest.fn().mockReturnThis(),
+      sockets: { sockets: new Map() },
+    };
+    gateway = new ChatGateway(mockPresenceService, mockRtcGateway);
+    Object.defineProperty(gateway, 'server', { get: () => mockServer });
+    (gateway as any).userSockets  = new Map();
+    (gateway as any).socketToUser = new Map();
+    mockPresenceService.updateUserPresence = jest.fn();
   });
 
   afterEach(() => {
@@ -51,7 +51,7 @@ describe('ChatGateway', () => {
       gateway.handleConnection(client);
 
       expect(mockPresenceService.updateUserPresence).toHaveBeenCalledWith('test-user-id');
-      expect(gateway['server'].emit).toHaveBeenCalledWith('userOnline', { userId: 'test-user-id' });
+      expect(mockServer.emit).toHaveBeenCalledWith('userOnline', { userId: 'test-user-id' });
     });
   });
 
@@ -65,7 +65,7 @@ describe('ChatGateway', () => {
 
       gateway.handleDisconnect(client);
 
-      expect(gateway['server'].emit).toHaveBeenCalledWith('userOffline', { userId: 'test-user-id' });
+      expect(mockServer.emit).toHaveBeenCalledWith('userOffline', { userId: 'test-user-id' });
     });
   });
 
@@ -84,8 +84,8 @@ describe('ChatGateway', () => {
 
       gateway.handleMessage(client, message);
 
-      expect(gateway['server'].to).toHaveBeenCalledWith('test-room');
-      expect(gateway['server'].emit).toHaveBeenCalledWith('message', {
+      expect(mockServer.to).toHaveBeenCalledWith('test-room');
+      expect(mockServer.emit).toHaveBeenCalledWith('message', {
         from: 'test-user-id',
         to: 'test-room',
         content: 'Hello, world!',
@@ -108,8 +108,8 @@ describe('ChatGateway', () => {
 
       gateway.handleTyping(client, typingData);
 
-      expect(gateway['server'].to).toHaveBeenCalledWith('test-room');
-      expect(gateway['server'].emit).toHaveBeenCalledWith('typing', {
+      expect(mockServer.to).toHaveBeenCalledWith('test-room');
+      expect(mockServer.emit).toHaveBeenCalledWith('typing', {
         from: 'test-user-id',
         isTyping: true,
       });

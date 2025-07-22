@@ -131,3 +131,12 @@ jobs:
           if (( $(echo "$coverage < 80" | bc -l) )); then
             echo "Coverage $coverage% is below threshold!"; exit 1;
           fi
+      - name: "Ensure test S3 bucket"
+        run: |
+          aws s3api head-bucket --bucket "$S3_BUCKET_NAME" || \
+          aws s3api create-bucket --bucket "$S3_BUCKET_NAME" --region "$AWS_REGION" \
+            ${AWS_REGION:+--create-bucket-configuration LocationConstraint=$AWS_REGION}
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

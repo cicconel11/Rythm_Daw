@@ -16,7 +16,7 @@ module.exports = {
     '/node_modules/'
   ],
   setupFiles: ['dotenv/config'],
-  setupFilesAfterEnv: ['<rootDir>/../jest.setup.ts', '<rootDir>/test/test.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
   testTimeout: 15000,
   testEnvironment: 'node',
   moduleNameMapper: {
@@ -24,7 +24,6 @@ module.exports = {
     '^@test/(.*)$': '<rootDir>/test/$1',
     '^@prisma/client$': '<rootDir>/test/__mocks__/@prisma/client',
     'aws-sdk': '<rootDir>/test/__mocks__/aws-sdk',
-    'socket.io-client': '<rootDir>/test/__mocks__/socket.io-client',
     'ws': '<rootDir>/test/__mocks__/ws',
     '^@prisma/client/(.*)$': '<rootDir>/node_modules/@prisma/client/$1',
   },

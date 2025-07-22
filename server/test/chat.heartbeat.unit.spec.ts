@@ -9,19 +9,6 @@ import { Server, Socket, Namespace } from 'socket.io';
 import { MockIoServer } from './__mocks__/socket-io';
 import { attachMockServer } from './utils/gateway';
 
-// Mock the entire socket.io module
-jest.mock('socket.io', () => ({
-  Server: jest.fn().mockImplementation(() => ({
-    on: jest.fn(),
-    emit: jest.fn(),
-    to: jest.fn().mockReturnThis(),
-    in: jest.fn().mockReturnThis(),
-    sockets: {
-      sockets: new Map()
-    }
-  }))
-}));
-
 type MockSocket = {
   id: string;
   data: any;
