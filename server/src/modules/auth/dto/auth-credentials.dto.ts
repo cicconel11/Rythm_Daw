@@ -2,11 +2,11 @@ import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 
 export class AuthCredentialsDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @MinLength(8)
-  password: string;
+  password!: string;
 
   @IsString()
   @IsOptional()
@@ -14,10 +14,10 @@ export class AuthCredentialsDto {
 }
 
 export class AuthResponseDto {
-  accessToken: string;
-  user: {
+  accessToken!: string;
+  user!: {
     id: string;
     email: string;
-    name: string;
+    name?: string;
   };
 }

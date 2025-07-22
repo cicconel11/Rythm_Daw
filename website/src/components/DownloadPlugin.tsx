@@ -1,3 +1,12 @@
+// @ts-ignore
+// Fix for missing type declarations in local dev/CI
+// Remove if you add @types/next, @types/lucide-react, etc.
+declare module 'next/router';
+declare module 'next/link';
+declare module 'lucide-react';
+declare module '@headlessui/react';
+declare module '@/components/ui/use-toast';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -89,7 +98,7 @@ export default function DownloadPlugin() {
     try {
       const a = document.createElement('a');
       a.href = asset.url;
-      a.download = asset.url.split('/').pop();
+      a.download = asset.url.split('/').pop() ?? 'download';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

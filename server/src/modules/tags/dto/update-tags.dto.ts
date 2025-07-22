@@ -10,7 +10,7 @@ export class UpdateTagsDto {
   @IsArray()
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
-  tags: string[];
+  tags!: string[];
 
   @ApiProperty({
     description: 'Optional color for new tags',

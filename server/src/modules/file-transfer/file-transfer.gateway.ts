@@ -33,7 +33,7 @@ type FileTransferClient = WebSocket & {
 })
 export class FileTransferGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
   private readonly logger = new Logger(FileTransferGateway.name);
   private clients: Map<string, FileTransferClient> = new Map();
   private s3Client: S3Client;

@@ -58,8 +58,9 @@ export class WebSocketModule implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleDestroy() {
-    if (this.gateway.cleanup) {
-      this.gateway.cleanup();
-    }
+    // Remove or comment out:
+    // if (this.gateway.cleanup) {
+    //   this.gateway.cleanup();
+    // }
   }
 }

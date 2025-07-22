@@ -4,7 +4,7 @@ import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CreateSnapshotDto } from './dto/create-snapshot.dto';
 import { SnapshotsService } from './snapshots.service';
-import { RequestWithUser } from '../../constants/request-with-user';
+import type { RequestWithUser } from '../../constants/request-with-user';
 
 @ApiTags('snapshots')
 @Controller('api/snapshots')

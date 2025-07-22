@@ -96,7 +96,7 @@ export class AuthService {
         },
       };
     } catch (error) {
-      this.logger.error(`Signup error: ${error.message}`, error.stack);
+      this.logger.error(`Signup error: ${(error as any).message}`, (error as any).stack);
       throw error;
     }
   }
@@ -131,7 +131,7 @@ export class AuthService {
         },
       };
     } catch (error) {
-      this.logger.error(`Login error: ${error.message}`, error.stack);
+      this.logger.error(`Login error: ${(error as any).message}`, (error as any).stack);
       throw error;
     }
   }
@@ -144,7 +144,7 @@ export class AuthService {
       });
       return true;
     } catch (error) {
-      this.logger.error(`Logout error: ${error.message}`, error.stack);
+      this.logger.error(`Logout error: ${(error as any).message}`, (error as any).stack);
       throw error;
     }
   }
@@ -187,7 +187,7 @@ export class AuthService {
 
       return tokens;
     } catch (error) {
-      this.logger.error(`Refresh token error: ${error.message}`, error.stack);
+      this.logger.error(`Refresh token error: ${(error as any).message}`, (error as any).stack);
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
@@ -221,7 +221,7 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
     } catch (error) {
-      this.logger.error(`Token verification failed: ${error.message}`, error.stack);
+      this.logger.error(`Token verification failed: ${(error as any).message}`, (error as any).stack);
       throw new UnauthorizedException('Invalid token');
     }
   }
@@ -234,7 +234,7 @@ export class AuthService {
         data: { refreshToken: hashedRefreshToken },
       });
     } catch (error) {
-      this.logger.error(`Update refresh token error: ${error.message}`, error.stack);
+      this.logger.error(`Update refresh token error: ${(error as any).message}`, (error as any).stack);
       throw error;
     }
   }
@@ -246,7 +246,7 @@ export class AuthService {
         data: { refreshToken: null },
       });
     } catch (error) {
-      this.logger.error(`Revoke refresh tokens error: ${error.message}`, error.stack);
+      this.logger.error(`Revoke refresh tokens error: ${(error as any).message}`, (error as any).stack);
       throw error;
     }
   }
@@ -280,7 +280,7 @@ export class AuthService {
         },
       };
     } catch (error) {
-      this.logger.error(`Failed to generate tokens: ${error.message}`, error.stack);
+      this.logger.error(`Failed to generate tokens: ${(error as any).message}`, (error as any).stack);
       throw error;
     }
   }

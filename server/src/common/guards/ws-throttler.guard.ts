@@ -34,7 +34,7 @@ export class WsThrottlerGuard extends ThrottlerGuard {
       return canActivate as boolean;
     } catch (error) {
       // Handle rate limit exceeded
-      if (error.getStatus?.() === 429) {
+      if ((error as any).getStatus?.() === 429) {
         const socket = wsContext.getRequest();
         const ip = socket.handshake.address || 'unknown';
         

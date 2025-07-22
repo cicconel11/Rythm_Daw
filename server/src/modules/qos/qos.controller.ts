@@ -2,11 +2,11 @@ import { Controller, Post, Body, HttpStatus, UseGuards, Req, HttpCode } from '@n
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
-import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
+import type { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { QosService } from './qos.service';
 import { WebRtcMetricDto } from './dto/webrtc-metric.dto';
 import { CrashReportDto } from './dto/crash-report.dto';
-import { Request } from 'express';
+import type { Request } from 'express';
 
 @ApiTags('QoS')
 @Controller('api/qos')

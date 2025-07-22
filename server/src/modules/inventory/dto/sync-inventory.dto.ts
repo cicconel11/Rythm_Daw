@@ -4,28 +4,28 @@ import { Type } from 'class-transformer';
 export class PluginDto {
   @IsString()
   @IsNotEmpty()
-  uid: string;
+  uid!: string;
 
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsNotEmpty()
-  vendor: string;
+  vendor!: string;
 
   @IsString()
   @IsNotEmpty()
-  version: string;
+  version!: string;
 }
 
 export class SyncInventoryDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => PluginDto)
-  plugins: PluginDto[];
+  plugins!: PluginDto[];
 
   @IsString()
   @IsNotEmpty()
-  inventoryHash: string;
+  inventoryHash!: string;
 }

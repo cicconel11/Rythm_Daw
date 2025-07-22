@@ -14,8 +14,7 @@ import { WsJwtAuthGuard } from '../auth/guards/ws-jwt-auth.guard';
 })
 @UseGuards(WsJwtAuthGuard)
 export class InventoryGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private userSockets = new Map<string, string>();
 

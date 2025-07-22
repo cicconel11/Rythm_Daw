@@ -74,7 +74,7 @@ interface ConnectedClient {
 @UseGuards(JwtWsAuthGuard, WsThrottlerGuard)
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
   @WebSocketServer()
-  private io: IoServer;
+  private io!: IoServer;
   
   // Alias for backward compatibility
   get server(): IoServer {
@@ -497,7 +497,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     const clients: CustomSocket[] = [];
     
     if (this.server?.sockets?.sockets) {
-      this.server.sockets.sockets.forEach((socket: CustomSocket) => {
+      this.server.sockets.sockets.forEach((value: Socket, key: string, map: Map<string, Socket>) => {
+        const socket = value as CustomSocket;
         const socketUserId = (socket.handshake.query.userId as string) || '';
         if (socketUserId === userId) {
           clients.push(socket);

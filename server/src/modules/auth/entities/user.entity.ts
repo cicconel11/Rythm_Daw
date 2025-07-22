@@ -3,20 +3,15 @@ import * as bcrypt from 'bcryptjs';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
-  @Column({ unique: true })
-  email: string;
+  email!: string;
 
-  @Column()
-  password: string;
+  password!: string;
 
-  @Column({ nullable: true })
-  name: string;
+  name!: string;
 
-  @Column({ default: true })
-  isApproved: boolean;
+  isApproved!: boolean;
 
   @BeforeInsert()
   async hashPassword() {

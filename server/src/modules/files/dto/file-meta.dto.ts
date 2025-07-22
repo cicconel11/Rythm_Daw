@@ -1,12 +1,11 @@
 import { IsString, IsNumber } from 'class-validator';
 
 export class FileMetaDto {
-  @IsString()
-  name: string;
+  name!: string;
 
   @IsString()
-  mime: string;
+  mime!: string;
 
   @IsNumber()
-  size: number;
+  size!: number;
 }

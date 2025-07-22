@@ -2,7 +2,7 @@ import { Controller, Put, Param, Body, UseGuards, Get, Query, Delete } from '@ne
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
-import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
+import type { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { TagsService } from './tags.service';
 import { UpdateTagsDto } from './dto/update-tags.dto';
 // Local interface for Tag based on Prisma schema

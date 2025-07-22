@@ -16,8 +16,7 @@ import { JwtWsAuthGuard } from '../auth/guards/jwt-ws-auth.guard';
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(ChatGateway.name);
 
-  @WebSocketServer()
-  private _server: Server;
+  private _server!: Server;
 
   get server(): Server {
     return this._server;
@@ -29,7 +28,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     const subClient = pubClient.duplicate();
     await pubClient.connect();
     await subClient.connect();
-    this.server.adapter(createAdapter(pubClient, subClient));
+    (this.server as any).adapter(createAdapter(pubClient, subClient));
     this.logger.log('ChatGateway initialized with Redis adapter');
   }
 

@@ -12,7 +12,7 @@ import {
   Get, 
   HttpCode 
 } from '@nestjs/common';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { 
   ApiTags, 
   ApiOperation, 
@@ -57,7 +57,7 @@ export class AuthController {
       };
     } catch (error) {
       throw new HttpException(
-        error.message || 'Registration failed',
+        (error as any).message || 'Registration failed',
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }

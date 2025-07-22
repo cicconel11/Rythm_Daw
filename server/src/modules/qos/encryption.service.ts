@@ -5,7 +5,7 @@ import * as crypto from 'crypto';
 @Injectable()
 export class EncryptionService implements OnModuleInit {
   private readonly logger = new Logger(EncryptionService.name);
-  private encryptionKey: Buffer;
+  private encryptionKey!: Buffer;
   private readonly ALGORITHM = 'aes-256-gcm';
   private readonly IV_LENGTH = 12; // For GCM, 12 bytes is recommended
   private readonly AUTH_TAG_LENGTH = 16; // 16 bytes for GCM
@@ -55,7 +55,7 @@ export class EncryptionService implements OnModuleInit {
       
       return result.toString('base64');
     } catch (error) {
-      this.logger.error('Encryption failed', error.stack);
+      this.logger.error('Encryption failed', (error as any).stack);
       throw new Error('Failed to encrypt data');
     }
   }
@@ -92,7 +92,7 @@ export class EncryptionService implements OnModuleInit {
       
       return decrypted;
     } catch (error) {
-      this.logger.error('Decryption failed', error.stack);
+      this.logger.error('Decryption failed', (error as any).stack);
       throw new Error('Failed to decrypt data - it may be corrupted or tampered with');
     }
   }
