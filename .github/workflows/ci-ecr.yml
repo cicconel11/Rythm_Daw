@@ -9,83 +9,46 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write    # needed for OIDC to AWS
+      contents: read
     steps:
-      - name: Checkout
+      - name: ⬇️  Checkout source
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      # ---------- NEW: Docker Buildx + QEMU ----------
+      - name: 🛠️  Set up QEMU (multi-arch emulation)
+        uses: docker/setup-qemu-action@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: 🏗️  Set up Docker Buildx builder
+        uses: docker/setup-buildx-action@v3
+        with:
+          buildkitd-flags: --debug  # easier to debug if build fails
+
+      # ---------- pnpm install ----------
+      - name: 📦  Set up Node & pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Docker build (bake)
-        run: |
-          docker buildx bake --platform=linux/amd64 .
-
-  login-ecr:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
+      # ---------- AWS ECR login ----------
+      - name: 🔐  Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-  push:
-    needs: [build, login-ecr]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU (multi-arch emulation)
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Push Docker image to ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_REPO: ${{ secrets.ECR_REPOSITORY }}
+      # ---------- Build & push ----------
+      - name: 🐳  Build & push image to ECR
         run: |
-          IMAGE_TAG=${{ github.sha }}
-          docker buildx build --platform linux/amd64,linux/arm64 \
+          IMAGE="${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}"
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
             --push \
-            -t $ECR_REGISTRY/$IMAGE_REPO:$IMAGE_TAG \
-            -t $ECR_REGISTRY/$IMAGE_REPO:latest . 
+            -t $IMAGE:${{ github.sha }} \
+            -t $IMAGE:latest \
+            . 
