@@ -26,9 +26,6 @@ let WebSocketModule = class WebSocketModule {
     onModuleInit() {
     }
     onModuleDestroy() {
-        if (this.gateway.cleanup) {
-            this.gateway.cleanup();
-        }
     }
 };
 exports.WebSocketModule = WebSocketModule;

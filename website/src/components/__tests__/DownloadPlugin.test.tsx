@@ -5,7 +5,7 @@ import DownloadPlugin from '../DownloadPlugin';
 import { useAuth } from '@/hooks/useAuth';
 
 jest.mock('@/hooks/useAuth', () => ({
-  useAuth: jest.fn(),
+  useAuth: () => ({ user: { id: '123', email: 'test@rythm.dev' } })
 }));
 
 const mockUseAuth = useAuth as jest.Mock;

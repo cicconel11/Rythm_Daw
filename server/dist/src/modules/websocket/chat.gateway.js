@@ -343,7 +343,8 @@ let ChatGateway = ChatGateway_1 = class ChatGateway {
     getUserClients(userId) {
         const clients = [];
         if (this.server?.sockets?.sockets) {
-            this.server.sockets.sockets.forEach((socket) => {
+            this.server.sockets.sockets.forEach((value, key, map) => {
+                const socket = value;
                 const socketUserId = socket.handshake.query.userId || '';
                 if (socketUserId === userId) {
                     clients.push(socket);

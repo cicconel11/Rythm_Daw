@@ -8,6 +8,6 @@ export declare class AuthResponseDto {
     user: {
         id: string;
         email: string;
-        name: string;
+        name?: string;
     };
 }

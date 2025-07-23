@@ -1,45 +1,44 @@
-# Stage 1: Build
+# ---------- builder stage ----------
 FROM node:20-bookworm-slim AS builder
-
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install OpenSSL for Prisma
+RUN apt-get update -y && apt-get install -y openssl
 
-# Copy package files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages/server/package.json ./packages/server/
+# Copy server package files
+COPY server/package*.json ./
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --prod=false
+RUN npm install --legacy-peer-deps
 
-# Copy source code
-COPY . .
+# Copy server source code (excluding node_modules)
+COPY server/src ./src
+COPY server/prisma ./prisma
+COPY server/tsconfig*.json ./
+COPY server/nest-cli.json ./
 
-# Build the application
-RUN pnpm run build
+# compile the API and fail if main.js is missing
+RUN rm -rf dist/ && \
+  npx tsc -p tsconfig.build.json && \
+  cp -r src/public dist/ 2>/dev/null || true && \
+  test -f dist/src/main.js
 
-# Stage 2: Production
-FROM node:20-slim
-
+# ---------- runtime stage ----------
+FROM node:20-slim AS runner
 WORKDIR /app
 
-# Copy built application and production dependencies
-COPY --from=builder /app/packages/server/package.json ./package.json
+# copy compiled output + runtime deps
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/server/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nodeuser && \
-    chown -R nodeuser:nodejs .
+ENV NODE_ENV=production
+ENV PORT=4000
+EXPOSE 4000
 
-USER nodeuser
+# Create startup script
+RUN echo '#!/bin/sh\nnpx prisma generate\nnode dist/src/main.js' > /app/start.sh && \
+  chmod +x /app/start.sh
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error()}).on('error', () => {process.exit(1)});"
-
-EXPOSE 3000
-
-CMD ["node", "dist/main.js"]
+# run the compiled Nest app
+CMD ["/app/start.sh"]

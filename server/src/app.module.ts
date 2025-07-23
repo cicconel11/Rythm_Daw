@@ -6,16 +6,25 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { RootController } from './common/root.controller';
 import { SecurityModule } from './common/security.module';
 // import { AuthModule } from './modules/auth/auth.module';
-import { PrismaModule } from './prisma/prisma.module';
+// import { PrismaModule } from './prisma/prisma.module';
 // import { FilesModule } from './modules/files/files.module';
 // import { RtcModule } from './modules/rtc/rtc.module';
 import { Redis } from 'ioredis';
 import { PingController } from './common/ping.controller';
 import { AuthLoginController } from './common/auth-login.controller';
 import { FilesUploadController } from './common/files-upload.controller';
+import { PluginsModule } from './modules/plugins/plugins.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '(public)'),
+      renderPath: '/',
+      serveStaticOptions: { index: false },
+      exclude: ['/api*'],
+    }),
     // ConfigModule.forRoot({
     //   isGlobal: true,
     //   envFilePath: '.env',
@@ -26,10 +35,11 @@ import { FilesUploadController } from './common/files-upload.controller';
       ],
     }),
     SecurityModule,
-    PrismaModule,
+    // PrismaModule,
     // AuthModule,
     // FilesModule,
     // RtcModule,
+    PluginsModule,
   ],
   controllers: [
     RootController,

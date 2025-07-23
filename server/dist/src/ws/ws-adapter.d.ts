@@ -1,5 +1,5 @@
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { ServerOptions } from 'socket.io';
 import { Server as HttpServer } from 'http';
 export declare class WsAdapter extends IoAdapter {

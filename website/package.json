@@ -1,28 +1,28 @@
 {
-  "name": "rythm-daw-website",
-  "version": "1.0.0",
-  "private": true,
+  "name": "website",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "next start"
   },
   "dependencies": {
-    "next": "13.4.19",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "lucide-react": "^0.288.0",
-    "@headlessui/react": "^1.7.17",
-    "tailwindcss": "^3.3.3",
-    "postcss": "^8.4.21",
-    "autoprefixer": "^10.4.14"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.4",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "eslint": "^8.45.0",
-    "eslint-config-next": "13.4.19"
+    "@headlessui/react": "^1.7.18",
+    "@radix-ui/react-avatar": "^1.0.0",
+    "@radix-ui/react-dialog": "^1.0.0",
+    "@radix-ui/react-label": "^1.0.0",
+    "@radix-ui/react-progress": "^1.0.0",
+    "@radix-ui/react-scroll-area": "^1.0.0",
+    "@radix-ui/react-switch": "^1.0.0",
+    "autoprefixer": "^10.4.17",
+    "class-variance-authority": "^0.7.0",
+    "classnames": "^2.3.2",
+    "lucide-react": "^0.525.0",
+    "next": "^14.2.3",
+    "postcss": "^8.4.34",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-hot-toast": "^2.5.2",
+    "tailwind-merge": "^2.2.2",
+    "tailwindcss": "^3.4.4"
   }
 }

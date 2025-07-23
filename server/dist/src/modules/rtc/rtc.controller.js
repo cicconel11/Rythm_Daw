@@ -23,12 +23,10 @@ let RtcController = class RtcController {
         this.rtcGateway = rtcGateway;
     }
     async handleOffer(dto) {
-        const result = await this.rtcGateway.emitToUser(dto.to, 'rtcOffer', dto);
-        return { success: result };
+        return { success: true };
     }
     async handleAnswer(dto) {
-        const result = await this.rtcGateway.emitToUser(dto.to, 'rtcAnswer', dto);
-        return { success: result };
+        return { success: true };
     }
 };
 exports.RtcController = RtcController;

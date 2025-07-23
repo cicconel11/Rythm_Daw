@@ -1,4 +1,11 @@
 {
+  "private": true,
+  "workspaces": [
+    "ui-kit",
+    "ui-dev",
+    "website",
+    "server"
+  ],
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@types/react-window": "^1.8.8",
@@ -45,6 +52,7 @@
     "@babel/preset-env": "^7.28.0",
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
+    "@nestjs/cli": "^11.0.7",
     "@pact-foundation/pact": "^12.1.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",

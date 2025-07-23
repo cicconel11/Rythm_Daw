@@ -4,6 +4,12 @@
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "@ui-kit/*": [
+        "../ui-kit/src/*"
+      ],
+      "@ui-dev/*": [
+        "../ui-dev/src/*"
       ]
     },
     "typeRoots": [

@@ -15,6 +15,10 @@ const root_controller_1 = require("./common/root.controller");
 const security_module_1 = require("./common/security.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 const ioredis_1 = require("ioredis");
+const ping_controller_1 = require("./common/ping.controller");
+const auth_login_controller_1 = require("./common/auth-login.controller");
+const files_upload_controller_1 = require("./common/files-upload.controller");
+const plugins_module_1 = require("./modules/plugins/plugins.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -28,8 +32,14 @@ exports.AppModule = AppModule = __decorate([
             }),
             security_module_1.SecurityModule,
             prisma_module_1.PrismaModule,
+            plugins_module_1.PluginsModule,
         ],
-        controllers: [root_controller_1.RootController],
+        controllers: [
+            root_controller_1.RootController,
+            ping_controller_1.PingController,
+            auth_login_controller_1.AuthLoginController,
+            files_upload_controller_1.FilesUploadController,
+        ],
         providers: [
             {
                 provide: core_1.APP_GUARD,
