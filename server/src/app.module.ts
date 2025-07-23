@@ -21,8 +21,6 @@ import { join } from 'path';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '(public)'),
-      renderPath: '/',
-      serveStaticOptions: { index: false },
       exclude: ['/api*'],
     }),
     // ConfigModule.forRoot({

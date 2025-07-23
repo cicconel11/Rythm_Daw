@@ -8,7 +8,10 @@ COPY website/package*.json ./
 # Install dependencies
 RUN npm install --legacy-peer-deps
 
-# Copy website source code
+# shared libs first (cache)
+COPY "Studio Hub Project/src" /app/StudioHubSrc/
+COPY ui-kit                  /app/ui-kit/
+COPY website                 /app/website/
 COPY website/src ./src
 COPY website/pages ./pages
 COPY website/tsconfig.json ./

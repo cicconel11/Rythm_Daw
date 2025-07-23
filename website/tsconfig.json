@@ -10,6 +10,9 @@
       ],
       "@ui-dev/*": [
         "../ui-dev/src/*"
+      ],
+      "@studio/*": [
+        "../Studio Hub Project/src/*"
       ]
     },
     "typeRoots": [
