@@ -1,4 +1,4 @@
-import { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
+import type { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { TagsService } from './tags.service';
 import { UpdateTagsDto } from './dto/update-tags.dto';
 export declare class TagsController {

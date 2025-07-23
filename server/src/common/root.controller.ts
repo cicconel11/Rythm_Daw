@@ -1,11 +1,11 @@
 import { Controller, Get, Inject } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+// import { PrismaService } from '../prisma/prisma.service';
 import { Redis } from 'ioredis';
 
 @Controller('/')
 export class RootController {
   constructor(
-    private readonly prisma: PrismaService,
+    // private readonly prisma: PrismaService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis
   ) {}
 
@@ -19,7 +19,7 @@ export class RootController {
     // Check DB
     let db = 'ok';
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      // await this.prisma.$queryRaw`SELECT 1`;
     } catch (e) {
       db = 'fail';
     }

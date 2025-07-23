@@ -51,7 +51,7 @@ async function bootstrap() {
 
     // Enable CORS
     app.enableCors({
-      origin: process.env.CORS_ORIGINS?.split(',') || '*',
+      origin: process.env.FRONTEND_ORIGIN ?? '*',
       credentials: true,
     });
     
@@ -107,20 +107,22 @@ async function bootstrap() {
       // Log all registered routes
       const server = app.getHttpServer();
       const router = server._events.request._router;
-      const routes = router.stack
-        .map((layer: any) => {
-          if (layer.route) {
-            return {
-              route: {
-                path: layer.route.path,
-                methods: layer.route.methods
-              }
-            };
-          }
-        })
-        .filter((item: any) => item !== undefined);
-      
-      logger.log('Registered routes:', JSON.stringify(routes, null, 2));
+      if (router && router.stack) {
+        const routes = router.stack
+          .map((layer: any) => {
+            if (layer.route) {
+              return {
+                route: {
+                  path: layer.route.path,
+                  methods: layer.route.methods
+                }
+              };
+            }
+          })
+          .filter((item: any) => item !== undefined);
+        
+        logger.log('Registered routes:', JSON.stringify(routes, null, 2));
+      }
       
       return app;
     } catch (error) {

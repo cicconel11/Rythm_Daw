@@ -1,19 +1,29 @@
 version: '3.9'
 services:
-  app:
-    build: .
-    container_name: rhythm-app
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports: ['4000:4000']
+    networks: [rythm-net]
     environment:
+      - FRONTEND_ORIGIN=http://localhost:3000
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/rhythm
       - REDIS_URL=redis://redis:6379
       - JWT_ACCESS_SECRET=your_jwt_access_secret
       - JWT_REFRESH_SECRET=your_jwt_refresh_secret
-    ports:
-      - "3000:3000"
     depends_on:
       - db
       - redis
+  website:
+    build:
+      context: .
+      dockerfile: website/Dockerfile
+    ports: ['3000:3000']
+    networks: [rythm-net]
+    environment:
+      - NEXT_PUBLIC_API_URL=http://server:4000
   db:
     image: postgres:14
     container_name: rhythm-db
@@ -32,5 +42,7 @@ services:
     restart: always
     ports:
       - "6379:6379"
+networks:
+  rythm-net:
 volumes:
   pgdata: 

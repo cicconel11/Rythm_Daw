@@ -1,5 +1,5 @@
 import { SnapshotsService } from './snapshots.service';
-import { RequestWithUser } from '../../constants/request-with-user';
+import type { RequestWithUser } from '../../constants/request-with-user';
 export declare class SnapshotsController {
     private readonly snapshotsService;
     constructor(snapshotsService: SnapshotsService);

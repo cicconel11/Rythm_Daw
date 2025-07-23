@@ -22,10 +22,6 @@ class HeartbeatDto {
 }
 exports.HeartbeatDto = HeartbeatDto;
 __decorate([
-    (0, class_validator_1.IsEnum)(UserStatus),
-    __metadata("design:type", String)
-], HeartbeatDto.prototype, "status", void 0);
-__decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)

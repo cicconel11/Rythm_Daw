@@ -36,19 +36,29 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-      - run: pnpm install --prod --frozen-lockfile
+      - name: Cache pnpm store (server)
+        uses: actions/cache@v4
+        with:
+          path: server/node_modules/.pnpm-store
+          key: ${{ runner.os }}-pnpm-server-${{ hashFiles('server/pnpm-lock.yaml') }}
+      - name: Cache pnpm store (website)
+        uses: actions/cache@v4
+        with:
+          path: website/node_modules/.pnpm-store
+          key: ${{ runner.os }}-pnpm-website-${{ hashFiles('website/pnpm-lock.yaml') }}
 
       # ---------- AWS ECR login ----------
       - name: 🔐  Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
       # ---------- Build & push ----------
-      - name: 🐳  Build & push image to ECR
+      - name: 🐳  Build & push multi-arch images
         run: |
-          IMAGE="${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}"
-          docker buildx build \
+          docker buildx build --push \
             --platform linux/amd64,linux/arm64 \
-            --push \
-            -t $IMAGE:${{ github.sha }} \
-            -t $IMAGE:latest \
-            . 
+            --tag ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/rythm-server:${{ github.sha }} \
+            --file server/Dockerfile server
+          docker buildx build --push \
+            --platform linux/amd64,linux/arm64 \
+            --tag ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/rythm-web:${{ github.sha }} \
+            --file website/Dockerfile website 

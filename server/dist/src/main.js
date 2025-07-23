@@ -43,7 +43,7 @@ async function bootstrap() {
             hidePoweredBy: true,
         }));
         app.enableCors({
-            origin: process.env.CORS_ORIGINS?.split(',') || '*',
+            origin: process.env.FRONTEND_ORIGIN ?? '*',
             credentials: true,
         });
         app.useGlobalPipes(new common_1.ValidationPipe({
@@ -85,7 +85,7 @@ async function bootstrap() {
             const server = app.getHttpServer();
             const router = server._events.request._router;
             const routes = router.stack
-                .map(layer => {
+                .map((layer) => {
                 if (layer.route) {
                     return {
                         route: {
@@ -95,7 +95,7 @@ async function bootstrap() {
                     };
                 }
             })
-                .filter(item => item !== undefined);
+                .filter((item) => item !== undefined);
             logger.log('Registered routes:', JSON.stringify(routes, null, 2));
             return app;
         }

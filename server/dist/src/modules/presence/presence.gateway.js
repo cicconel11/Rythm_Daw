@@ -11,7 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PresenceGateway = void 0;
 const websockets_1 = require("@nestjs/websockets");
-const socket_io_1 = require("socket.io");
 const common_1 = require("@nestjs/common");
 const ws_jwt_auth_guard_1 = require("../auth/guards/ws-jwt-auth.guard");
 const presence_service_1 = require("./presence.service");
@@ -96,10 +95,6 @@ let PresenceGateway = class PresenceGateway {
     }
 };
 exports.PresenceGateway = PresenceGateway;
-__decorate([
-    (0, websockets_1.WebSocketServer)(),
-    __metadata("design:type", socket_io_1.Server)
-], PresenceGateway.prototype, "server", void 0);
 exports.PresenceGateway = PresenceGateway = __decorate([
     (0, websockets_1.WebSocketGateway)({
         namespace: 'presence',
