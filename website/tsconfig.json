@@ -13,6 +13,12 @@
       ],
       "@lovable/*": [
         "../lovable-src/src/*"
+      ],
+      "@shared/*": [
+        "../shared/*"
+      ],
+      "@shared/lib/*": [
+        "../shared/lib/*"
       ]
     },
     "typeRoots": [

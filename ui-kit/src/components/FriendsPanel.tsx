@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Search, UserPlus, MessageSquare, Music, Users } from 'lucide-react';
+import { useFriendRequests, useAcceptRequest, FriendRequest } from '@shared/hooks/useFriendRequests';
 
 interface FriendsPanelProps {
   onNavigate?: (path: string) => void;
@@ -29,10 +30,22 @@ const suggested = [
   { id: 2, name: 'BassMaster', avatar: 'BM', mutualFriends: 3, reason: 'Friend of ProducerX' },
 ];
 
+function isFriendRequest(item: any): item is FriendRequest {
+  return (
+    typeof item === 'object' &&
+    typeof item.id === 'string' &&
+    typeof item.name === 'string' &&
+    Array.isArray(item.plugins)
+  );
+}
+
 export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
   const [activeTab, setActiveTab] = useState<'all' | 'online' | 'pending' | 'suggested'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [addFriendInput, setAddFriendInput] = useState('');
+  const { data, isLoading, error } = useFriendRequests();
+  const requests: FriendRequest[] = data ?? [];
+  const accept = useAcceptRequest();
 
   const handleAddFriend = () => {
     if (addFriendInput.trim()) {
@@ -165,76 +178,59 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
           <CardContent className="p-6">
             <ScrollArea className="h-[500px]">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {getTabContent().map((item, index) => (
-                  <div key={index} className="bg-[#0D1126] rounded-lg p-4 border border-gray-700 group hover:border-[#7E4FFF]/50 transition-colors">
-                    <div className="flex items-start space-x-3 mb-3">
-                      <div className="relative">
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#7E4FFF] to-[#6B3FE6] rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">{item.avatar}</span>
+                {(requests as FriendRequest[]).map(item => {
+                  const { id, name, status = '', reason = '', plugins = [] } = item;
+                  return (
+                    <div key={id} className="bg-[#0D1126] rounded-lg p-4 border border-gray-700 group hover:border-[#7E4FFF]/50 transition-colors">
+                      <div className="flex items-start space-x-3 mb-3">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-br from-[#7E4FFF] to-[#6B3FE6] rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">{name.charAt(0)}</span>
+                          </div>
+                          {status && (
+                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0D1126] ${status === 'online' ? 'bg-green-400' : 'bg-gray-500'}`}></div>
+                          )}
                         </div>
-                        {'status' in item && (
-                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0D1126] ${
-                            item.status === 'online' ? 'bg-green-400' : 'bg-gray-500'
-                          }`}></div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-white">{item.name}</h3>
-                        {'status' in item && (
-                          <p className={`text-sm ${item.status === 'online' ? 'text-green-400' : 'text-gray-400'}`}>
-                            {item.status}
-                          </p>
-                        )}
-                        {'reason' in item && (
-                          <p className="text-sm text-gray-400">{item.reason}</p>
-                        )}
-                        <p className="text-xs text-gray-500">{item.mutualFriends} mutual friends</p>
-                      </div>
-                    </div>
-
-                    {'plugins' in item && (
-                      <div className="mb-3">
-                        <p className="text-xs text-gray-400 mb-1">Recent plugins:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {item.plugins.slice(0, 2).map((plugin, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {plugin}
-                            </Badge>
-                          ))}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white">{name}</h3>
+                          <p className={`text-sm ${status === 'online' ? 'text-green-400' : 'text-gray-400'}`}>{status}</p>
+                          <p className="text-sm text-gray-400">{reason}</p>
                         </div>
                       </div>
-                    )}
-
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {activeTab === 'pending' ? (
-                        <>
-                          <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                            Accept
+                      {plugins.slice(0, 2).map((plugin: string, idx: number) => (
+                        <span key={idx}>{plugin}</span>
+                      ))}
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {activeTab === 'pending' ? (
+                          <>
+                            <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                              Accept
+                            </Button>
+                            <Button size="sm" variant="outline" className="flex-1">
+                              Decline
+                            </Button>
+                          </>
+                        ) : activeTab === 'suggested' ? (
+                          <Button size="sm" className="flex-1 bg-[#7E4FFF] hover:bg-[#6B3FE6]">
+                            <UserPlus className="w-3 h-3 mr-1" />
+                            Add
                           </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            Decline
-                          </Button>
-                        </>
-                      ) : activeTab === 'suggested' ? (
-                        <Button size="sm" className="flex-1 bg-[#7E4FFF] hover:bg-[#6B3FE6]">
-                          <UserPlus className="w-3 h-3 mr-1" />
-                          Add
-                        </Button>
-                      ) : (
-                        <>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <MessageSquare className="w-3 h-3 mr-1" />
-                            Chat
-                          </Button>
-                          <Button size="sm" variant="outline" className="flex-1">
-                            <Music className="w-3 h-3 mr-1" />
-                            Plugins
-                          </Button>
-                        </>
-                      )}
+                        ) : (
+                          <>
+                            <Button size="sm" variant="outline" className="flex-1">
+                              <MessageSquare className="w-3 h-3 mr-1" />
+                              Chat
+                            </Button>
+                            <Button size="sm" variant="outline" className="flex-1">
+                              <Music className="w-3 h-3 mr-1" />
+                              Plugins
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </ScrollArea>
           </CardContent>
