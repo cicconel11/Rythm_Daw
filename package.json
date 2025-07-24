@@ -20,7 +20,8 @@
     "ts-node": "^10.9.2",
     "ulid": "^3.0.1",
     "uuid": "^11.1.0",
-    "ws": "^7.5.9"
+    "ws": "^7.5.9",
+    "zod": "^4.0.7"
   },
   "packageManager": "pnpm@10.13.1",
   "type": "module",

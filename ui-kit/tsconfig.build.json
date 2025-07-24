@@ -12,6 +12,7 @@
         "types": [
             "node"
         ],
+        "module": "Node16",
         "paths": {
             "@shared/*": [
                 "../shared/*"
