@@ -36,6 +36,8 @@ model User {
   crashReports  CrashReport[]
   webRtcMetrics WebRtcMetric[]
   devices       Device[]
+  fromTransfers FileTransfer[] @relation("FromTransfers")
+  toTransfers   FileTransfer[] @relation("ToTransfers")
 }
 
 model Plugin {
@@ -215,4 +217,21 @@ model EntityTag {
   snapshot Snapshot? @relation("SnapshotTags", fields: [snapshotId], references: [id])
 
   @@unique([entityType, entityId, tagId])
+}
+
+model FileTransfer {
+  id         String   @id @default(cuid())
+  fileName   String
+  size       Int
+  mimeType   String
+  fromUserId String
+  toUserId   String
+  status     String   @default("pending")
+  progress   Int      @default(0)
+  fileKey    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  fromUser User @relation("FromTransfers", fields: [fromUserId], references: [id])
+  toUser   User @relation("ToTransfers", fields: [toUserId], references: [id])
 }

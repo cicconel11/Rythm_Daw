@@ -1,6 +1,6 @@
-import React from 'react';
-import { useStore } from '@store';
-import { Led } from '../components/Led';
+import React from "react";
+import { useStore } from "@store";
+import { Led } from "../components/Led";
 
 const AccountTab: React.FC = () => {
   const { plugins } = useStore();
@@ -24,13 +24,22 @@ const AccountTab: React.FC = () => {
       </div>
 
       {/* Plugins List */}
-      <h3 className="text-lg font-medium mb-4 text-text_primary">My Plug-ins</h3>
+      <h3 className="text-lg font-medium mb-4 text-text_primary">
+        My Plug-ins
+      </h3>
       <div className="flex-1 overflow-y-auto space-y-2 pr-1">
         {plugins.map((plugin) => (
-          <div key={plugin.id} className="bg-card rounded-lg p-3 shadow-inner-md border border-gray-700 flex justify-between items-center">
-            <span className="text-sm text-text_primary truncate flex-1">{plugin.name}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${plugin.compatible ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
-              {plugin.compatible ? '✓ Compatible' : '✖ Version Mismatch'}
+          <div
+            key={plugin.id}
+            className="bg-card rounded-lg p-3 shadow-inner-md border border-gray-700 flex justify-between items-center"
+          >
+            <span className="text-sm text-text_primary truncate flex-1">
+              {plugin.name}
+            </span>
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full ${plugin.compatible ? "bg-green-900 text-green-300" : "bg-red-900 text-red-300"}`}
+            >
+              {plugin.compatible ? "✓ Compatible" : "✖ Version Mismatch"}
             </span>
           </div>
         ))}

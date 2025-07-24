@@ -1,11 +1,10 @@
-
-import React from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Download } from 'lucide-react';
+import React from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Download } from "lucide-react";
 
 interface OnboardScanProps {
   onSuccess: () => void;
@@ -13,47 +12,47 @@ interface OnboardScanProps {
 
 export function OnboardScan({ onSuccess }: OnboardScanProps) {
   const navigate = useNavigate();
-  
+
   const { mutate: downloadApp, isPending } = useMutation({
     mutationFn: async () => {
       const os = detectOS();
       const response = await fetch(`/api/download?os=${os}`);
       if (!response.ok) {
-        throw new Error('Failed to download app');
+        throw new Error("Failed to download app");
       }
-      
+
       // Create a blob from the response and trigger download
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `RHYTHM-${os}.dmg`; // Will be adjusted based on OS
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
-      
+
       return os;
     },
     onSuccess: (os) => {
       toast.success(`Downloading RHYTHM for ${os}...`);
       onSuccess();
-      navigate('/onboard/device');
+      navigate("/onboard/device");
     },
     onError: () => {
-      toast.error('Failed to start download. Please try again.');
-    }
+      toast.error("Failed to start download. Please try again.");
+    },
   });
-  
+
   const handleSkip = () => {
     onSuccess();
-    navigate('/onboard/device');
+    navigate("/onboard/device");
   };
   const detectOS = () => {
     const userAgent = navigator.userAgent;
-    if (userAgent.includes('Mac')) return 'mac';
-    if (userAgent.includes('Windows')) return 'windows';
-    return 'linux';
+    if (userAgent.includes("Mac")) return "mac";
+    if (userAgent.includes("Windows")) return "windows";
+    return "linux";
   };
 
   return (
@@ -61,7 +60,9 @@ export function OnboardScan({ onSuccess }: OnboardScanProps) {
       <Card className="w-full max-w-2xl bg-gradient-to-br from-[#141B33] to-[#1A2142] border-gray-700">
         <CardHeader className="text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-[#7E4FFF] to-[#6B3FE6] rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span className="text-white font-bold text-xl font-['JetBrains_Mono']">R</span>
+            <span className="text-white font-bold text-xl font-['JetBrains_Mono']">
+              R
+            </span>
           </div>
           <CardTitle className="text-3xl font-bold text-white font-['Inter'] mb-2">
             Scan your plug-ins
@@ -78,26 +79,36 @@ export function OnboardScan({ onSuccess }: OnboardScanProps) {
               </div>
               <div className="flex space-x-2">
                 <div className="w-2 h-2 bg-[#7E4FFF] rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-[#7E4FFF] rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                <div className="w-2 h-2 bg-[#7E4FFF] rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                <div
+                  className="w-2 h-2 bg-[#7E4FFF] rounded-full animate-pulse"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-[#7E4FFF] rounded-full animate-pulse"
+                  style={{ animationDelay: "0.4s" }}
+                ></div>
               </div>
               <div className="w-24 h-16 bg-gradient-to-br from-[#7E4FFF] to-[#6B3FE6] rounded flex items-center justify-center">
-                <span className="text-white font-bold text-sm font-['JetBrains_Mono']">RHYTHM</span>
+                <span className="text-white font-bold text-sm font-['JetBrains_Mono']">
+                  RHYTHM
+                </span>
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-4">
-            <Button 
+            <Button
               onClick={() => downloadApp()}
               disabled={isPending}
               className="bg-gradient-to-r from-[#7E4FFF] to-[#6B3FE6] text-white hover:opacity-90 transition-opacity"
             >
               <Download className="mr-2 h-4 w-4" />
-              {isPending ? 'Preparing download...' : `Download for ${detectOS()}`}
+              {isPending
+                ? "Preparing download..."
+                : `Download for ${detectOS()}`}
             </Button>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={handleSkip}
               disabled={isPending}
               className="text-gray-400 hover:text-white"

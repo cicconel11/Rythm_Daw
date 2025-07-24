@@ -1,13 +1,22 @@
-import { useState, useCallback } from 'react';
-import { File, Folder, Upload, Search, MoreVertical, Download, Trash2, Share2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useCallback } from "react";
+import {
+  File,
+  Folder,
+  Upload,
+  Search,
+  MoreVertical,
+  Download,
+  Trash2,
+  Share2,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type FileItem = {
   id: string;
   name: string;
-  type: 'file' | 'folder';
+  type: "file" | "folder";
   size: string;
   modified: string;
   sharedWith: string[];
@@ -16,67 +25,67 @@ type FileItem = {
 
 const files: FileItem[] = [
   {
-    id: '1',
-    name: 'Project_Alpha',
-    type: 'folder',
-    size: '--',
-    modified: '2 hours ago',
-    sharedWith: ['Alex', 'Jordan'],
+    id: "1",
+    name: "Project_Alpha",
+    type: "folder",
+    size: "--",
+    modified: "2 hours ago",
+    sharedWith: ["Alex", "Jordan"],
     icon: <Folder className="h-5 w-5 text-yellow-400" />,
   },
   {
-    id: '2',
-    name: 'Drum_Loop_1.wav',
-    type: 'file',
-    size: '4.2 MB',
-    modified: '5 hours ago',
-    sharedWith: ['Alex'],
+    id: "2",
+    name: "Drum_Loop_1.wav",
+    type: "file",
+    size: "4.2 MB",
+    modified: "5 hours ago",
+    sharedWith: ["Alex"],
     icon: <File className="h-5 w-5 text-blue-400" />,
   },
   {
-    id: '3',
-    name: 'Bassline_Project',
-    type: 'folder',
-    size: '--',
-    modified: '1 day ago',
+    id: "3",
+    name: "Bassline_Project",
+    type: "folder",
+    size: "--",
+    modified: "1 day ago",
     sharedWith: [],
     icon: <Folder className="h-5 w-5 text-yellow-400" />,
   },
   {
-    id: '4',
-    name: 'Vocal_Take_3.mp3',
-    type: 'file',
-    size: '12.8 MB',
-    modified: '2 days ago',
-    sharedWith: ['Jordan', 'Taylor'],
+    id: "4",
+    name: "Vocal_Take_3.mp3",
+    type: "file",
+    size: "12.8 MB",
+    modified: "2 days ago",
+    sharedWith: ["Jordan", "Taylor"],
     icon: <File className="h-5 w-5 text-blue-400" />,
   },
   {
-    id: '5',
-    name: 'Mixing_Preset_1',
-    type: 'file',
-    size: '0.5 MB',
-    modified: '3 days ago',
+    id: "5",
+    name: "Mixing_Preset_1",
+    type: "file",
+    size: "0.5 MB",
+    modified: "3 days ago",
     sharedWith: [],
     icon: <File className="h-5 w-5 text-purple-400" />,
   },
 ];
 
 export default function FileShare() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
 
   const filteredFiles = files.filter((file) =>
-    file.name.toLowerCase().includes(searchQuery.toLowerCase())
+    file.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragover') {
+    if (e.type === "dragover") {
       setIsDragging(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setIsDragging(false);
     }
   }, []);
@@ -85,21 +94,21 @@ export default function FileShare() {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       // Handle file upload
       const files = Array.from(e.dataTransfer.files);
-      console.log('Files to upload:', files);
+      console.log("Files to upload:", files);
       // Here you would typically upload the files to your server
     }
   }, []);
 
   const handleFileSelect = (id: string, ctrlKey: boolean) => {
     if (ctrlKey) {
-      setSelectedFiles(prev => 
-        prev.includes(id) 
-          ? prev.filter(fileId => fileId !== id)
-          : [...prev, id]
+      setSelectedFiles((prev) =>
+        prev.includes(id)
+          ? prev.filter((fileId) => fileId !== id)
+          : [...prev, id],
       );
     } else {
       setSelectedFiles([id]);
@@ -107,14 +116,14 @@ export default function FileShare() {
   };
 
   const handleUploadClick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
+    const input = document.createElement("input");
+    input.type = "file";
     input.multiple = true;
     input.onchange = (e: Event) => {
       const target = e.target as HTMLInputElement;
       if (target.files && target.files.length > 0) {
         const files = Array.from(target.files);
-        console.log('Files to upload:', files);
+        console.log("Files to upload:", files);
         // Handle file upload
       }
     };
@@ -126,7 +135,9 @@ export default function FileShare() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white">File Share</h1>
-          <p className="text-sm text-gray-400">Share and collaborate on your music projects</p>
+          <p className="text-sm text-gray-400">
+            Share and collaborate on your music projects
+          </p>
         </div>
         <div className="flex w-full sm:w-auto gap-2">
           <div className="relative flex-1 sm:w-64">
@@ -139,7 +150,10 @@ export default function FileShare() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button onClick={handleUploadClick} className="bg-purple-600 hover:bg-purple-700">
+          <Button
+            onClick={handleUploadClick}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
             <Upload className="h-4 w-4 mr-2" />
             Upload
           </Button>
@@ -148,7 +162,9 @@ export default function FileShare() {
 
       <div
         className={`rounded-lg border-2 border-dashed ${
-          isDragging ? 'border-purple-500 bg-purple-500/10' : 'border-gray-700 bg-gray-800/50'
+          isDragging
+            ? "border-purple-500 bg-purple-500/10"
+            : "border-gray-700 bg-gray-800/50"
         } p-8 text-center transition-colors`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragOver}
@@ -159,10 +175,10 @@ export default function FileShare() {
             <Upload className="h-6 w-6 text-purple-400" />
           </div>
           <h3 className="text-lg font-medium text-white">
-            {isDragging ? 'Drop files here' : 'Drag and drop files here'}
+            {isDragging ? "Drop files here" : "Drag and drop files here"}
           </h3>
           <p className="text-sm text-gray-400">
-            {isDragging ? 'Release to upload' : 'or click to browse files'}
+            {isDragging ? "Release to upload" : "or click to browse files"}
           </p>
         </div>
       </div>
@@ -173,15 +189,27 @@ export default function FileShare() {
             <CardTitle className="text-lg text-white">My Files</CardTitle>
             {selectedFiles.length > 0 && (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:bg-gray-700 hover:text-white">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-400 hover:bg-gray-700 hover:text-white"
+                >
                   <Download className="h-4 w-4 mr-1.5" />
                   Download
                 </Button>
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:bg-gray-700 hover:text-white">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-gray-400 hover:bg-gray-700 hover:text-white"
+                >
                   <Share2 className="h-4 w-4 mr-1.5" />
                   Share
                 </Button>
-                <Button variant="ghost" size="sm" className="text-red-400 hover:bg-gray-700 hover:text-red-300">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-400 hover:bg-gray-700 hover:text-red-300"
+                >
                   <Trash2 className="h-4 w-4 mr-1.5" />
                   Delete
                 </Button>
@@ -213,20 +241,24 @@ export default function FileShare() {
               </thead>
               <tbody className="divide-y divide-gray-700">
                 {filteredFiles.map((file) => (
-                  <tr 
+                  <tr
                     key={file.id}
                     className={`${
-                      selectedFiles.includes(file.id) ? 'bg-purple-500/10' : 'hover:bg-gray-700/30'
+                      selectedFiles.includes(file.id)
+                        ? "bg-purple-500/10"
+                        : "hover:bg-gray-700/30"
                     } transition-colors cursor-pointer`}
-                    onClick={(e) => handleFileSelect(file.id, e.ctrlKey || e.metaKey)}
+                    onClick={(e) =>
+                      handleFileSelect(file.id, e.ctrlKey || e.metaKey)
+                    }
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          {file.icon}
-                        </div>
+                        <div className="flex-shrink-0">{file.icon}</div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-white">{file.name}</div>
+                          <div className="text-sm font-medium text-white">
+                            {file.name}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -234,7 +266,9 @@ export default function FileShare() {
                       <div className="text-sm text-gray-300">{file.size}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-300">{file.modified}</div>
+                      <div className="text-sm text-gray-300">
+                        {file.modified}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex -space-x-2">
@@ -248,7 +282,9 @@ export default function FileShare() {
                           </div>
                         ))}
                         {file.sharedWith.length === 0 && (
-                          <span className="text-xs text-gray-400">Only you</span>
+                          <span className="text-xs text-gray-400">
+                            Only you
+                          </span>
                         )}
                       </div>
                     </td>

@@ -1,6 +1,6 @@
-import { User, Plug2, Activity } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ToastExample } from '@/components/examples/ToastExample';
+import { User, Plug2, Activity } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToastExample } from "@/components/examples/ToastExample";
 
 type Plugin = {
   id: string;
@@ -18,34 +18,83 @@ type RecentActivity = {
 };
 
 const plugins: Plugin[] = [
-  { id: '1', name: 'Serum', category: 'Synthesizer', version: '1.2.3', isActive: true },
-  { id: '2', name: 'ValhallaDSP', category: 'Reverb', version: '2.1.0', isActive: true },
-  { id: '3', name: 'Soothe2', category: 'Dynamic EQ', version: '1.5.2', isActive: true },
-  { id: '4', name: 'Pro-Q3', category: 'EQ', version: '3.0.0', isActive: false },
-  { id: '5', name: 'Kickstart', category: 'Sidechain', version: '1.0.0', isActive: true },
+  {
+    id: "1",
+    name: "Serum",
+    category: "Synthesizer",
+    version: "1.2.3",
+    isActive: true,
+  },
+  {
+    id: "2",
+    name: "ValhallaDSP",
+    category: "Reverb",
+    version: "2.1.0",
+    isActive: true,
+  },
+  {
+    id: "3",
+    name: "Soothe2",
+    category: "Dynamic EQ",
+    version: "1.5.2",
+    isActive: true,
+  },
+  {
+    id: "4",
+    name: "Pro-Q3",
+    category: "EQ",
+    version: "3.0.0",
+    isActive: false,
+  },
+  {
+    id: "5",
+    name: "Kickstart",
+    category: "Sidechain",
+    version: "1.0.0",
+    isActive: true,
+  },
 ];
 
 const recentActivity: RecentActivity[] = [
-  { id: '1', action: 'Opened project', plugin: 'Ableton Live', time: '2 min ago' },
-  { id: '2', action: 'Added plugin', plugin: 'Serum', time: '15 min ago' },
-  { id: '3', action: 'Exported track', plugin: 'Project 1', time: '1 hour ago' },
-  { id: '4', action: 'Updated plugin', plugin: 'ValhallaDSP', time: '2 hours ago' },
+  {
+    id: "1",
+    action: "Opened project",
+    plugin: "Ableton Live",
+    time: "2 min ago",
+  },
+  { id: "2", action: "Added plugin", plugin: "Serum", time: "15 min ago" },
+  {
+    id: "3",
+    action: "Exported track",
+    plugin: "Project 1",
+    time: "1 hour ago",
+  },
+  {
+    id: "4",
+    action: "Updated plugin",
+    plugin: "ValhallaDSP",
+    time: "2 hours ago",
+  },
 ];
 
 export default function Dashboard() {
-  const activePlugins = plugins.filter(plugin => plugin.isActive);
-  const inactivePlugins = plugins.filter(plugin => !plugin.isActive);
+  const activePlugins = plugins.filter((plugin) => plugin.isActive);
+  const inactivePlugins = plugins.filter((plugin) => !plugin.isActive);
 
   return (
     <div className="space-y-6">
       {/* Toast Example */}
       <ToastExample />
-      
+
       {/* Welcome Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Welcome back, Producer</h1>
-          <p className="text-gray-400">Here's what's happening with your music today</p>
+          <h1 className="text-2xl font-bold text-white">
+            Welcome back, Producer
+          </h1>
+          <p className="text-gray-400">
+            Here's what's happening with your music today
+          </p>
         </div>
         <div className="flex items-center space-x-2 bg-gray-800/50 rounded-full px-4 py-2">
           <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -57,18 +106,24 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-gray-800/50 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">Active Plugins</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">
+              Active Plugins
+            </CardTitle>
             <Plug2 className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{activePlugins.length}</div>
+            <div className="text-2xl font-bold text-white">
+              {activePlugins.length}
+            </div>
             <p className="text-xs text-gray-400">+2 from yesterday</p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gray-800/50 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">Projects</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">
+              Projects
+            </CardTitle>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -89,10 +144,12 @@ export default function Dashboard() {
             <p className="text-xs text-gray-400">+1 in progress</p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gray-800/50 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">CPU Usage</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">
+              CPU Usage
+            </CardTitle>
             <Activity className="h-4 w-4 text-green-400" />
           </CardHeader>
           <CardContent>
@@ -100,10 +157,12 @@ export default function Dashboard() {
             <p className="text-xs text-gray-400">+2% from last hour</p>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gray-800/50 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-400">Collaborators</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-400">
+              Collaborators
+            </CardTitle>
             <User className="h-4 w-4 text-yellow-400" />
           </CardHeader>
           <CardContent>
@@ -122,10 +181,15 @@ export default function Dashboard() {
           <CardContent>
             <div className="space-y-4">
               {activePlugins.map((plugin) => (
-                <div key={plugin.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors">
+                <div
+                  key={plugin.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors"
+                >
                   <div>
                     <p className="font-medium text-white">{plugin.name}</p>
-                    <p className="text-xs text-gray-400">{plugin.category} • v{plugin.version}</p>
+                    <p className="text-xs text-gray-400">
+                      {plugin.category} • v{plugin.version}
+                    </p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -151,7 +215,8 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-white">
-                      {activity.action} <span className="text-purple-400">{activity.plugin}</span>
+                      {activity.action}{" "}
+                      <span className="text-purple-400">{activity.plugin}</span>
                     </p>
                     <p className="text-xs text-gray-400">{activity.time}</p>
                   </div>
@@ -170,9 +235,14 @@ export default function Dashboard() {
         <CardContent>
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {inactivePlugins.map((plugin) => (
-              <div key={plugin.id} className="p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors">
+              <div
+                key={plugin.id}
+                className="p-3 rounded-lg bg-gray-700/30 hover:bg-gray-700/50 transition-colors"
+              >
                 <p className="font-medium text-white">{plugin.name}</p>
-                <p className="text-xs text-gray-400">{plugin.category} • v{plugin.version}</p>
+                <p className="text-xs text-gray-400">
+                  {plugin.category} • v{plugin.version}
+                </p>
                 <button className="mt-2 text-xs text-purple-400 hover:text-purple-300 transition-colors">
                   Activate
                 </button>

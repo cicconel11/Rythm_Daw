@@ -1,6 +1,6 @@
-import * as React from "react"
+import * as React from "react";
 
-type IconProps = React.SVGProps<SVGSVGElement>
+type IconProps = React.SVGProps<SVGSVGElement>;
 
 export const Icons = {
   google: (props: IconProps) => (

@@ -1,19 +1,18 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Progress } from './ui/progress';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Progress } from "./ui/progress";
 
 interface DeviceConnectProps {
   onConnected: () => void;
 }
 
 export function DeviceConnect({ onConnected }: DeviceConnectProps) {
-  const [code] = useState('ABC 123');
+  const [code] = useState("ABC 123");
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setProgress(prev => {
+      setProgress((prev) => {
         if (prev >= 100) {
           onConnected();
           return 100;
@@ -30,7 +29,9 @@ export function DeviceConnect({ onConnected }: DeviceConnectProps) {
       <Card className="w-full max-w-2xl bg-gradient-to-br from-[#141B33] to-[#1A2142] border-gray-700">
         <CardHeader className="text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-[#7E4FFF] to-[#6B3FE6] rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span className="text-white font-bold text-xl font-['JetBrains_Mono']">R</span>
+            <span className="text-white font-bold text-xl font-['JetBrains_Mono']">
+              R
+            </span>
           </div>
           <CardTitle className="text-3xl font-bold text-white font-['Inter'] mb-2">
             Connect your device
@@ -47,12 +48,15 @@ export function DeviceConnect({ onConnected }: DeviceConnectProps) {
             <div className="w-32 h-32 bg-white rounded-lg mx-auto p-4">
               <div className="w-full h-full bg-gray-900 rounded grid grid-cols-8 gap-1">
                 {Array.from({ length: 64 }).map((_, i) => (
-                  <div key={i} className={`rounded-sm ${Math.random() > 0.5 ? 'bg-white' : 'bg-gray-900'}`}></div>
+                  <div
+                    key={i}
+                    className={`rounded-sm ${Math.random() > 0.5 ? "bg-white" : "bg-gray-900"}`}
+                  ></div>
                 ))}
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-400">Waiting for connection...</span>

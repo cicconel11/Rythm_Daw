@@ -4,6 +4,10 @@ import { AddressInfo } from 'net';
 import { io, Socket } from 'socket.io-client';
 import { Server as SocketIOServer } from 'socket.io';
 
+jest.mock('uws', () => ({
+  restoreAdapter: jest.fn(),
+}));
+
 // Simple WebSocket server test that doesn't depend on NestJS
 describe('Standalone WebSocket Server', () => {
   let httpServer: HttpServer;

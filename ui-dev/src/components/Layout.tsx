@@ -1,19 +1,26 @@
-import { ReactNode } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Folder, Clock, Users, MessageSquare, Settings } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ReactNode } from "react";
+import { NavLink, Outlet } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Folder,
+  Clock,
+  Users,
+  MessageSquare,
+  Settings,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LayoutProps {
   children?: ReactNode;
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Files', href: '/files', icon: Folder },
-  { name: 'History', href: '/history', icon: Clock },
-  { name: 'Friends', href: '/friends', icon: Users },
-  { name: 'Chat', href: '/chat', icon: MessageSquare },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Files", href: "/files", icon: Folder },
+  { name: "History", href: "/history", icon: Clock },
+  { name: "Friends", href: "/friends", icon: Users },
+  { name: "Chat", href: "/chat", icon: MessageSquare },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function Layout({ children }: LayoutProps) {
@@ -22,9 +29,11 @@ export default function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <div className="w-20 md:w-64 bg-music-card border-r border-music-border flex flex-col">
         <div className="p-4 border-b border-music-border">
-          <h1 className="text-xl font-bold text-music-primary text-center md:text-left">Rythm</h1>
+          <h1 className="text-xl font-bold text-music-primary text-center md:text-left">
+            Rythm
+          </h1>
         </div>
-        
+
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-2">
             {navigation.map((item) => (
@@ -33,28 +42,33 @@ export default function Layout({ children }: LayoutProps) {
                   to={item.href}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center p-3 rounded-lg text-music-text-muted hover:bg-music-primary/10 hover:text-music-primary transition-colors',
-                      'group',
-                      isActive && 'bg-music-primary/10 text-music-primary font-medium'
+                      "flex items-center p-3 rounded-lg text-music-text-muted hover:bg-music-primary/10 hover:text-music-primary transition-colors",
+                      "group",
+                      isActive &&
+                        "bg-music-primary/10 text-music-primary font-medium",
                     )
                   }
                 >
-                  <item.icon className="h-6 w-6 flex-shrink-0" aria-hidden="true" />
+                  <item.icon
+                    className="h-6 w-6 flex-shrink-0"
+                    aria-hidden="true"
+                  />
                   <span className="ml-3 hidden md:inline">{item.name}</span>
                 </NavLink>
               </li>
             ))}
           </ul>
         </nav>
-        
+
         <div className="p-4 border-t border-music-border">
           <NavLink
             to="/settings"
             className={({ isActive }) =>
               cn(
-                'flex items-center p-3 rounded-lg text-music-text-muted hover:bg-music-primary/10 hover:text-music-primary transition-colors',
-                'group',
-                isActive && 'bg-music-primary/10 text-music-primary font-medium'
+                "flex items-center p-3 rounded-lg text-music-text-muted hover:bg-music-primary/10 hover:text-music-primary transition-colors",
+                "group",
+                isActive &&
+                  "bg-music-primary/10 text-music-primary font-medium",
               )
             }
           >
@@ -74,7 +88,7 @@ export default function Layout({ children }: LayoutProps) {
             {/* User menu and notifications can go here */}
           </div>
         </header>
-        
+
         {/* Page content */}
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />

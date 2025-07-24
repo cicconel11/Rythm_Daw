@@ -1,9 +1,16 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Filter, Upload, MessageSquare, UserPlus, Download, Music } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Upload,
+  MessageSquare,
+  UserPlus,
+  Download,
+  Music,
+} from "lucide-react";
 import { useState } from "react";
 
 const activities = [
@@ -13,7 +20,7 @@ const activities = [
     action: "Uploaded file",
     details: "Track_01_Master.wav",
     timestamp: "2024-01-15T10:30:00",
-    user: "You"
+    user: "You",
   },
   {
     id: 2,
@@ -21,7 +28,7 @@ const activities = [
     action: "Sent message",
     details: "Check out this new beat!",
     timestamp: "2024-01-15T09:45:00",
-    user: "You"
+    user: "You",
   },
   {
     id: 3,
@@ -29,7 +36,7 @@ const activities = [
     action: "Added friend",
     details: "BeatMaker99",
     timestamp: "2024-01-15T08:20:00",
-    user: "You"
+    user: "You",
   },
   {
     id: 4,
@@ -37,7 +44,7 @@ const activities = [
     action: "Downloaded file",
     details: "Bass_Line_v2.mid",
     timestamp: "2024-01-14T16:15:00",
-    user: "You"
+    user: "You",
   },
   {
     id: 5,
@@ -45,7 +52,7 @@ const activities = [
     action: "Installed plugin",
     details: "Serum v1.365",
     timestamp: "2024-01-14T14:30:00",
-    user: "You"
+    user: "You",
   },
   {
     id: 6,
@@ -53,7 +60,7 @@ const activities = [
     action: "Uploaded file",
     details: "Drum_Pattern.flp",
     timestamp: "2024-01-14T11:45:00",
-    user: "You"
+    user: "You",
   },
   {
     id: 7,
@@ -61,7 +68,7 @@ const activities = [
     action: "Received message",
     details: "What DAW are you using?",
     timestamp: "2024-01-13T20:10:00",
-    user: "ProducerX"
+    user: "ProducerX",
   },
   {
     id: 8,
@@ -69,7 +76,7 @@ const activities = [
     action: "Friend request received",
     details: "SynthWave2024",
     timestamp: "2024-01-13T18:30:00",
-    user: "SynthWave2024"
+    user: "SynthWave2024",
   },
 ];
 
@@ -110,8 +117,10 @@ const getActivityColor = (type: string) => {
 const formatTimestamp = (timestamp: string) => {
   const date = new Date(timestamp);
   const now = new Date();
-  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-  
+  const diffInHours = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+  );
+
   if (diffInHours < 1) return "Less than an hour ago";
   if (diffInHours < 24) return `${diffInHours} hours ago`;
   if (diffInHours < 48) return "Yesterday";
@@ -122,9 +131,10 @@ export default function History() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
 
-  const filteredActivities = activities.filter(activity => {
-    const matchesSearch = activity.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         activity.details.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredActivities = activities.filter((activity) => {
+    const matchesSearch =
+      activity.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      activity.details.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === "all" || activity.type === filterType;
     return matchesSearch && matchesFilter;
   });
@@ -134,7 +144,9 @@ export default function History() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">History</h1>
-          <p className="text-muted-foreground">Track your recent activity across the platform</p>
+          <p className="text-muted-foreground">
+            Track your recent activity across the platform
+          </p>
         </div>
         <Button variant="outline">
           <Filter className="w-4 h-4 mr-2" />
@@ -173,27 +185,34 @@ export default function History() {
         <CardContent>
           <div className="space-y-4">
             {filteredActivities.map((activity, index) => (
-              <div key={activity.id} className="flex items-start gap-4 p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors">
+              <div
+                key={activity.id}
+                className="flex items-start gap-4 p-4 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors"
+              >
                 <div className="flex-shrink-0 w-10 h-10 bg-card rounded-full flex items-center justify-center border border-border">
                   {getActivityIcon(activity.type)}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge className={`text-xs ${getActivityColor(activity.type)}`}>
+                    <Badge
+                      className={`text-xs ${getActivityColor(activity.type)}`}
+                    >
                       {activity.type.toUpperCase()}
                     </Badge>
-                    <span className="text-sm text-muted-foreground">by {activity.user}</span>
+                    <span className="text-sm text-muted-foreground">
+                      by {activity.user}
+                    </span>
                   </div>
-                  
+
                   <h3 className="font-medium text-foreground mb-1">
                     {activity.action}
                   </h3>
-                  
+
                   <p className="text-sm text-muted-foreground mb-2">
                     {activity.details}
                   </p>
-                  
+
                   <span className="text-xs text-muted-foreground">
                     {formatTimestamp(activity.timestamp)}
                   </span>

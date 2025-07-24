@@ -1,7 +1,7 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { useFileTransfer } from '../../hooks/useFileTransfer';
-import { Button, Progress, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import React, { useState, useCallback, useRef } from "react";
+import { useFileTransfer } from "../../hooks/useFileTransfer";
+import { Button, Progress, message } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 
 interface FileTransferProps {
   userId: string;
@@ -11,14 +11,9 @@ interface FileTransferProps {
 const FileTransfer: React.FC<FileTransferProps> = ({ userId, recipientId }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const {
-    isConnected,
-    isTransferring,
-    transferProgress,
-    error,
-    sendFileP2P,
-  } = useFileTransfer(userId);
+
+  const { isConnected, isTransferring, transferProgress, error, sendFileP2P } =
+    useFileTransfer(userId);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -35,21 +30,23 @@ const FileTransfer: React.FC<FileTransferProps> = ({ userId, recipientId }) => {
           console.log(`Transfer progress: ${progress}%`);
         },
         onComplete: (fileUrl) => {
-          message.success('File transfer completed successfully!');
-          console.log('File URL:', fileUrl);
+          message.success("File transfer completed successfully!");
+          console.log("File URL:", fileUrl);
           setSelectedFile(null);
           if (fileInputRef.current) {
-            fileInputRef.current.value = '';
+            fileInputRef.current.value = "";
           }
         },
         onError: (error) => {
           message.error(`Transfer failed: ${error.message}`);
-          console.error('Transfer error:', error);
+          console.error("Transfer error:", error);
         },
       });
     } catch (error) {
-      message.error(`Failed to start transfer: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      console.error('Error starting transfer:', error);
+      message.error(
+        `Failed to start transfer: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      console.error("Error starting transfer:", error);
     }
   }, [selectedFile, sendFileP2P, recipientId]);
 
@@ -61,7 +58,7 @@ const FileTransfer: React.FC<FileTransferProps> = ({ userId, recipientId }) => {
           ref={fileInputRef}
           onChange={handleFileChange}
           disabled={isTransferring || !isConnected}
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
         />
         <Button
           icon={<UploadOutlined />}
@@ -69,40 +66,40 @@ const FileTransfer: React.FC<FileTransferProps> = ({ userId, recipientId }) => {
           disabled={isTransferring || !isConnected}
           style={{ marginRight: 8 }}
         >
-          {selectedFile ? selectedFile.name : 'Select File'}
+          {selectedFile ? selectedFile.name : "Select File"}
         </Button>
-        
+
         <Button
           type="primary"
           onClick={handleSendFile}
           disabled={!selectedFile || isTransferring || !isConnected}
           loading={isTransferring}
         >
-          {isTransferring ? 'Sending...' : 'Send File'}
+          {isTransferring ? "Sending..." : "Send File"}
         </Button>
       </div>
-      
+
       {isTransferring && (
         <div className="progress-container" style={{ marginTop: 16 }}>
           <Progress percent={transferProgress} status="active" />
-          <div style={{ textAlign: 'center', marginTop: 8 }}>
+          <div style={{ textAlign: "center", marginTop: 8 }}>
             Transferring: {Math.round(transferProgress)}%
           </div>
         </div>
       )}
-      
+
       {error && (
-        <div className="error-message" style={{ color: 'red', marginTop: 8 }}>
+        <div className="error-message" style={{ color: "red", marginTop: 8 }}>
           Error: {error.message}
         </div>
       )}
-      
+
       {!isConnected && (
-        <div style={{ color: 'orange', marginTop: 8 }}>
+        <div style={{ color: "orange", marginTop: 8 }}>
           Connecting to file transfer service...
         </div>
       )}
-      
+
       <style>{`
         .file-transfer-container {
           padding: 16px;

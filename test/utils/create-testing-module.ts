@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppModule } from '../../server/src/app.module';
-import { PrismaService } from '../../server/src/modules/prisma/prisma.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { AppModule } from "../../server/src/app.module";
+import { PrismaService } from "../../server/src/modules/prisma/prisma.service";
 
 export async function createTestingApp(): Promise<TestingModule> {
   return Test.createTestingModule({
     imports: [AppModule],
   })
-    .overrideProvider(PrismaService)                // ✅ mock DB
+    .overrideProvider(PrismaService) // ✅ mock DB
     .useValue({
       $connect: jest.fn(),
       $disconnect: jest.fn(),

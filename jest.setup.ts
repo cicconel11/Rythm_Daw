@@ -1,5 +1,5 @@
 // Global test setup
-import 'dotenv/config';
+import "dotenv/config";
 import { ensureTestBucket } from "./server/test/ensure-s3-bucket";
 
 // Mock WebSocket for Node.js environment
@@ -15,11 +15,11 @@ global.WebSocket = class MockWebSocket extends EventTarget {
     super();
     this.url = url;
     this.readyState = this.CONNECTING;
-    
+
     // Simulate connection
     setTimeout(() => {
       this.readyState = this.OPEN;
-      this.dispatchEvent(new Event('open'));
+      this.dispatchEvent(new Event("open"));
     }, 0);
   }
 
@@ -31,7 +31,7 @@ global.WebSocket = class MockWebSocket extends EventTarget {
     this.readyState = this.CLOSING;
     setTimeout(() => {
       this.readyState = this.CLOSED;
-      this.dispatchEvent(new Event('close'));
+      this.dispatchEvent(new Event("close"));
     }, 0);
   }
 
@@ -60,4 +60,4 @@ afterAll(() => {
 });
 
 // Global test timeout
-jest.setTimeout(15000); 
+jest.setTimeout(15000);

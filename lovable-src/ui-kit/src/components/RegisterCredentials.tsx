@@ -1,20 +1,24 @@
-
-import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import React, { useState } from "react";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 interface RegisterCredentialsProps {
-  onContinue: (data: { email: string; password: string; displayName: string }) => void;
+  onContinue: (data: {
+    email: string;
+    password: string;
+    displayName: string;
+  }) => void;
 }
 
 export function RegisterCredentials({ onContinue }: RegisterCredentialsProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
 
-  const isValid = email.includes('@') && password.length >= 8 && displayName.length >= 2;
+  const isValid =
+    email.includes("@") && password.length >= 8 && displayName.length >= 2;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,15 +32,21 @@ export function RegisterCredentials({ onContinue }: RegisterCredentialsProps) {
       <Card className="w-full max-w-md bg-gradient-to-br from-[#141B33] to-[#1A2142] border-gray-700">
         <CardHeader className="text-center">
           <div className="w-16 h-16 bg-gradient-to-br from-[#7E4FFF] to-[#6B3FE6] rounded-full mx-auto mb-4 flex items-center justify-center">
-            <span className="text-white font-bold text-xl font-['JetBrains_Mono']">R</span>
+            <span className="text-white font-bold text-xl font-['JetBrains_Mono']">
+              R
+            </span>
           </div>
-          <CardTitle className="text-2xl font-bold text-white font-['Inter']">Create Account</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white font-['Inter']">
+            Create Account
+          </CardTitle>
           <p className="text-gray-400">Join the RHYTHM community</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-gray-300">Email</Label>
+              <Label htmlFor="email" className="text-gray-300">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -48,7 +58,9 @@ export function RegisterCredentials({ onContinue }: RegisterCredentialsProps) {
               />
             </div>
             <div>
-              <Label htmlFor="password" className="text-gray-300">Password</Label>
+              <Label htmlFor="password" className="text-gray-300">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -60,7 +72,9 @@ export function RegisterCredentials({ onContinue }: RegisterCredentialsProps) {
               />
             </div>
             <div>
-              <Label htmlFor="displayName" className="text-gray-300">Display Name</Label>
+              <Label htmlFor="displayName" className="text-gray-300">
+                Display Name
+              </Label>
               <Input
                 id="displayName"
                 type="text"
@@ -71,7 +85,7 @@ export function RegisterCredentials({ onContinue }: RegisterCredentialsProps) {
                 required
               />
             </div>
-            <Button 
+            <Button
               type="submit"
               disabled={!isValid}
               className="w-full bg-[#7E4FFF] hover:bg-[#6B3FE6] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold"

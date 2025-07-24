@@ -8,7 +8,7 @@ interface ImportMetaEnv {
 // Extend the existing ImportMeta interface
 export {};
 
-declare module 'vite' {
+declare module "vite" {
   interface ImportMeta {
     readonly env: ImportMetaEnv;
   }

@@ -1,51 +1,46 @@
 // @ts-nocheck
-import * as React from 'react';
-import { useState } from 'react';
-import { useStore } from '@store';
-import { motion, AnimatePresence } from 'framer-motion';
-import CreateGroupModal from './CreateGroupModal';
+import * as React from "react";
+import { useState } from "react";
+import { useStore } from "@store";
+import { motion, AnimatePresence } from "framer-motion";
+import CreateGroupModal from "./CreateGroupModal";
 
 type User = {
   id: string;
   name: string;
-  status: 'online' | 'offline' | 'away' | 'busy';
+  status: "online" | "offline" | "away" | "busy";
 };
 
 type Channel = {
   id: string;
   name: string;
-  type: 'direct' | 'group' | 'project';
+  type: "direct" | "group" | "project";
   participants: string[];
   unreadCount?: number;
 };
 
 const Sidebar = () => {
   const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
-  const { 
-    channels, 
-    users, 
-    activeChannel, 
-    setActiveChannel,
-    activeTab
-  } = useStore();
-  
+  const { channels, users, activeChannel, setActiveChannel, activeTab } =
+    useStore();
+
   // Separate channels by type
-  const projectChannels = channels.filter(c => c.type === 'project');
-  const groupChannels = channels.filter(c => c.type === 'group');
-  const directMessageChannels = channels.filter(c => c.type === 'direct');
+  const projectChannels = channels.filter((c) => c.type === "project");
+  const groupChannels = channels.filter((c) => c.type === "group");
+  const directMessageChannels = channels.filter((c) => c.type === "direct");
 
   const getChannelDisplayName = (channel: Channel) => {
-    if (channel.type === 'direct') {
-      const user = users.find(u => u.id === channel.id);
+    if (channel.type === "direct") {
+      const user = users.find((u) => u.id === channel.id);
       return user?.name || channel.name;
     }
     return channel.name;
   };
 
   const getChannelStatus = (channel: Channel) => {
-    if (channel.type === 'direct') {
-      const user = users.find(u => u.id === channel.id);
-      return user?.status || 'offline';
+    if (channel.type === "direct") {
+      const user = users.find((u) => u.id === channel.id);
+      return user?.status || "offline";
     }
     return null;
   };
@@ -53,32 +48,48 @@ const Sidebar = () => {
   const renderChannelItem = (channel: Channel) => (
     <motion.div
       key={channel.id}
-      whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+      whileHover={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
       className={`px-4 py-2 cursor-pointer flex items-center justify-between ${
-        activeChannel === channel.id ? 'bg-brand/10' : ''
+        activeChannel === channel.id ? "bg-brand/10" : ""
       }`}
       onClick={() => setActiveChannel(channel.id)}
     >
       <div className="flex items-center space-x-2 truncate">
-        {channel.type === 'direct' ? (
+        {channel.type === "direct" ? (
           <div className="relative flex-shrink-0">
-            <div className={`w-2 h-2 rounded-full ${
-              getChannelStatus(channel) === 'online' ? 'bg-green-500' : 
-              getChannelStatus(channel) === 'away' ? 'bg-yellow-500' :
-              getChannelStatus(channel) === 'busy' ? 'bg-red-500' : 'bg-gray-500'
-            } absolute -left-3 top-1/2 transform -translate-y-1/2`} />
+            <div
+              className={`w-2 h-2 rounded-full ${
+                getChannelStatus(channel) === "online"
+                  ? "bg-green-500"
+                  : getChannelStatus(channel) === "away"
+                    ? "bg-yellow-500"
+                    : getChannelStatus(channel) === "busy"
+                      ? "bg-red-500"
+                      : "bg-gray-500"
+              } absolute -left-3 top-1/2 transform -translate-y-1/2`}
+            />
             <span className="text-text_primary truncate">
               {getChannelDisplayName(channel)}
             </span>
           </div>
         ) : (
           <div className="flex items-center space-x-2 truncate">
-            {channel.type === 'project' ? (
+            {channel.type === "project" ? (
               <span className="text-text_secondary">#</span>
             ) : (
               <span className="text-text_secondary">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
                 </svg>
               </span>
             )}
@@ -96,7 +107,7 @@ const Sidebar = () => {
     </motion.div>
   );
 
-  if (activeTab !== 'Chat') {
+  if (activeTab !== "Chat") {
     return null;
   }
 
@@ -110,8 +121,18 @@ const Sidebar = () => {
           className="text-text_secondary hover:text-brand transition-colors p-1"
           title="Create new group"
         >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            />
           </svg>
         </button>
       </div>
@@ -179,9 +200,9 @@ const Sidebar = () => {
       {/* Create Group Modal */}
       <AnimatePresence>
         {isCreateGroupModalOpen && (
-          <CreateGroupModal 
-            isOpen={isCreateGroupModalOpen} 
-            onClose={() => setIsCreateGroupModalOpen(false)} 
+          <CreateGroupModal
+            isOpen={isCreateGroupModalOpen}
+            onClose={() => setIsCreateGroupModalOpen(false)}
           />
         )}
       </AnimatePresence>

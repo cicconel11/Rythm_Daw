@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useTheme } from "next-themes"
-import { Toast, ToastProvider, ToastViewport } from "@/components/ui/toast"
-import { useToast } from "@/components/ui/use-toast"
+import * as React from "react";
+import { useTheme } from "next-themes";
+import { Toast, ToastProvider, ToastViewport } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/use-toast";
 
 export function Toaster() {
-  const { toasts } = useToast()
-  const { theme } = useTheme()
+  const { toasts } = useToast();
+  const { theme } = useTheme();
 
   return (
     <ToastProvider>
@@ -19,11 +19,11 @@ export function Toaster() {
               description={description}
               variant={variant}
               onDismiss={onDismiss}
-              className={theme === 'dark' ? 'dark' : ''}
+              className={theme === "dark" ? "dark" : ""}
             />
           </div>
         ))}
       </div>
     </ToastProvider>
-  )
+  );
 }

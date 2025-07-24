@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Icons } from '../ui/icons';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Icons } from "../ui/icons";
 
 interface SocialAuthProps {
   disabled?: boolean;
@@ -11,11 +11,11 @@ const SocialAuth = ({ disabled = false }: SocialAuthProps) => {
 
   const handleAppleLogin = () => {
     setIsLoading(true);
-    window.location.href = '/api/auth/apple';
+    window.location.href = "/api/auth/apple";
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = '/api/auth/google';
+    window.location.href = "/api/auth/google";
   };
 
   return (
@@ -44,7 +44,7 @@ const SocialAuth = ({ disabled = false }: SocialAuthProps) => {
           type="button"
           onClick={handleAppleLogin}
           disabled={disabled || isLoading}
-          className={`flex items-center justify-center gap-2 ${(disabled || isLoading) ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`flex items-center justify-center gap-2 ${disabled || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           {isLoading ? (
             <Icons.spinner className="h-4 w-4 animate-spin" />

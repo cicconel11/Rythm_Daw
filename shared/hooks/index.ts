@@ -1,1 +1,1 @@
-export * from './useFriendRequests.js'; 
+export * from "./useFriendRequests.js";

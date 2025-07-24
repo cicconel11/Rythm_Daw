@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { v4 as uuidv4 } from 'uuid';
+import { create } from "zustand";
+import { v4 as uuidv4 } from "uuid";
 
-type UserStatus = 'online' | 'offline' | 'away' | 'busy';
+type UserStatus = "online" | "offline" | "away" | "busy";
 
 export interface User {
   id: string;
@@ -16,7 +16,7 @@ export interface FriendRequest {
   id: string;
   senderId: string;
   receiverId: string;
-  status: 'pending' | 'accepted' | 'declined';
+  status: "pending" | "accepted" | "declined";
   createdAt: string;
 }
 
@@ -32,7 +32,7 @@ export interface Message {
 export interface Channel {
   id: string;
   name: string;
-  type: 'direct' | 'group' | 'project';
+  type: "direct" | "group" | "project";
   participants: string[];
   lastMessage?: string;
   unreadCount: number;
@@ -46,17 +46,17 @@ interface Store {
   currentUser: User | null;
   setCurrentUser: (user: User | null) => void;
   updateStatus: (status: UserStatus) => void;
-  
+
   // Navigation
   activeTab: string;
   setActiveTab: (tab: string) => void;
   fetchInitialData: () => void;
-  
+
   // Users
   users: User[];
   addUser: (user: User) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
-  
+
   // Friends
   friends: string[];
   friendRequests: {
@@ -67,18 +67,20 @@ interface Store {
   acceptFriendRequest: (requestId: string) => void;
   declineFriendRequest: (requestId: string) => void;
   removeFriend: (friendId: string) => void;
-  
+
   // Channels
   channels: Channel[];
   activeChannel: string | null;
   setActiveChannel: (channelId: string | null) => void;
-  createChannel: (channel: Omit<Channel, 'id' | 'createdAt' | 'updatedAt' | 'unreadCount'>) => void;
-  
+  createChannel: (
+    channel: Omit<Channel, "id" | "createdAt" | "updatedAt" | "unreadCount">,
+  ) => void;
+
   // Messages
   messages: Message[];
   sendMessage: (text: string, channelId: string) => void;
   markAsRead: (messageId: string) => void;
-  
+
   // Projects
   projects: any[]; // Define proper type later
 }
@@ -86,43 +88,43 @@ interface Store {
 const useStore = create<Store>((set, get) => ({
   // Current User
   currentUser: {
-    id: 'user1',
-    name: 'Current User',
-    email: 'current@example.com',
-    status: 'online',
+    id: "user1",
+    name: "Current User",
+    email: "current@example.com",
+    status: "online",
   },
-  
+
   // Initialize with mock data
   fetchInitialData: () => {
     set({
       users: [
         {
-          id: 'user1',
-          name: 'Current User',
-          email: 'current@example.com',
-          status: 'online',
+          id: "user1",
+          name: "Current User",
+          email: "current@example.com",
+          status: "online",
         },
         {
-          id: 'user2',
-          name: 'Friend 1',
-          email: 'friend1@example.com',
-          status: 'online',
+          id: "user2",
+          name: "Friend 1",
+          email: "friend1@example.com",
+          status: "online",
         },
         {
-          id: 'user3',
-          name: 'Friend 2',
-          email: 'friend2@example.com',
-          status: 'offline',
+          id: "user3",
+          name: "Friend 2",
+          email: "friend2@example.com",
+          status: "offline",
         },
       ],
-      friends: ['user2'],
+      friends: ["user2"],
       friendRequests: { sent: [], received: [] },
       channels: [
         {
-          id: 'channel1',
-          name: 'general',
-          type: 'group',
-          participants: ['user1', 'user2'],
+          id: "channel1",
+          name: "general",
+          type: "group",
+          participants: ["user1", "user2"],
           isPrivate: false,
           unreadCount: 0,
           createdAt: new Date().toISOString(),
@@ -133,53 +135,53 @@ const useStore = create<Store>((set, get) => ({
     });
   },
   setCurrentUser: (user) => set({ currentUser: user }),
-  updateStatus: (status) => 
+  updateStatus: (status) =>
     set((state) => ({
       currentUser: state.currentUser ? { ...state.currentUser, status } : null,
     })),
-  
+
   // Navigation
-  activeTab: 'chat',
+  activeTab: "chat",
   setActiveTab: (tab) => set({ activeTab: tab }),
-  
+
   // Users
   users: [
     {
-      id: 'user1',
-      name: 'Current User',
-      email: 'user@example.com',
-      status: 'online',
+      id: "user1",
+      name: "Current User",
+      email: "user@example.com",
+      status: "online",
     },
     {
-      id: 'user2',
-      name: 'John Doe',
-      email: 'john@example.com',
-      status: 'online',
+      id: "user2",
+      name: "John Doe",
+      email: "john@example.com",
+      status: "online",
     },
     {
-      id: 'user3',
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      status: 'away',
+      id: "user3",
+      name: "Jane Smith",
+      email: "jane@example.com",
+      status: "away",
     },
   ],
   addUser: (user) => set((state) => ({ users: [...state.users, user] })),
   updateUser: (id, updates) =>
     set((state) => ({
       users: state.users.map((user) =>
-        user.id === id ? { ...user, ...updates } : user
+        user.id === id ? { ...user, ...updates } : user,
       ),
     })),
-  
+
   // Friends
   friends: [],
   friendRequests: { sent: [], received: [] },
   sendFriendRequest: (receiverId) => {
     const request: FriendRequest = {
       id: uuidv4(),
-      senderId: get().currentUser?.id || '',
+      senderId: get().currentUser?.id || "",
       receiverId,
-      status: 'pending',
+      status: "pending",
       createdAt: new Date().toISOString(),
     };
     set((state) => ({
@@ -191,13 +193,17 @@ const useStore = create<Store>((set, get) => ({
   },
   acceptFriendRequest: (requestId) => {
     set((state) => {
-      const request = state.friendRequests.received.find(r => r.id === requestId);
+      const request = state.friendRequests.received.find(
+        (r) => r.id === requestId,
+      );
       if (!request) return state;
-      
+
       return {
         friendRequests: {
           ...state.friendRequests,
-          received: state.friendRequests.received.filter(r => r.id !== requestId),
+          received: state.friendRequests.received.filter(
+            (r) => r.id !== requestId,
+          ),
         },
         friends: [...state.friends, request.senderId],
       };
@@ -208,7 +214,7 @@ const useStore = create<Store>((set, get) => ({
       friendRequests: {
         ...state.friendRequests,
         received: state.friendRequests.received.filter(
-          (req) => req.id !== requestId
+          (req) => req.id !== requestId,
         ),
       },
     })),
@@ -216,14 +222,14 @@ const useStore = create<Store>((set, get) => ({
     set((state) => ({
       friends: state.friends.filter((id) => id !== friendId),
     })),
-  
+
   // Channels
   channels: [
     {
-      id: 'channel1',
-      name: 'general',
-      type: 'project',
-      participants: ['user1', 'user2', 'user3'],
+      id: "channel1",
+      name: "general",
+      type: "project",
+      participants: ["user1", "user2", "user3"],
       unreadCount: 0,
       isPrivate: false,
       createdAt: new Date().toISOString(),
@@ -237,7 +243,7 @@ const useStore = create<Store>((set, get) => ({
     if (channelId) {
       set((state) => ({
         channels: state.channels.map((channel) =>
-          channel.id === channelId ? { ...channel, unreadCount: 0 } : channel
+          channel.id === channelId ? { ...channel, unreadCount: 0 } : channel,
         ),
       }));
     }
@@ -255,19 +261,19 @@ const useStore = create<Store>((set, get) => ({
     }));
     return newChannel;
   },
-  
+
   // Messages
   messages: [],
   sendMessage: (text, channelId) => {
     const newMessage: Message = {
       id: uuidv4(),
       text,
-      senderId: get().currentUser?.id || '',
+      senderId: get().currentUser?.id || "",
       channelId,
       timestamp: Date.now(),
       read: false,
     };
-    
+
     set((state) => ({
       messages: [...state.messages, newMessage],
       channels: state.channels.map((channel) =>
@@ -277,19 +283,21 @@ const useStore = create<Store>((set, get) => ({
               lastMessage: text,
               updatedAt: new Date().toISOString(),
               unreadCount:
-                channel.id === state.activeChannel ? 0 : channel.unreadCount + 1,
+                channel.id === state.activeChannel
+                  ? 0
+                  : channel.unreadCount + 1,
             }
-          : channel
+          : channel,
       ),
     }));
   },
   markAsRead: (messageId) =>
     set((state) => ({
       messages: state.messages.map((msg) =>
-        msg.id === messageId ? { ...msg, read: true } : msg
+        msg.id === messageId ? { ...msg, read: true } : msg,
       ),
     })),
-  
+
   // Projects (to be implemented)
   projects: [],
 }));

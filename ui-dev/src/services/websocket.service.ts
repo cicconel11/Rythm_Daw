@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { getAuthToken } from '../utils/auth';
+import { useEffect, useRef, useCallback } from "react";
+import { getAuthToken } from "../utils/auth";
 
 export type MessageHandler = (data: any) => void;
 
@@ -16,7 +16,7 @@ export class WebSocketService {
   private reconnectInterval = 3000; // 3 seconds
   private isConnecting = false;
   private connectionPromise: Promise<void> | null = null;
-  
+
   // Track connection status
   public get isConnected(): boolean {
     return this.socket?.readyState === WebSocket.OPEN;
@@ -34,7 +34,7 @@ export class WebSocketService {
   }
 
   private getWebSocketUrl(): string {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = process.env.REACT_APP_WS_URL || `${window.location.host}`;
     return `${protocol}//${host}/ws`;
   }
@@ -56,20 +56,20 @@ export class WebSocketService {
 
       this.isConnecting = true;
       const token = getAuthToken();
-      
+
       if (!token) {
-        reject(new Error('No authentication token available'));
+        reject(new Error("No authentication token available"));
         return;
       }
 
       try {
         const wsUrl = new URL(this.getWebSocketUrl());
-        wsUrl.searchParams.append('token', token);
+        wsUrl.searchParams.append("token", token);
 
         this.socket = new WebSocket(wsUrl.toString());
 
         this.socket.onopen = () => {
-          console.log('WebSocket connection established');
+          console.log("WebSocket connection established");
           this.reconnectAttempts = 0;
           this.isConnecting = false;
           this.connectionPromise = null;
@@ -81,12 +81,12 @@ export class WebSocketService {
             const message = JSON.parse(event.data);
             this.handleMessage(message);
           } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
+            console.error("Error parsing WebSocket message:", error);
           }
         };
 
         this.socket.onclose = () => {
-          console.log('WebSocket connection closed');
+          console.log("WebSocket connection closed");
           this.socket = null;
           this.connectionPromise = null;
           this.isConnecting = false;
@@ -94,7 +94,7 @@ export class WebSocketService {
         };
 
         this.socket.onerror = (error) => {
-          console.error('WebSocket error:', error);
+          console.error("WebSocket error:", error);
           this.socket?.close();
         };
       } catch (error) {
@@ -110,10 +110,12 @@ export class WebSocketService {
   private handleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      console.log(
+        `Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`,
+      );
       setTimeout(() => this.connect(), this.reconnectInterval);
     } else {
-      console.error('Max reconnection attempts reached');
+      console.error("Max reconnection attempts reached");
     }
   }
 
@@ -136,7 +138,7 @@ export class WebSocketService {
   public off(event: string, handler: MessageHandler): void {
     if (this.eventHandlers[event]) {
       this.eventHandlers[event] = this.eventHandlers[event].filter(
-        (h) => h !== handler
+        (h) => h !== handler,
       );
     }
   }
@@ -146,23 +148,23 @@ export class WebSocketService {
       const message = JSON.stringify({ event, data });
       this.socket.send(message);
     } else {
-      console.warn('WebSocket is not connected. Attempting to reconnect...');
+      console.warn("WebSocket is not connected. Attempting to reconnect...");
       this.connect()
         .then(() => this.emit(event, data))
-        .catch((error) => console.error('Failed to reconnect:', error));
+        .catch((error) => console.error("Failed to reconnect:", error));
     }
   }
 
   public joinRoom(roomId: string): void {
-    this.emit('joinRoom', { roomId });
+    this.emit("joinRoom", { roomId });
   }
 
   public leaveRoom(roomId: string): void {
-    this.emit('leaveRoom', { roomId });
+    this.emit("leaveRoom", { roomId });
   }
 
   public sendTrackUpdate(trackData: any): void {
-    this.emit('trackUpdate', trackData);
+    this.emit("trackUpdate", trackData);
   }
 
   public disconnect(): void {
@@ -180,7 +182,7 @@ export const useWebSocket = () => {
 
   useEffect(() => {
     wsService.current = WebSocketService.getInstance();
-    
+
     return () => {
       // Only disconnect if no other components are using the WebSocket
       // This prevents disconnecting when unmounting a component

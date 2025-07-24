@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface KnobProps {
   label: string;
@@ -9,7 +9,14 @@ interface KnobProps {
   size?: number;
 }
 
-export const Knob: React.FC<KnobProps> = ({ label, min = 0, max = 100, value = 50, onChange, size = 60 }) => {
+export const Knob: React.FC<KnobProps> = ({
+  label,
+  min = 0,
+  max = 100,
+  value = 50,
+  onChange,
+  size = 60,
+}) => {
   const [dragging, setDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startValue, setStartValue] = useState(value);
@@ -37,7 +44,12 @@ export const Knob: React.FC<KnobProps> = ({ label, min = 0, max = 100, value = 5
   };
 
   return (
-    <div className="flex flex-col items-center space-y-2" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+    <div
+      className="flex flex-col items-center space-y-2"
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
       <div
         className="relative bg-card rounded-full shadow-inner-md flex items-center justify-center cursor-pointer"
         style={{ width: size, height: size }}
@@ -49,8 +61,12 @@ export const Knob: React.FC<KnobProps> = ({ label, min = 0, max = 100, value = 5
         />
         <div className="absolute w-6 h-6 bg-panel rounded-full shadow-outer-md" />
       </div>
-      <div className="text-text_primary text-sm font-medium text-center w-full truncate">{label}</div>
-      <div className="absolute -top-2 bg-panel text-text_secondary text-xs px-2 py-0.5 rounded-md shadow-outer-md">{Math.round(value)}</div>
+      <div className="text-text_primary text-sm font-medium text-center w-full truncate">
+        {label}
+      </div>
+      <div className="absolute -top-2 bg-panel text-text_secondary text-xs px-2 py-0.5 rounded-md shadow-outer-md">
+        {Math.round(value)}
+      </div>
     </div>
   );
 };
