@@ -6,10 +6,23 @@
         "declarationMap": true,
         "emitDeclarationOnly": true,
         "outDir": "dist",
-        "rootDir": "src",
-        "skipLibCheck": true
+        "rootDir": "../",
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "types": [
+            "node"
+        ],
+        "paths": {
+            "@shared/*": [
+                "../shared/*"
+            ],
+            "@shared/lib/*": [
+                "../shared/lib/*"
+            ]
+        }
     },
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "../shared/**/*"
     ]
 }

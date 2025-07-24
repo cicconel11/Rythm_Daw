@@ -2,7 +2,16 @@
     "extends": "../tsconfig.json",
     "compilerOptions": {
         /* 👇 override the global “types” entry so the build ignores jest-dom */
-        "types": []
+        "types": [],
+        "baseUrl": ".",
+        "paths": {
+            "@shared/*": [
+                "../shared/*"
+            ],
+            "@shared/lib/*": [
+                "../shared/lib/*"
+            ]
+        }
     },
     "include": [
         "src/**/*"
