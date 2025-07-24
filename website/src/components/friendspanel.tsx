@@ -1,1 +1,0 @@
-import { useFriendRequests, useAcceptRequest, FriendRequest } from '@shared/hooks/useFriendRequests'; 

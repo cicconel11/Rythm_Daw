@@ -1,5 +1,5 @@
+import { SettingsAccount } from '@rythm/ui-kit';
 
-import { SettingsAccount } from '../../ui-kit/src/components/SettingsAccount';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SettingsPage() {
