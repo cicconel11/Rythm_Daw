@@ -1,17 +1,15 @@
 
-export { LandingPage } from './components/LandingPage';
-export { LoginPage } from './components/LoginPage';
-export { RegisterCredentials } from './components/RegisterCredentials';
-export { RegisterBio } from './components/RegisterBio';
-export { OnboardScan } from './components/OnboardScan';
-export { DeviceConnect } from './components/DeviceConnect';
-export { Dashboard } from './components/Dashboard';
-export { ChatPanel } from './components/ChatPanel';
-export { FriendsPanel } from './components/FriendsPanel';
-export { Settings } from './components/Settings';
-export { SettingsAccount } from './components/SettingsAccount';
-export { PluginList } from './components/PluginList';
-export { ConfettiBurst } from './components/ConfettiBurst';
+export { Dashboard }            from './components/dashboard';
+export { ChatPanel }            from './components/chatpanel';
+export { FriendsPanel }         from './components/friendspanel';
+export { SettingsAccount }      from './components/settingsaccount';
+export { LandingPage }          from './components/landingpage';
+export { LoginPage }            from './components/loginpage';
+export { RegisterCredentials }  from './components/registercredentials';
+export { RegisterBio }          from './components/registerbio';
+export { OnboardScan }          from './components/onboardscan';
+export { DeviceConnect }        from './components/deviceconnect';
+export { ConfettiBurst }        from './components/confettiburst';
 
 // Design tokens
 export { theme } from './design/theme';
@@ -32,3 +30,11 @@ export { Progress } from './components/ui/progress';
 export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './components/ui/dialog';
 export { Switch } from './components/ui/switch';
 export { Avatar, AvatarImage, AvatarFallback } from './components/ui/avatar';
+
+/*---------  @rythm/ui-kit public surface  ----------------*/
+export * from "./components/ui/button";
+export * from "./components/ui/card";
+export * from "./components/chatpanel";
+export * from "./components/dashboard";
+export * from "./components/friendspanel";
+/*---------------------------------------------------------*/
