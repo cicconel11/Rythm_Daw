@@ -29,7 +29,7 @@ function createTestClient(url: string, id: string): Promise<TestWebSocketClient>
     client.testId = id;
     client.receivedMessages = [];
     
-    let messageResolvers: Array<() => void> = [];
+    const messageResolvers: Array<() => void> = [];
     
     client.on('message', (data: string) => {
       try {

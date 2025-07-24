@@ -14,6 +14,7 @@ import { JwtWsAuthGuard } from '../auth/guards/jwt-ws-auth.guard';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ConfigService } from '@nestjs/config';
+import { FileTransferService } from './file-transfer.service';
 
 // Extend the WebSocket type from 'ws' with our custom properties
 type FileTransferClient = WebSocket & {
@@ -42,7 +43,7 @@ export class FileTransferGateway implements OnGatewayConnection, OnGatewayDiscon
     { urls: 'stun:stun1.l.google.com:19302' },
   ];
 
-  constructor(private configService: ConfigService) {
+  constructor(private configService: ConfigService, private service: FileTransferService) {
     const region = this.configService.get<string>('AWS_REGION');
     const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
     const secretAccessKey = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
@@ -73,31 +74,25 @@ export class FileTransferGateway implements OnGatewayConnection, OnGatewayDiscon
   }
 
   @UseGuards(JwtWsAuthGuard)
-  @SubscribeMessage('init-transfer')
+  @SubscribeMessage('init_transfer')
   async handleInitTransfer(
     @ConnectedSocket() client: FileTransferClient,
-    @MessageBody() data: { fileName: string; fileSize: number; mimeType: string },
+    @MessageBody() data: { fileName: string; fileSize: number; mimeType: string; toUserId: string },
   ) {
     try {
-      // Generate a unique file key
-      const fileKey = `uploads/${Date.now()}-${data.fileName}`;
-      
-      // Create pre-signed URL for S3 upload
-      const command = new PutObjectCommand({
-        Bucket: this.configService.get('S3_BUCKET_NAME'),
-        Key: fileKey,
-        ContentType: data.mimeType,
-        ContentLength: data.fileSize,
-      });
+      // Use service to create transfer and get presign
+      const { uploadUrl, transferId } = await this.service.presign({
+        fileName: data.fileName,
+        mimeType: data.mimeType,
+        size: data.fileSize,
+        toUserId: data.toUserId,
+      }, client.userId); // assume userId set in guard
 
-      const uploadUrl = await getSignedUrl(this.s3Client, command, { expiresIn: 3600 });
-      
-      // Return the pre-signed URL and file key to the client
       return {
         event: 'transfer-initiated',
         data: {
           uploadUrl,
-          fileKey,
+          transferId,
           stunServers: this.stunServers,
         },
       };
@@ -160,6 +155,16 @@ export class FileTransferGateway implements OnGatewayConnection, OnGatewayDiscon
           from: client.userId,
           candidate: data.candidate,
         },
+      }));
+    }
+  }
+
+  emitTransferStatus(toUserId: string, data: { transferId: string; status: string; progress?: number }) {
+    const targetClient = Array.from(this.clients.values()).find(c => c.userId === toUserId);
+    if (targetClient) {
+      targetClient.send(JSON.stringify({
+        event: 'transfer_status',
+        data,
       }));
     }
   }

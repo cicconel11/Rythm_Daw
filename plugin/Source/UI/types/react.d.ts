@@ -1,4 +1,4 @@
-declare module 'react' {
+declare module "react" {
   export = React;
   export as namespace React;
 
@@ -16,7 +16,7 @@ declare module 'react' {
       P = any,
       T extends string | JSXElementConstructor<any> =
         | string
-        | JSXElementConstructor<any>
+        | JSXElementConstructor<any>,
     > {
       type: T;
       props: P;
@@ -29,18 +29,15 @@ declare module 'react' {
 
     type Key = string | number;
 
-    interface Component<P = {}, S = {}, SS = any> extends ComponentLifecycle<
-      P,
-      S,
-      SS
-    > {}
+    interface Component<P = {}, S = {}, SS = any>
+      extends ComponentLifecycle<P, S, SS> {}
 
     interface ComponentLifecycle<P, S, SS = any> {
       componentDidMount?(): void;
       shouldComponentUpdate?(
         nextProps: Readonly<P>,
         nextState: Readonly<S>,
-        nextContext: any
+        nextContext: any,
       ): boolean;
       componentWillUnmount?(): void;
       componentDidCatch?(error: Error, errorInfo: ErrorInfo): void;

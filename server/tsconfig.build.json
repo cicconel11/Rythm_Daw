@@ -1,9 +1,15 @@
 {
+  "baseUrl": ".",
+  "paths": {
+    "@shared/*": [
+      "../../shared/*"
+    ]
+  },
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "..",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -16,12 +22,11 @@
   },
   "include": [
     "src/**/*.ts",
-    "prisma/**/*.ts"
+    "prisma/**/*.ts",
+    "../../shared/**/*"
   ],
   "exclude": [
-    "**/*.spec.ts",
-    "**/*.test.ts",
-    "test/**",
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }

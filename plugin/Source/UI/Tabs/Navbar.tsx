@@ -1,8 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useStore } from '@store';
+import React from "react";
+import { motion } from "framer-motion";
+import { useStore } from "@store";
 
-const tabs = ['Chat', 'Files', 'History', 'Account'];
+const tabs = ["Chat", "Files", "History", "Account"];
 
 const Navbar: React.FC = () => {
   const { activeTab, setActiveTab } = useStore();
@@ -13,7 +13,7 @@ const Navbar: React.FC = () => {
         {tabs.map((tab) => (
           <div key={tab} className="w-full flex justify-center relative">
             <button
-              className={`text-sm font-medium w-full py-2 transition-colors duration-300 relative z-10 ${activeTab === tab ? 'text-brand' : 'text-text_secondary hover:text-text_primary'}`}
+              className={`text-sm font-medium w-full py-2 transition-colors duration-300 relative z-10 ${activeTab === tab ? "text-brand" : "text-text_secondary hover:text-text_primary"}`}
               onClick={() => setActiveTab(tab)}
             >
               {tab}

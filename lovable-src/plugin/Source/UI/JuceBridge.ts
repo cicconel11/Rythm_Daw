@@ -1,4 +1,3 @@
-
 interface JuceBridgeMessage {
   type: string;
   data: any;
@@ -11,12 +10,12 @@ class JuceBridgeClass {
 
   send(type: string, data: any) {
     const message: JuceBridgeMessage = { type, data };
-    
+
     // In a real JUCE plugin, this would send to the native layer
-    if (typeof window !== 'undefined' && (window as any).juce) {
+    if (typeof window !== "undefined" && (window as any).juce) {
       (window as any).juce.postMessage(JSON.stringify(message));
     } else {
-      console.log('JuceBridge send:', message);
+      console.log("JuceBridge send:", message);
     }
   }
 
@@ -40,20 +39,20 @@ class JuceBridgeClass {
   private handleMessage(message: JuceBridgeMessage) {
     const handlers = this.eventHandlers.get(message.type);
     if (handlers) {
-      handlers.forEach(handler => handler(message.data));
+      handlers.forEach((handler) => handler(message.data));
     }
   }
 
   init() {
     // In a real JUCE plugin, this would listen for messages from native layer
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       (window as any).juceBridge = this;
       (window as any).handleJuceMessage = (messageString: string) => {
         try {
           const message = JSON.parse(messageString);
           this.handleMessage(message);
         } catch (error) {
-          console.error('Failed to parse JUCE message:', error);
+          console.error("Failed to parse JUCE message:", error);
         }
       };
     }

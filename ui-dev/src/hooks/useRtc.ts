@@ -1,16 +1,16 @@
-import { useEffect, useCallback, useRef } from 'react';
-import { rtcService, EventCallback } from '../services/rtc.service';
-import { ServerEvents, ClientEvents } from '../types/websocket.types';
+import { useEffect, useCallback, useRef } from "react";
+import { rtcService, EventCallback } from "../services/rtc.service";
+import { ServerEvents, ClientEvents } from "../types/websocket.types";
 
 type EventMap = {
   [K in keyof typeof ServerEvents]: Parameters<EventCallback>[0];
 };
 
 export const useRtc = <T extends keyof EventMap>(
-  eventHandlers: { [K in T]?: (data: EventMap[K]) => void } = {}
+  eventHandlers: { [K in T]?: (data: EventMap[K]) => void } = {},
 ) => {
   const handlersRef = useRef(eventHandlers);
-  
+
   // Update handlers when they change
   useEffect(() => {
     handlersRef.current = eventHandlers;
@@ -25,7 +25,7 @@ export const useRtc = <T extends keyof EventMap>(
       try {
         await rtcService.connect();
       } catch (error) {
-        console.error('Failed to connect to RTC server:', error);
+        console.error("Failed to connect to RTC server:", error);
       }
     };
 
@@ -41,7 +41,7 @@ export const useRtc = <T extends keyof EventMap>(
 
     // Clean up on unmount
     return () => {
-      unsubscribers.forEach(unsubscribe => unsubscribe());
+      unsubscribers.forEach((unsubscribe) => unsubscribe());
       // Don't disconnect here to maintain connection across component unmounts
       // rtcService.disconnect();
     };
@@ -52,7 +52,7 @@ export const useRtc = <T extends keyof EventMap>(
     try {
       return await rtcService.joinRoom(roomId);
     } catch (error) {
-      console.error('Failed to join room:', error);
+      console.error("Failed to join room:", error);
       throw error;
     }
   }, []);
@@ -61,7 +61,7 @@ export const useRtc = <T extends keyof EventMap>(
     try {
       return await rtcService.leaveRoom(roomId);
     } catch (error) {
-      console.error('Failed to leave room:', error);
+      console.error("Failed to leave room:", error);
       throw error;
     }
   }, []);

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +6,54 @@ import { Upload, Search, FileText, Music, Download, Share } from "lucide-react";
 import { useState } from "react";
 
 const files = [
-  { id: 1, name: "Track_01_Master.wav", type: "audio", size: "45.2 MB", modified: "2 hours ago", shared: true },
-  { id: 2, name: "Bass_Line_v2.mid", type: "midi", size: "2.1 KB", modified: "5 hours ago", shared: false },
-  { id: 3, name: "Drum_Pattern.flp", type: "project", size: "12.8 MB", modified: "1 day ago", shared: true },
-  { id: 4, name: "Vocal_Sample.wav", type: "audio", size: "28.7 MB", modified: "2 days ago", shared: false },
-  { id: 5, name: "Synth_Preset.fxp", type: "preset", size: "1.4 KB", modified: "3 days ago", shared: true },
-  { id: 6, name: "Mix_Reference.mp3", type: "audio", size: "8.9 MB", modified: "1 week ago", shared: false },
+  {
+    id: 1,
+    name: "Track_01_Master.wav",
+    type: "audio",
+    size: "45.2 MB",
+    modified: "2 hours ago",
+    shared: true,
+  },
+  {
+    id: 2,
+    name: "Bass_Line_v2.mid",
+    type: "midi",
+    size: "2.1 KB",
+    modified: "5 hours ago",
+    shared: false,
+  },
+  {
+    id: 3,
+    name: "Drum_Pattern.flp",
+    type: "project",
+    size: "12.8 MB",
+    modified: "1 day ago",
+    shared: true,
+  },
+  {
+    id: 4,
+    name: "Vocal_Sample.wav",
+    type: "audio",
+    size: "28.7 MB",
+    modified: "2 days ago",
+    shared: false,
+  },
+  {
+    id: 5,
+    name: "Synth_Preset.fxp",
+    type: "preset",
+    size: "1.4 KB",
+    modified: "3 days ago",
+    shared: true,
+  },
+  {
+    id: 6,
+    name: "Mix_Reference.mp3",
+    type: "audio",
+    size: "8.9 MB",
+    modified: "1 week ago",
+    shared: false,
+  },
 ];
 
 const getFileIcon = (type: string) => {
@@ -47,8 +88,8 @@ export default function FileShare() {
   const [searchTerm, setSearchTerm] = useState("");
   const [dragOver, setDragOver] = useState(false);
 
-  const filteredFiles = files.filter(file =>
-    file.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredFiles = files.filter((file) =>
+    file.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -73,7 +114,9 @@ export default function FileShare() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">File Share</h1>
-          <p className="text-muted-foreground">Upload, organize, and share your music files</p>
+          <p className="text-muted-foreground">
+            Upload, organize, and share your music files
+          </p>
         </div>
         <Button className="bg-primary hover:bg-primary/90">
           <Upload className="w-4 h-4 mr-2" />
@@ -125,8 +168,12 @@ export default function FileShare() {
                   <div className="flex items-center gap-3">
                     {getFileIcon(file.type)}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-foreground truncate">{file.name}</h3>
-                      <p className="text-sm text-muted-foreground">{file.size}</p>
+                      <h3 className="font-medium text-foreground truncate">
+                        {file.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {file.size}
+                      </p>
                     </div>
                   </div>
                   {file.shared && (
@@ -135,12 +182,14 @@ export default function FileShare() {
                     </Badge>
                   )}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <Badge className={`text-xs ${getFileTypeColor(file.type)}`}>
                     {file.type.toUpperCase()}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">{file.modified}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {file.modified}
+                  </span>
                 </div>
 
                 <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">

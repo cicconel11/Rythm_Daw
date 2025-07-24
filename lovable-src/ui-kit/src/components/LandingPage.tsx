@@ -1,7 +1,6 @@
-
-import React from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent } from './ui/card';
+import React from "react";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -31,7 +30,9 @@ function LandingArt() {
             </div>
             <div className="mt-6 flex justify-center">
               <div className="w-16 h-16 bg-gradient-to-br from-purple to-[#6B3FE6] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold font-['JetBrains_Mono']">R</span>
+                <span className="text-white font-bold font-['JetBrains_Mono']">
+                  R
+                </span>
               </div>
             </div>
           </CardContent>
@@ -54,16 +55,17 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto">
-              Connect with producers worldwide, share plugins in real-time, and create music together without leaving your favorite DAW.
+              Connect with producers worldwide, share plugins in real-time, and
+              create music together without leaving your favorite DAW.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
+              <Button
                 onClick={onGetStarted}
                 className="bg-purple hover:bg-[#976BFF] text-white px-8 py-4 text-lg font-semibold font-['Inter']"
               >
                 Get Started Free
               </Button>
-              <Button 
+              <Button
                 onClick={onLogin}
                 variant="outline"
                 className="border-border text-muted-foreground hover:bg-secondary px-8 py-4 text-lg font-['Inter']"
@@ -72,7 +74,7 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
               </Button>
             </div>
           </div>
-          
+
           <div className="mb-16">
             <LandingArt />
           </div>
@@ -83,36 +85,54 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
                 <div className="w-12 h-12 bg-purple/20 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <div className="w-6 h-6 bg-purple rounded"></div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2 font-['Inter']">Real-time Sync</h3>
-                <p className="text-muted-foreground">Your plugins sync instantly across all connected devices and collaborators.</p>
+                <h3 className="text-xl font-semibold text-foreground mb-2 font-['Inter']">
+                  Real-time Sync
+                </h3>
+                <p className="text-muted-foreground">
+                  Your plugins sync instantly across all connected devices and
+                  collaborators.
+                </p>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-br from-card to-secondary border-border">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-purple/20 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <div className="w-6 h-6 bg-purple rounded-full"></div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2 font-['Inter']">Cross-DAW</h3>
-                <p className="text-muted-foreground">Works with Ableton, Logic, FL Studio, Pro Tools, and more.</p>
+                <h3 className="text-xl font-semibold text-foreground mb-2 font-['Inter']">
+                  Cross-DAW
+                </h3>
+                <p className="text-muted-foreground">
+                  Works with Ableton, Logic, FL Studio, Pro Tools, and more.
+                </p>
               </CardContent>
             </Card>
-            
+
             <Card className="bg-gradient-to-br from-card to-secondary border-border">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-purple/20 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <div className="w-6 h-6 bg-purple rounded-sm"></div>
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2 font-['Inter']">Plugin Sharing</h3>
-                <p className="text-muted-foreground">Share presets, settings, and collaborate on sounds in real-time.</p>
+                <h3 className="text-xl font-semibold text-foreground mb-2 font-['Inter']">
+                  Plugin Sharing
+                </h3>
+                <p className="text-muted-foreground">
+                  Share presets, settings, and collaborate on sounds in
+                  real-time.
+                </p>
               </CardContent>
             </Card>
           </div>
-          
+
           <footer className="mt-20 text-center border-t border-border pt-8">
             <div className="flex justify-center gap-6 text-sm text-muted-foreground">
-              <button className="hover:text-foreground transition-colors">Terms of Service</button>
-              <button className="hover:text-foreground transition-colors">Privacy Policy</button>
+              <button className="hover:text-foreground transition-colors">
+                Terms of Service
+              </button>
+              <button className="hover:text-foreground transition-colors">
+                Privacy Policy
+              </button>
             </div>
           </footer>
         </div>

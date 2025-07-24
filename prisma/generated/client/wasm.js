@@ -267,6 +267,20 @@ exports.Prisma.EntityTagScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.FileTransferScalarFieldEnum = {
+  id: 'id',
+  fileName: 'fileName',
+  size: 'size',
+  mimeType: 'mimeType',
+  fromUserId: 'fromUserId',
+  toUserId: 'toUserId',
+  status: 'status',
+  progress: 'progress',
+  fileKey: 'fileKey',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -389,6 +403,16 @@ exports.Prisma.EntityTagOrderByRelevanceFieldEnum = {
   snapshotId: 'snapshotId'
 };
 
+exports.Prisma.FileTransferOrderByRelevanceFieldEnum = {
+  id: 'id',
+  fileName: 'fileName',
+  mimeType: 'mimeType',
+  fromUserId: 'fromUserId',
+  toUserId: 'toUserId',
+  status: 'status',
+  fileKey: 'fileKey'
+};
+
 
 exports.Prisma.ModelName = {
   User: 'User',
@@ -402,7 +426,8 @@ exports.Prisma.ModelName = {
   Project: 'Project',
   Snapshot: 'Snapshot',
   Tag: 'Tag',
-  EntityTag: 'EntityTag'
+  EntityTag: 'EntityTag',
+  FileTransfer: 'FileTransfer'
 };
 
 /**

@@ -1,11 +1,10 @@
+"use client";
 
-'use client';
-
-import { RegisterBio } from '@rythm/ui-kit';
+import { RegisterBio } from "@rythm/ui-kit";
 
 export default function StepTwoWrapper() {
   const handleCreateAccount = (bio: string) => {
-    console.log('Create account with bio:', bio);
+    console.log("Create account with bio:", bio);
   };
 
   return <RegisterBio onCreateAccount={handleCreateAccount} />;

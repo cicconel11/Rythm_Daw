@@ -162,7 +162,10 @@ describe('ChatGateway Heartbeat (Unit)', () => {
       },
       connected: true,
       disconnected: false,
-      rooms: new Set()
+      rooms: new Set(),
+      emit: jest.fn(),
+      on: jest.fn(),
+      disconnect: jest.fn(),
     };
     
     // Add all socket methods

@@ -1,5 +1,10 @@
-import { LandingPage } from '@/components/landing/LandingPage';
+import { LandingPage } from "@/components/landing/LandingPage";
 
 export default function Home() {
-  return <LandingPage onGetStarted={() => window.location.href = '/dashboard'} onLogin={() => window.location.href = '/login'} />;
-} 
+  return (
+    <LandingPage
+      onGetStarted={() => (window.location.href = "/dashboard")}
+      onLogin={() => (window.location.href = "/login")}
+    />
+  );
+}

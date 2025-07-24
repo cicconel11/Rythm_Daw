@@ -1,10 +1,10 @@
-import { Controller, Post, UploadedFile, UseInterceptors, HttpCode } from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { Express } from 'express';
 
 @Controller('files')
 export class FilesUploadController {
   @Post('upload')
-  @HttpCode(200)
   @UseInterceptors(FileInterceptor('file'))
   uploadFile(@UploadedFile() file: Express.Multer.File) {
     // Always return a 26-char ULID key for test

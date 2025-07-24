@@ -1,5 +1,9 @@
 {
-  "moduleFileExtensions": ["js", "json", "ts"],
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
   "rootDir": ".",
   "testEnvironment": "node",
   "testRegex": ".spec.ts$",
@@ -8,5 +12,7 @@
   },
   "coverageDirectory": "../coverage",
   "testTimeout": 30000,
-  "setupFilesAfterEnv": ["../test/setup.ts"]
+  "setupFilesAfterEnv": [
+    "../test/setup-jest.ts"
+  ]
 }

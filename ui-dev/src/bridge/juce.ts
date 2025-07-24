@@ -3,7 +3,7 @@
 --------------------------------------------------------------*/
 export const juce = {
   send: (channel: string, payload: unknown) =>
-    console.log('JUCE →', channel, payload),
+    console.log("JUCE →", channel, payload),
   on: (_channel: string, _cb: (payload: unknown) => void) => {
     /* no-op stub for now */
   },

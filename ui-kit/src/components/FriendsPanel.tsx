@@ -1,69 +1,122 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
-import { ScrollArea } from './ui/scroll-area';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Search, UserPlus, MessageSquare, Music, Users } from 'lucide-react';
-import { useFriendRequests, useAcceptRequest, FriendRequest } from '@shared/hooks/useFriendRequests';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
+import { ScrollArea } from "./ui/scroll-area";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Search, UserPlus, MessageSquare, Music, Users } from "lucide-react";
+import {
+  useFriendRequests,
+  useAcceptRequest,
+  FriendRequest,
+} from "@shared/hooks/useFriendRequests";
 
 interface FriendsPanelProps {
   onNavigate?: (path: string) => void;
 }
 
 const friends = [
-  { id: 1, name: 'BeatMaker99', avatar: 'BM', status: 'online', plugins: ['Serum', 'Pro-Q 3'], mutualFriends: 5 },
-  { id: 2, name: 'ProducerX', avatar: 'PX', status: 'offline', plugins: ['Massive X', 'Ozone'], mutualFriends: 12 },
-  { id: 3, name: 'SynthWave2024', avatar: 'SW', status: 'online', plugins: ['Sylenth1', 'Diva'], mutualFriends: 8 },
-  { id: 4, name: 'DrumMachine', avatar: 'DM', status: 'online', plugins: ['Battery 4', 'Superior'], mutualFriends: 15 },
+  {
+    id: 1,
+    name: "BeatMaker99",
+    avatar: "BM",
+    status: "online",
+    plugins: ["Serum", "Pro-Q 3"],
+    mutualFriends: 5,
+  },
+  {
+    id: 2,
+    name: "ProducerX",
+    avatar: "PX",
+    status: "offline",
+    plugins: ["Massive X", "Ozone"],
+    mutualFriends: 12,
+  },
+  {
+    id: 3,
+    name: "SynthWave2024",
+    avatar: "SW",
+    status: "online",
+    plugins: ["Sylenth1", "Diva"],
+    mutualFriends: 8,
+  },
+  {
+    id: 4,
+    name: "DrumMachine",
+    avatar: "DM",
+    status: "online",
+    plugins: ["Battery 4", "Superior"],
+    mutualFriends: 15,
+  },
 ];
 
 const pendingRequests = [
-  { id: 1, name: 'NewProducer', avatar: 'NP', mutualFriends: 2 },
-  { id: 2, name: 'VocalMaster', avatar: 'VM', mutualFriends: 1 },
+  { id: 1, name: "NewProducer", avatar: "NP", mutualFriends: 2 },
+  { id: 2, name: "VocalMaster", avatar: "VM", mutualFriends: 1 },
 ];
 
 const suggested = [
-  { id: 1, name: 'ElectroWiz', avatar: 'EW', mutualFriends: 8, reason: 'Uses similar plugins' },
-  { id: 2, name: 'BassMaster', avatar: 'BM', mutualFriends: 3, reason: 'Friend of ProducerX' },
+  {
+    id: 1,
+    name: "ElectroWiz",
+    avatar: "EW",
+    mutualFriends: 8,
+    reason: "Uses similar plugins",
+  },
+  {
+    id: 2,
+    name: "BassMaster",
+    avatar: "BM",
+    mutualFriends: 3,
+    reason: "Friend of ProducerX",
+  },
 ];
 
 function isFriendRequest(item: any): item is FriendRequest {
   return (
-    typeof item === 'object' &&
-    typeof item.id === 'string' &&
-    typeof item.name === 'string' &&
+    typeof item === "object" &&
+    typeof item.id === "string" &&
+    typeof item.name === "string" &&
     Array.isArray(item.plugins)
   );
 }
 
 export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
-  const [activeTab, setActiveTab] = useState<'all' | 'online' | 'pending' | 'suggested'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [addFriendInput, setAddFriendInput] = useState('');
+  const [activeTab, setActiveTab] = useState<
+    "all" | "online" | "pending" | "suggested"
+  >("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [addFriendInput, setAddFriendInput] = useState("");
   const { data, isLoading, error } = useFriendRequests();
   const requests: FriendRequest[] = data ?? [];
   const accept = useAcceptRequest();
 
   const handleAddFriend = () => {
     if (addFriendInput.trim()) {
-      console.log('Adding friend:', addFriendInput);
-      setAddFriendInput('');
+      console.log("Adding friend:", addFriendInput);
+      setAddFriendInput("");
     }
   };
 
-  const filteredFriends = friends.filter(friend =>
-    friend.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (activeTab === 'all' || (activeTab === 'online' && friend.status === 'online'))
+  const filteredFriends = friends.filter(
+    (friend) =>
+      friend.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (activeTab === "all" ||
+        (activeTab === "online" && friend.status === "online")),
   );
 
   const getTabContent = () => {
     switch (activeTab) {
-      case 'pending':
+      case "pending":
         return pendingRequests;
-      case 'suggested':
+      case "suggested":
         return suggested;
       default:
         return filteredFriends;
@@ -75,7 +128,9 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white font-['Inter'] mb-2">Friends</h1>
+            <h1 className="text-3xl font-bold text-white font-['Inter'] mb-2">
+              Friends
+            </h1>
             <p className="text-gray-400">Connect with fellow music producers</p>
           </div>
           <Dialog>
@@ -96,7 +151,10 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
                   onChange={(e) => setAddFriendInput(e.target.value)}
                   className="bg-[#0D1126] border-gray-600 text-white"
                 />
-                <Button onClick={handleAddFriend} className="w-full bg-[#7E4FFF] hover:bg-[#6B3FE6]">
+                <Button
+                  onClick={handleAddFriend}
+                  className="w-full bg-[#7E4FFF] hover:bg-[#6B3FE6]"
+                >
                   Send Friend Request
                 </Button>
               </div>
@@ -110,7 +168,9 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Total Friends</p>
-                  <p className="text-2xl font-bold text-[#7E4FFF]">{friends.length}</p>
+                  <p className="text-2xl font-bold text-[#7E4FFF]">
+                    {friends.length}
+                  </p>
                 </div>
                 <Users className="w-8 h-8 text-[#7E4FFF]" />
               </div>
@@ -123,7 +183,7 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
                 <div>
                   <p className="text-sm text-gray-400">Online Now</p>
                   <p className="text-2xl font-bold text-green-400">
-                    {friends.filter(f => f.status === 'online').length}
+                    {friends.filter((f) => f.status === "online").length}
                   </p>
                 </div>
                 <div className="w-3 h-3 bg-green-400 rounded-full"></div>
@@ -136,7 +196,9 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-400">Pending</p>
-                  <p className="text-2xl font-bold text-orange-400">{pendingRequests.length}</p>
+                  <p className="text-2xl font-bold text-orange-400">
+                    {pendingRequests.length}
+                  </p>
                 </div>
                 <UserPlus className="w-8 h-8 text-orange-400" />
               </div>
@@ -147,17 +209,19 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex space-x-2">
             {[
-              { key: 'all', label: 'All' },
-              { key: 'online', label: 'Online' },
-              { key: 'pending', label: `Pending (${pendingRequests.length})` },
-              { key: 'suggested', label: 'Suggested' },
+              { key: "all", label: "All" },
+              { key: "online", label: "Online" },
+              { key: "pending", label: `Pending (${pendingRequests.length})` },
+              { key: "suggested", label: "Suggested" },
             ].map((tab) => (
               <Button
                 key={tab.key}
-                variant={activeTab === tab.key ? 'default' : 'outline'}
+                variant={activeTab === tab.key ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTab(tab.key as any)}
-                className={activeTab === tab.key ? 'bg-[#7E4FFF] hover:bg-[#6B3FE6]' : ''}
+                className={
+                  activeTab === tab.key ? "bg-[#7E4FFF] hover:bg-[#6B3FE6]" : ""
+                }
               >
                 {tab.label}
               </Button>
@@ -178,50 +242,87 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
           <CardContent className="p-6">
             <ScrollArea className="h-[500px]">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {(requests as FriendRequest[]).map(item => {
-                  const { id, name, status = '', reason = '', plugins = [] } = item;
+                {(requests as FriendRequest[]).map((item) => {
+                  const {
+                    id,
+                    name,
+                    status = "",
+                    reason = "",
+                    plugins = [],
+                  } = item;
                   return (
-                    <div key={id} className="bg-[#0D1126] rounded-lg p-4 border border-gray-700 group hover:border-[#7E4FFF]/50 transition-colors">
+                    <div
+                      key={id}
+                      className="bg-[#0D1126] rounded-lg p-4 border border-gray-700 group hover:border-[#7E4FFF]/50 transition-colors"
+                    >
                       <div className="flex items-start space-x-3 mb-3">
                         <div className="relative">
                           <div className="w-12 h-12 bg-gradient-to-br from-[#7E4FFF] to-[#6B3FE6] rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">{name.charAt(0)}</span>
+                            <span className="text-white font-bold text-sm">
+                              {name.charAt(0)}
+                            </span>
                           </div>
                           {status && (
-                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0D1126] ${status === 'online' ? 'bg-green-400' : 'bg-gray-500'}`}></div>
+                            <div
+                              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0D1126] ${status === "online" ? "bg-green-400" : "bg-gray-500"}`}
+                            ></div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-white">{name}</h3>
-                          <p className={`text-sm ${status === 'online' ? 'text-green-400' : 'text-gray-400'}`}>{status}</p>
+                          <p
+                            className={`text-sm ${status === "online" ? "text-green-400" : "text-gray-400"}`}
+                          >
+                            {status}
+                          </p>
                           <p className="text-sm text-gray-400">{reason}</p>
                         </div>
                       </div>
-                      {plugins.slice(0, 2).map((plugin: string, idx: number) => (
-                        <span key={idx}>{plugin}</span>
-                      ))}
+                      {plugins
+                        .slice(0, 2)
+                        .map((plugin: string, idx: number) => (
+                          <span key={idx}>{plugin}</span>
+                        ))}
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {activeTab === 'pending' ? (
+                        {activeTab === "pending" ? (
                           <>
-                            <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                            >
                               Accept
                             </Button>
-                            <Button size="sm" variant="outline" className="flex-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                            >
                               Decline
                             </Button>
                           </>
-                        ) : activeTab === 'suggested' ? (
-                          <Button size="sm" className="flex-1 bg-[#7E4FFF] hover:bg-[#6B3FE6]">
+                        ) : activeTab === "suggested" ? (
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-[#7E4FFF] hover:bg-[#6B3FE6]"
+                          >
                             <UserPlus className="w-3 h-3 mr-1" />
                             Add
                           </Button>
                         ) : (
                           <>
-                            <Button size="sm" variant="outline" className="flex-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                            >
                               <MessageSquare className="w-3 h-3 mr-1" />
                               Chat
                             </Button>
-                            <Button size="sm" variant="outline" className="flex-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                            >
                               <Music className="w-3 h-3 mr-1" />
                               Plugins
                             </Button>

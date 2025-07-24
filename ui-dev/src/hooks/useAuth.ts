@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export interface User {
   id: string;
@@ -25,12 +25,12 @@ const useAuth = () => {
     // Load auth state from localStorage on mount
     const loadAuth = () => {
       try {
-        const storedAuth = localStorage.getItem('auth');
+        const storedAuth = localStorage.getItem("auth");
         if (storedAuth) {
           setAuth(JSON.parse(storedAuth));
         }
       } catch (error) {
-        console.error('Failed to parse auth data', error);
+        console.error("Failed to parse auth data", error);
       } finally {
         setIsLoading(false);
       }
@@ -40,20 +40,20 @@ const useAuth = () => {
 
     // Listen for storage events to sync auth state across tabs
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'auth') {
+      if (e.key === "auth") {
         loadAuth();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
   const login = (authData: AuthState) => {
     // Get users from localStorage
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
     const user = users.find((u: any) => u.email === authData.user.email);
-    
+
     // Merge with existing user data (to preserve isAdmin status)
     const updatedAuth = {
       ...authData,
@@ -61,18 +61,18 @@ const useAuth = () => {
         ...authData.user,
         isAdmin: user?.isAdmin || false,
         isApproved: user?.isApproved || false,
-      }
+      },
     };
-    
-    localStorage.setItem('auth', JSON.stringify(updatedAuth));
+
+    localStorage.setItem("auth", JSON.stringify(updatedAuth));
     setAuth(updatedAuth);
     return updatedAuth;
   };
 
   const logout = () => {
-    localStorage.removeItem('auth');
+    localStorage.removeItem("auth");
     setAuth(null);
-    window.location.href = '/signin'; // Force reload to clear all state
+    window.location.href = "/signin"; // Force reload to clear all state
   };
 
   return {

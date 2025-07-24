@@ -1,11 +1,10 @@
+"use client";
 
-'use client';
-
-import { FriendsPanel } from '@rythm/ui-kit';
+import { FriendsPanel } from "@rythm/ui-kit";
 
 export default function FriendsPage() {
   const handleNavigate = (path: string) => {
-    console.log('Navigate to:', path);
+    console.log("Navigate to:", path);
   };
 
   return <FriendsPanel onNavigate={handleNavigate} />;

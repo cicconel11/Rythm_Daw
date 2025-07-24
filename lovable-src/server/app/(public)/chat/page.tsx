@@ -1,11 +1,10 @@
+"use client";
 
-'use client';
-
-import { ChatPanel } from '@rythm/ui-kit';
+import { ChatPanel } from "@rythm/ui-kit";
 
 export default function ChatPage() {
   const handleNavigate = (path: string) => {
-    console.log('Navigate to:', path);
+    console.log("Navigate to:", path);
   };
 
   return <ChatPanel onNavigate={handleNavigate} />;

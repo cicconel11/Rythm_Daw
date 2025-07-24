@@ -1,23 +1,32 @@
-
-import React, { useState } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { Progress } from './ui/progress';
-import { Settings, RefreshCw, User, Download } from 'lucide-react';
+import React, { useState } from "react";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Progress } from "./ui/progress";
+import { Settings, RefreshCw, User, Download } from "lucide-react";
 
 interface SettingsProps {
-  onUpdateAccount: (data: { displayName: string; email: string; bio: string }) => void;
+  onUpdateAccount: (data: {
+    displayName: string;
+    email: string;
+    bio: string;
+  }) => void;
   onRescanPlugins: () => void;
   onDownloadPlugin: () => void;
 }
 
-export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }: SettingsProps) {
-  const [displayName, setDisplayName] = useState('DJ Producer');
-  const [email, setEmail] = useState('dj@producer.com');
-  const [bio, setBio] = useState('Making beats and collaborating with artists worldwide.');
+export function Settings({
+  onUpdateAccount,
+  onRescanPlugins,
+  onDownloadPlugin,
+}: SettingsProps) {
+  const [displayName, setDisplayName] = useState("DJ Producer");
+  const [email, setEmail] = useState("dj@producer.com");
+  const [bio, setBio] = useState(
+    "Making beats and collaborating with artists worldwide.",
+  );
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
 
@@ -29,10 +38,10 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
   const handleRescan = () => {
     setIsScanning(true);
     setScanProgress(0);
-    
+
     // Simulate scanning progress
     const interval = setInterval(() => {
-      setScanProgress(prev => {
+      setScanProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           setIsScanning(false);
@@ -46,9 +55,9 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
 
   const detectOS = () => {
     const userAgent = navigator.userAgent;
-    if (userAgent.includes('Mac')) return 'macOS';
-    if (userAgent.includes('Windows')) return 'Windows';
-    return 'your OS';
+    if (userAgent.includes("Mac")) return "macOS";
+    if (userAgent.includes("Windows")) return "Windows";
+    return "your OS";
   };
 
   return (
@@ -57,7 +66,9 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-          <p className="text-muted-foreground">Manage your account and plugin library</p>
+          <p className="text-muted-foreground">
+            Manage your account and plugin library
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -72,7 +83,12 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
             <CardContent>
               <form onSubmit={handleUpdateAccount} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="displayName" className="text-muted-foreground">Display Name</Label>
+                  <Label
+                    htmlFor="displayName"
+                    className="text-muted-foreground"
+                  >
+                    Display Name
+                  </Label>
                   <Input
                     id="displayName"
                     value={displayName}
@@ -83,7 +99,9 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-muted-foreground">Email</Label>
+                  <Label htmlFor="email" className="text-muted-foreground">
+                    Email
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -95,7 +113,9 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio" className="text-muted-foreground">Bio</Label>
+                  <Label htmlFor="bio" className="text-muted-foreground">
+                    Bio
+                  </Label>
                   <Textarea
                     id="bio"
                     value={bio}
@@ -105,14 +125,13 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
                     maxLength={140}
                   />
                   <div className="text-right">
-                    <span className="text-xs text-muted-foreground">{bio.length}/140</span>
+                    <span className="text-xs text-muted-foreground">
+                      {bio.length}/140
+                    </span>
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full"
-                >
+                <Button type="submit" className="w-full">
                   Update Account
                 </Button>
               </form>
@@ -130,14 +149,13 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
             <CardContent className="space-y-6">
               {/* Download Plugin */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-foreground">RHYTHM Plugin</h3>
+                <h3 className="text-lg font-semibold text-foreground">
+                  RHYTHM Plugin
+                </h3>
                 <p className="text-muted-foreground text-sm">
                   Download the latest version of the RHYTHM plugin for your DAW
                 </p>
-                <Button
-                  onClick={onDownloadPlugin}
-                  className="w-full"
-                >
+                <Button onClick={onDownloadPlugin} className="w-full">
                   <Download className="w-4 h-4 mr-2" />
                   Download for {detectOS()}
                 </Button>
@@ -145,15 +163,19 @@ export function Settings({ onUpdateAccount, onRescanPlugins, onDownloadPlugin }:
 
               {/* Rescan Plugins */}
               <div className="space-y-3 pt-4 border-t border-border">
-                <h3 className="text-lg font-semibold text-foreground">Rescan Library</h3>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Rescan Library
+                </h3>
                 <p className="text-muted-foreground text-sm">
                   Refresh your plugin library to detect new installations
                 </p>
-                
+
                 {isScanning ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Scanning plugins...</span>
+                      <span className="text-muted-foreground">
+                        Scanning plugins...
+                      </span>
                       <span className="text-primary">{scanProgress}%</span>
                     </div>
                     <Progress value={scanProgress} className="h-2" />

@@ -1,21 +1,17 @@
+"use client";
 
-'use client';
-
-import { LandingPage } from '@rythm/ui-kit';
+import { LandingPage } from "@rythm/ui-kit";
 
 export default function LandingPageWrapper() {
   const handleCreateAccount = () => {
-    console.log('Navigate to /register/credentials');
+    console.log("Navigate to /register/credentials");
   };
 
   const handleLogin = () => {
-    console.log('Navigate to /login');
+    console.log("Navigate to /login");
   };
 
   return (
-    <LandingPage 
-      onCreateAccount={handleCreateAccount}
-      onLogin={handleLogin}
-    />
+    <LandingPage onCreateAccount={handleCreateAccount} onLogin={handleLogin} />
   );
 }

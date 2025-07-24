@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { WebSocketService, MessageHandler } from '../services/websocket.service';
+import { useCallback, useEffect, useRef } from "react";
+import {
+  WebSocketService,
+  MessageHandler,
+} from "../services/websocket.service";
 
 interface UseWebSocketOptions {
   onConnect?: () => void;
@@ -28,7 +31,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
   // Initialize WebSocket service
   useEffect(() => {
     wsService.current = WebSocketService.getInstance();
-    
+
     const handleConnect = () => {
       reconnectAttemptsRef.current = 0;
       onConnect?.();
@@ -36,11 +39,13 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
 
     const handleDisconnect = () => {
       onDisconnect?.();
-      
+
       if (autoReconnect && reconnectAttemptsRef.current < reconnectAttempts) {
         reconnectAttemptsRef.current++;
-        console.log(`Attempting to reconnect (${reconnectAttemptsRef.current}/${reconnectAttempts})...`);
-        
+        console.log(
+          `Attempting to reconnect (${reconnectAttemptsRef.current}/${reconnectAttempts})...`,
+        );
+
         reconnectTimeoutRef.current = setTimeout(() => {
           wsService.current?.connect().catch(console.error);
         }, reconnectInterval);
@@ -48,14 +53,17 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     };
 
     const handleError = (error: Event) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
       onError?.(error);
     };
 
     // Set up event listeners
-    const cleanupConnect = wsService.current.on('connect', handleConnect);
-    const cleanupDisconnect = wsService.current.on('disconnect', handleDisconnect);
-    const cleanupError = wsService.current.on('error', handleError);
+    const cleanupConnect = wsService.current.on("connect", handleConnect);
+    const cleanupDisconnect = wsService.current.on(
+      "disconnect",
+      handleDisconnect,
+    );
+    const cleanupError = wsService.current.on("error", handleError);
 
     // Connect to WebSocket
     wsService.current.connect().catch(console.error);
@@ -65,27 +73,36 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
       cleanupConnect();
       cleanupDisconnect();
       cleanupError();
-      
+
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
-      
+
       // Clean up any registered event handlers
-      eventHandlersRef.current.forEach(cleanup => cleanup());
+      eventHandlersRef.current.forEach((cleanup) => cleanup());
       eventHandlersRef.current = [];
     };
-  }, [autoReconnect, onConnect, onDisconnect, onError, reconnectAttempts, reconnectInterval]);
+  }, [
+    autoReconnect,
+    onConnect,
+    onDisconnect,
+    onError,
+    reconnectAttempts,
+    reconnectInterval,
+  ]);
 
   // Helper to subscribe to events
   const on = useCallback((event: string, handler: MessageHandler) => {
     if (!wsService.current) return () => {};
-    
+
     const cleanup = wsService.current.on(event, handler);
     eventHandlersRef.current.push(cleanup);
-    
+
     return () => {
       cleanup();
-      eventHandlersRef.current = eventHandlersRef.current.filter(cb => cb !== cleanup);
+      eventHandlersRef.current = eventHandlersRef.current.filter(
+        (cb) => cb !== cleanup,
+      );
     };
   }, []);
 

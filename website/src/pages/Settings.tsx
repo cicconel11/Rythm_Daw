@@ -1,12 +1,16 @@
-import { SettingsAccount } from '@rythm/ui-kit';
+import { SettingsAccount } from "@rythm/ui-kit";
 
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 
 export default function SettingsPage() {
   const { toast } = useToast();
 
-  const handleUpdateAccount = (data: { displayName: string; email: string; bio: string }) => {
-    console.log('Update account:', data);
+  const handleUpdateAccount = (data: {
+    displayName: string;
+    email: string;
+    bio: string;
+  }) => {
+    console.log("Update account:", data);
     toast({
       title: "Account Updated",
       description: "Your account information has been successfully updated.",
@@ -14,7 +18,7 @@ export default function SettingsPage() {
   };
 
   const handleRescanPlugins = () => {
-    console.log('Rescan plugins completed');
+    console.log("Rescan plugins completed");
     toast({
       title: "Plugin Scan Complete",
       description: "Your plugin library has been successfully rescanned.",
@@ -22,7 +26,7 @@ export default function SettingsPage() {
   };
 
   const handleAvatarChange = (file: File) => {
-    console.log('Avatar changed:', file.name);
+    console.log("Avatar changed:", file.name);
     toast({
       title: "Avatar Updated",
       description: "Your profile picture has been updated.",

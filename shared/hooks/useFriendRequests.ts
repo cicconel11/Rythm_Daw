@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@shared/lib/api';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@shared/lib/api";
 
 /* ---------- shared DTO ---------- */
 export type FriendRequest = {
@@ -13,16 +13,17 @@ export type FriendRequest = {
 /* ---------- queries ------------- */
 export const useFriendRequests = () =>
   useQuery({
-    queryKey: ['friend-requests'],
-    queryFn : async () => (await api.get<FriendRequest[]>('/friends/requests')).data,
-    staleTime: 1000 * 30,           // 30 s cache
+    queryKey: ["friend-requests"],
+    queryFn: async () =>
+      (await api.get<FriendRequest[]>("/friends/requests")).data,
+    staleTime: 1000 * 30, // 30 s cache
   });
 
 /* ---------- mutations ----------- */
 export const useAcceptRequest = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn : (id: string) => api.post(`/friends/${id}/accept`),
-    onSuccess  : () => qc.invalidateQueries({ queryKey: ['friend-requests'] }),
+    mutationFn: (id: string) => api.post(`/friends/${id}/accept`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["friend-requests"] }),
   });
-}; 
+};

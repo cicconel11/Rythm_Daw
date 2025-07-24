@@ -1,4 +1,3 @@
-
 interface FileMeta {
   name: string;
   type: string;
@@ -20,12 +19,12 @@ class JuceBridgeClass {
 
   send(type: string, data: any) {
     const message: JuceBridgeMessage = { type, data };
-    
+
     // In a real JUCE plugin, this would send to the native layer
-    if (typeof window !== 'undefined' && (window as any).juce) {
+    if (typeof window !== "undefined" && (window as any).juce) {
       (window as any).juce.postMessage(JSON.stringify(message));
     } else {
-      console.log('JuceBridge send:', message);
+      console.log("JuceBridge send:", message);
     }
   }
 
@@ -49,20 +48,20 @@ class JuceBridgeClass {
   private handleMessage(message: JuceBridgeMessage) {
     const handlers = this.eventHandlers.get(message.type);
     if (handlers) {
-      handlers.forEach(handler => handler(message.data));
+      handlers.forEach((handler) => handler(message.data));
     }
   }
 
   init() {
     // In a real JUCE plugin, this would listen for messages from native layer
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       (window as any).juceBridge = this;
       (window as any).handleJuceMessage = (messageString: string) => {
         try {
           const message = JSON.parse(messageString);
           this.handleMessage(message);
         } catch (error) {
-          console.error('Failed to parse JUCE message:', error);
+          console.error("Failed to parse JUCE message:", error);
         }
       };
     }
@@ -80,8 +79,10 @@ let dataChannel: RTCDataChannel | null = null;
  */
 function webrtcReady(): boolean {
   // TODO: Implement proper WebRTC connection check
-  return typeof RTCPeerConnection !== 'undefined' && 
-         typeof RTCDataChannel !== 'undefined';
+  return (
+    typeof RTCPeerConnection !== "undefined" &&
+    typeof RTCDataChannel !== "undefined"
+  );
 }
 
 /**
@@ -91,22 +92,22 @@ async function rtcSend(file: FileMeta) {
   if (!rtcConnection) {
     // TODO: Initialize WebRTC connection with STUN servers
     // Adjust the import path based on your project structure
-    const { getIceServers } = await import('../../../shared/src/rtc/stun-list');
-    
+    const { getIceServers } = await import("../../../shared/src/rtc/stun-list");
+
     rtcConnection = new RTCPeerConnection({
-      iceServers: getIceServers()
+      iceServers: getIceServers(),
     });
 
     // Set up data channel
-    dataChannel = rtcConnection.createDataChannel('fileTransfer');
-    
+    dataChannel = rtcConnection.createDataChannel("fileTransfer");
+
     dataChannel.onopen = () => {
-      console.log('Data channel opened');
+      console.log("Data channel opened");
       // TODO: Implement file chunking and sending logic
       // This is a simplified example
       const reader = new FileReader();
       reader.onload = (e) => {
-        if (dataChannel?.readyState === 'open' && e.target?.result) {
+        if (dataChannel?.readyState === "open" && e.target?.result) {
           dataChannel.send(e.target.result as ArrayBuffer);
         }
       };
@@ -115,7 +116,7 @@ async function rtcSend(file: FileMeta) {
     };
 
     dataChannel.onclose = () => {
-      console.log('Data channel closed');
+      console.log("Data channel closed");
       cleanupRtc();
     };
 
@@ -123,7 +124,7 @@ async function rtcSend(file: FileMeta) {
   }
 
   // TODO: Handle file transfer
-  console.log('Sending file via WebRTC:', file);
+  console.log("Sending file via WebRTC:", file);
 }
 
 /**
@@ -146,47 +147,47 @@ function cleanupRtc() {
 async function restPresignAndUpload(file: FileMeta) {
   try {
     // 1. Get pre-signed URL from server
-    const presignResponse = await fetch('/api/files/presign', {
-      method: 'POST',
+    const presignResponse = await fetch("/api/files/presign", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         // TODO: Add authentication token if needed
         // 'Authorization': `Bearer ${getAuthToken()}`
       },
       body: JSON.stringify({
         name: file.name,
-        mime: file.type || 'application/octet-stream',
-        size: file.size
-      })
+        mime: file.type || "application/octet-stream",
+        size: file.size,
+      }),
     });
 
     if (!presignResponse.ok) {
-      throw new Error('Failed to get pre-signed URL');
+      throw new Error("Failed to get pre-signed URL");
     }
 
     const { putUrl } = await presignResponse.json();
 
     // 2. Upload file to pre-signed URL
     if (!file.data) {
-      throw new Error('No file data available for upload');
+      throw new Error("No file data available for upload");
     }
 
     const uploadResponse = await fetch(putUrl, {
-      method: 'PUT',
+      method: "PUT",
       body: file.data,
       headers: {
-        'Content-Type': file.type || 'application/octet-stream',
-        'Content-Length': file.size.toString()
-      }
+        "Content-Type": file.type || "application/octet-stream",
+        "Content-Length": file.size.toString(),
+      },
     });
 
     if (!uploadResponse.ok) {
-      throw new Error('File upload failed');
+      throw new Error("File upload failed");
     }
 
-    console.log('File uploaded successfully');
+    console.log("File uploaded successfully");
   } catch (error) {
-    console.error('File upload error:', error);
+    console.error("File upload error:", error);
     throw error;
   }
 }

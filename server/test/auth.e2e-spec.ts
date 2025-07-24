@@ -5,6 +5,7 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import AuthConfig from '../src/config/auth.config';
 import { ConfigModule } from '@nestjs/config';
+import { PrismaModule } from '../prisma/prisma.module';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -13,7 +14,7 @@ describe('AuthController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule.forRoot(), AppModule],
+      imports: [ConfigModule.forRoot(), AppModule, PrismaModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
