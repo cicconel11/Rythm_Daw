@@ -10,7 +10,7 @@ import { Switch } from './ui/switch';
 import { Progress } from './ui/progress';
 import { Badge } from './ui/badge';
 import { User, Upload, RefreshCw, Settings as SettingsIcon } from 'lucide-react';
-import { PluginList } from './PluginList';
+import { PluginList } from './pluginlist';
 
 interface SettingsAccountProps {
   onUpdateAccount: (data: { displayName: string; email: string; bio: string }) => void;

@@ -3,7 +3,8 @@
   "workspaces": [
     "ui-kit",
     "website",
-    "server"
+    "server",
+    "lovable-src"
   ],
   "dependencies": {
     "@headlessui/react": "^2.2.4",

@@ -1,0 +1,31 @@
+{
+    "name": "@rythm/ui-kit",
+    "version": "0.0.0",
+    "main": "./src/index.ts",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./src/index.ts"
+        },
+        "./*": "./src/*"
+    },
+    "scripts": {
+        "build": "tsc -p tsconfig.build.json"
+    },
+    "dependencies": {
+        "@tanstack/react-query": "^5.83.0",
+        "canvas-confetti": "^1.9.2",
+        "lucide-react": "^0.356.0"
+    },
+    "devDependencies": {
+        "@testing-library/jest-dom": "^6.4.2"
+    },
+    "typesVersions": {
+        "*": {
+            "*": [
+                "src/*"
+            ]
+        }
+    }
+}
