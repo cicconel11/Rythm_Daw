@@ -14,6 +14,76 @@ import {
   Share,
   History,
 } from "lucide-react";
+import { useTransfers } from '../../../../shared/hooks/useTransfers';
+import { useFileUpload } from '../../../../shared/hooks/useFileUpload';
+import { useTransferActions } from '../../../../shared/hooks/useTransferActions';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../../../shared/lib/api';
+import { ActivitySchema } from '../../../../shared/types';
+import { z } from 'zod';
+
+const ActivityListSchema = z.array(ActivitySchema);
+
+function PluginFiles() {
+  const { data: transfers, isLoading } = useTransfers();
+  const upload = useFileUpload();
+  const { accept, decline, download } = useTransferActions();
+  const [file, setFile] = useState<File | null>(null);
+  const [toUserId, setToUserId] = useState('');
+
+  const handleUpload = () => {
+    if (file && toUserId) {
+      upload.mutate({ file, toUserId, fileName: file.name, mimeType: file.type, size: file.size });
+    }
+  };
+
+  return (
+    <div>
+      <h2>File Transfers</h2>
+      <div>
+        <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
+        <input type="text" placeholder="Recipient User ID" value={toUserId} onChange={e => setToUserId(e.target.value)} />
+        <button onClick={handleUpload} disabled={upload.status === 'pending'}>Upload</button>
+      </div>
+      {isLoading ? <div>Loading...</div> : (
+        <ul>
+          {transfers?.map(t => (
+            <li key={t.id}>
+              <span>{t.fileName} ({t.status})</span>
+              <button onClick={() => accept.mutate(t.id)} disabled={t.status !== 'pending'}>Accept</button>
+              <button onClick={() => decline.mutate(t.id)} disabled={t.status !== 'pending'}>Decline</button>
+              <button onClick={() => download.mutate(t.id)} disabled={t.status !== 'accepted'}>Download</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function PluginHistory() {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['activity'],
+    queryFn: async () => {
+      const res = await api.get('/activity');
+      return ActivityListSchema.parse(res);
+    },
+  });
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading activity</div>;
+  return (
+    <div>
+      <h2>Activity Timeline</h2>
+      <ul>
+        {data?.map((item) => (
+          <li key={item.id}>
+            <span>{item.timestamp} — {item.type}: {item.description}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function App() {
   useFileTransferWS(); // Integrate WS
@@ -45,11 +115,9 @@ export function App() {
           />
         );
       case "files":
-        return <div className="p-6 text-white">Files view coming soon...</div>;
+        return <PluginFiles />;
       case "history":
-        return (
-          <div className="p-6 text-white">History view coming soon...</div>
-        );
+        return <PluginHistory />;
       default:
         return <Dashboard />;
     }

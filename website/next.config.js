@@ -1,10 +1,16 @@
+const withTM = require('next-transpile-modules')([
+  'lovable-src/ui-kit',
+  '../shared',
+]);
 const path = require('path');
-module.exports = {
+
+module.exports = withTM({
   reactStrictMode: true,
+  compiler: { styledComponents: true },
   webpack(config) {
-    config.resolve.alias['@ui-kit'] = require('path').resolve(__dirname, '../ui-kit/src');
-    config.resolve.alias['@lovable'] = require('path').resolve(__dirname, '../lovable-src/src');
-    config.resolve.alias['@shared'] = require('path').resolve(__dirname, '../shared');
+    // Remove manual @ui-kit alias; handled by transpile-modules and tsconfig
+    config.resolve.alias['@lovable'] = path.resolve(__dirname, '../lovable-src/src');
+    config.resolve.alias['@shared'] = path.resolve(__dirname, '../shared');
     return config;
   },
-}; 
+}); 
