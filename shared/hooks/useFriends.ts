@@ -1,22 +1,29 @@
-import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { FriendSchema } from '../types';
+import { api } from '../lib/api';
+import { useEffect } from 'react';
 
-const FriendSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  avatar: z.string().optional(),
-  isOnline: z.boolean().optional(),
-});
-export type Friend = z.infer<typeof FriendSchema>;
-
-export function useFriends() {
-  return useQuery({
-    queryKey: ["friends"],
+export const useFriends = () => {
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: ['friends'],
     queryFn: async () => {
-      const res = await fetch("/api/friends", { credentials: "include" });
-      const data = await res.json();
-      return z.array(FriendSchema).parse(data);
+      const res = await api.get('/friends');
+      return res.data.map((item: any) => FriendSchema.parse(item));
     },
-    staleTime: 60_000,
   });
-}
+
+  // Subscribe to WS presence updates
+  useEffect(() => {
+    const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL + '/presence');
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.event === 'presence:update') {
+        queryClient.invalidateQueries({ queryKey: ['friends'] });
+      }
+    };
+    return () => ws.close();
+  }, [queryClient]);
+
+  return query;
+};

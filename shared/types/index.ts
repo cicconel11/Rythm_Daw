@@ -68,3 +68,47 @@ export const FileTransferGatewayEventSchema = z.discriminatedUnion("event", [
 export type FileTransferGatewayEvent = z.infer<
   typeof FileTransferGatewayEventSchema
 >;
+
+export const ActivitySchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  description: z.string(),
+  timestamp: z.string(),
+});
+export type Activity = z.infer<typeof ActivitySchema>;
+
+export const DownloadUrlSchema = z.object({
+  url: z.string().url(),
+});
+export type DownloadUrl = z.infer<typeof DownloadUrlSchema>;
+
+// Chat Message
+export const ChatMessageSchema = z.object({
+  id: z.string(),
+  threadId: z.string(),
+  sender: z.string(),
+  content: z.string(),
+  timestamp: z.string(),
+});
+export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+export const ChatMessageListSchema = z.array(ChatMessageSchema);
+
+// Chat Thread
+export const ChatThreadSchema = z.object({
+  id: z.string(),
+  participants: z.array(z.string()),
+  lastMessage: z.string().optional(),
+  updatedAt: z.string(),
+});
+export type ChatThread = z.infer<typeof ChatThreadSchema>;
+export const ChatThreadListSchema = z.array(ChatThreadSchema);
+
+// Friend Request
+export const FriendRequestSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  status: z.string().optional(),
+  reason: z.string().optional(),
+  plugins: z.array(z.string()),
+});
+export type FriendRequest = z.infer<typeof FriendRequestSchema>;

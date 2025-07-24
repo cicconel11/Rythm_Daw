@@ -1,0 +1,6 @@
+/* Lovable-UIKit global styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add design tokens, fonts, or UIKit-wide resets here */

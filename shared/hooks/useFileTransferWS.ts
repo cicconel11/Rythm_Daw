@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { FileTransferGatewayEventSchema } from "../types/index.js";
 
 export function useFileTransferWS() {
   const ws = useRef<WebSocket | null>(null);
@@ -10,7 +11,13 @@ export function useFileTransferWS() {
     );
     ws.current.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      // TODO: handle transfer-initiated, transfer-status, etc.
+      // Parse and validate event
+      const parsed = FileTransferGatewayEventSchema.safeParse(msg);
+      if (!parsed.success) {
+        console.error('Invalid WS event', parsed.error, msg);
+        return;
+      }
+      // TODO: handle parsed.data
     };
     return () => ws.current?.close();
   }, []);
