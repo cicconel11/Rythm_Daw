@@ -13,7 +13,7 @@ type Message = {
   userId: string;
   ts: number;
   type: 'chat' | 'presence' | 'inventory' | 'system';
-  payload: any;
+  payload: unknown;
 };
 
 type Client = {
@@ -124,7 +124,7 @@ export class RealtimeChat {
           this.handleChatMessage(client, message);
           break;
         case 'presence':
-          this.broadcastPresence(client.userId, message.payload.status);
+          this.broadcastPresence(client.userId, message.payload as { status: 'online' | 'offline' | 'away' });
           break;
         case 'inventory':
           this.broadcastInventoryUpdate(client, message);

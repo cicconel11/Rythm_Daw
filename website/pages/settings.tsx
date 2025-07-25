@@ -4,4 +4,4 @@ import { useUser } from '@shared/hooks/useUser';
 export default function SettingsPage() {
   const hook = useUser();
   return <SettingsAccount {...hook} />;
-} 
+}

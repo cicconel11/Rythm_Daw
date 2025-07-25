@@ -2,36 +2,36 @@ import { EventEmitter } from 'events';
 
 // Mock Request interface
 interface MockRequest {
-  body: any;
-  params: any;
-  query: any;
-  headers: any;
+  body: unknown;
+  params: unknown;
+  query: unknown;
+  headers: unknown;
   method: string;
   url: string;
   originalUrl: string;
   path: string;
-  cookies: any;
-  session: any;
-  user: any;
-  [key: string]: any;
+  cookies: unknown;
+  session: unknown;
+  user: unknown;
+  [key: string]: unknown;
 }
 
 // Mock Response interface
 interface MockResponse {
   status: (code: number) => MockResponse;
-  json: (data: any) => MockResponse;
-  send: (data: any) => MockResponse;
+  json: (data: unknown) => MockResponse;
+  send: (data: unknown) => MockResponse;
   end: () => MockResponse;
   set: (key: string, value: string) => MockResponse;
   header: (key: string, value: string) => MockResponse;
   redirect: (url: string) => MockResponse;
-  render: (view: string, data?: any) => MockResponse;
-  locals: any;
-  [key: string]: any;
+  render: (view: string, data?: unknown) => MockResponse;
+  locals: unknown;
+  [key: string]: unknown;
 }
 
 // Mock Next function
-type MockNext = (error?: any) => void;
+type MockNext = (error?: unknown) => void;
 
 // Create mock request
 const createMockRequest = (overrides: Partial<MockRequest> = {}): MockRequest => {
@@ -89,10 +89,10 @@ const Router = jest.fn().mockReturnValue({
 });
 
 // Mock middleware functions
-const json = jest.fn().mockReturnValue((req: any, res: any, next: any) => next());
-const urlencoded = jest.fn().mockReturnValue((req: any, res: any, next: any) => next());
-const staticMiddleware = jest.fn().mockReturnValue((req: any, res: any, next: any) => next());
-const cors = jest.fn().mockReturnValue((req: any, res: any, next: any) => next());
+const json = jest.fn().mockReturnValue((req: unknown, res: unknown, next: unknown) => next());
+const urlencoded = jest.fn().mockReturnValue((req: unknown, res: unknown, next: unknown) => next());
+const staticMiddleware = jest.fn().mockReturnValue((req: unknown, res: unknown, next: unknown) => next());
+const cors = jest.fn().mockReturnValue((req: unknown, res: unknown, next: unknown) => next());
 
 // Mock express function
 const express = jest.fn().mockReturnValue({

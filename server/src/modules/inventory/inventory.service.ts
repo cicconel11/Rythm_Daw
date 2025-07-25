@@ -18,11 +18,11 @@ export class InventoryService {
     const { plugins, inventoryHash } = dto;
     
     // Start a transaction to ensure data consistency
-    return this.prisma.$transaction(async (prisma: any) => {
+    return this.prisma.$transaction(async (prisma: unknown) => {
       // 1. Upsert all plugins
       const upsertedPlugins = await Promise.all(
         plugins.map((plugin) =>
-          prisma.plugin.upsert({
+          (prisma as any).plugin.upsert({
             where: { id: plugin.uid },
             update: {
               name: plugin.name,
@@ -41,10 +41,10 @@ export class InventoryService {
 
       // Get the Prisma userPlugin delegate with proper typing
       const userPlugin = (prisma as any).userPlugin as {
-        findMany: (args: any) => Promise<Array<{ pluginId: string }>>;
-        createMany: (args: any) => Promise<any>;
-        deleteMany: (args: any) => Promise<any>;
-        updateMany: (args: any) => Promise<any>;
+        findMany: (args: unknown) => Promise<Array<{ pluginId: string }>>;
+        createMany: (args: unknown) => Promise<unknown>;
+        deleteMany: (args: unknown) => Promise<unknown>;
+        updateMany: (args: unknown) => Promise<unknown>;
       };
 
       // 2. Get current user plugins using the userPlugin delegate
@@ -61,7 +61,7 @@ export class InventoryService {
       const pluginsToRemove = Array.from(currentPluginUids).filter((uid: string) => !newPluginUids.has(uid));
 
       // 4. Update user plugins
-      const updatePromises: Promise<any>[] = [];
+      const updatePromises: Promise<unknown>[] = [];
       
       // Add new plugins
       if (pluginsToAdd.length > 0) {
@@ -122,7 +122,7 @@ export class InventoryService {
       await Promise.all(updatePromises);
 
       // 5. Update user's inventory hash
-      await prisma.user.update({
+      await (prisma as any).user.update({
         where: { id: userId },
         data: {
           inventoryHash,
@@ -131,7 +131,7 @@ export class InventoryService {
       });
 
       // 6. Get the complete updated inventory
-      const updatedInventory = await prisma.userPlugin.findMany({
+      const updatedInventory = await (prisma as any).userPlugin.findMany({
         where: { userId },
         include: {
           plugin: true,
@@ -144,7 +144,7 @@ export class InventoryService {
         timestamp: new Date(),
         added: pluginsToAdd,
         removed: pluginsToRemove,
-        inventory: updatedInventory.map((up: { plugin: any; isActive: boolean; updatedAt: Date }) => ({
+        inventory: updatedInventory.map((up: { plugin: unknown; isActive: boolean; updatedAt: Date }) => ({
           ...up.plugin,
           isActive: up.isActive,
           lastSynced: up.updatedAt,
@@ -164,7 +164,7 @@ export class InventoryService {
   }
 
   async getUserInventory(userId: string) {
-    return this.prisma.userPlugin.findMany({
+    return (this.prisma as any).userPlugin.findMany({
       where: { userId },
       include: {
         plugin: true,

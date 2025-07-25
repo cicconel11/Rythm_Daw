@@ -6,12 +6,12 @@ import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
 
 describe('WebSocket Heartbeat', () => {
   let gateway: ChatGateway;
-  let mockPresenceService: any;
-  let mockRtcGateway: any;
-  let mockServer: any;
-  let mockSocket: any;
-  let originalSetInterval: any;
-  let originalClearInterval: any;
+  let mockPresenceService: unknown;
+  let mockRtcGateway: unknown;
+  let mockServer: unknown;
+  let mockSocket: unknown;
+  let originalSetInterval: unknown;
+  let originalClearInterval: unknown;
   let mockTimers: { id: NodeJS.Timeout; callback: () => void }[] = [];
 
   beforeEach(() => {
@@ -72,8 +72,8 @@ describe('WebSocket Heartbeat', () => {
 
   afterEach(() => {
     // Restore original timers
-    global.setInterval = originalSetInterval;
-    global.clearInterval = originalClearInterval;
+    global.setInterval = originalSetInterval as typeof global.setInterval;
+    global.clearInterval = originalClearInterval as typeof global.clearInterval;
     mockTimers = [];
     jest.clearAllMocks();
   });
@@ -85,7 +85,7 @@ describe('WebSocket Heartbeat', () => {
 
   it('should send ping to connected clients', () => {
     // Simulate connection
-    gateway.handleConnection(mockSocket);
+    gateway.handleConnection(mockSocket as any);
     
     // Get the ping interval callback
     const pingInterval = mockTimers[0];
@@ -100,7 +100,7 @@ describe('WebSocket Heartbeat', () => {
     pingInterval.callback();
     
     // Should have sent a ping
-    expect(mockSocket.emit).toHaveBeenCalledWith('ping', { timestamp: mockTimestamp });
+    expect((mockSocket as any).emit).toHaveBeenCalledWith('ping', { timestamp: mockTimestamp });
     
     // Restore Date.now
     Date.now = originalDateNow;
@@ -108,7 +108,7 @@ describe('WebSocket Heartbeat', () => {
 
   it('should handle pong response', () => {
     // Simulate connection
-    gateway.handleConnection(mockSocket);
+    gateway.handleConnection(mockSocket as any);
     
     // Mock Date.now()
     const originalDateNow = Date.now;
@@ -116,14 +116,14 @@ describe('WebSocket Heartbeat', () => {
     Date.now = jest.fn(() => mockTimestamp);
     
     // Simulate receiving a pong
-    const pingCallback = mockSocket.emit.mock.calls[0][1];
+    const pingCallback = (mockSocket as any).emit.mock.calls[0][1];
     expect(typeof pingCallback).toBe('function');
     
     // Call the pong handler
     pingCallback({ timestamp: mockTimestamp });
     
     // Should reset missed pongs counter
-    expect(gateway['missedPongs'].get(mockSocket.id)).toBe(0);
+    expect(gateway['missedPongs'].get((mockSocket as any).id)).toBe(0);
     
     // Restore Date.now
     Date.now = originalDateNow;
@@ -131,7 +131,7 @@ describe('WebSocket Heartbeat', () => {
 
   it('should disconnect client after missing pongs', () => {
     // Simulate connection
-    gateway.handleConnection(mockSocket);
+    gateway.handleConnection(mockSocket as any);
     
     // Get the ping interval callback
     const pingInterval = mockTimers[0];
@@ -142,17 +142,17 @@ describe('WebSocket Heartbeat', () => {
     }
     
     // Should have disconnected the client
-    expect(mockSocket.disconnect).toHaveBeenCalled();
+    expect((mockSocket as any).disconnect).toHaveBeenCalled();
   });
 
   it('should clean up on disconnection', () => {
     // Simulate connection
-    gateway.handleConnection(mockSocket);
+    gateway.handleConnection(mockSocket as any);
     
     // Simulate disconnection
-    gateway.handleDisconnect(mockSocket);
+    gateway.handleDisconnect(mockSocket as any);
     
     // Should clean up client data
-    expect(gateway['missedPongs'].has(mockSocket.id)).toBe(false);
+    expect(gateway['missedPongs'].has((mockSocket as any).id)).toBe(false);
   });
 });

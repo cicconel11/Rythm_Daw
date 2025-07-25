@@ -1,2 +1,2 @@
-export const attachMockServer = (gateway: any, mock: any) =>
+export const attachMockServer = (gateway: unknown, mock: unknown) =>
   Object.defineProperty(gateway, 'server', { get: () => mock }); 

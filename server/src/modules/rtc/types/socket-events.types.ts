@@ -3,8 +3,8 @@ export interface BaseSocket {
   id: string;
   rooms: Set<string>;
   connected: boolean;
-  emit: <T>(event: string, ...args: any[]) => T;
-  on: (event: string, listener: (...args: any[]) => void) => void;
+  emit: <T>(event: string, ...args: unknown[]) => T;
+  on: (event: string, listener: (...args: unknown[]) => void) => void;
   join: (room: string) => Promise<void>;
   leave: (room: string) => Promise<void>;
   disconnect: (close?: boolean) => void;
@@ -33,7 +33,7 @@ export type ServerToClientEvents = {
   [ServerEvents.PRESENCE_UPDATE]: (update: PresenceUpdate) => void;
   [ServerEvents.ERROR]: (error: WsErrorResponse) => void;
   [ServerEvents.PONG]: () => void;
-  [key: string]: (...args: any[]) => void; // Allow any other events
+  [key: string]: (...args: unknown[]) => void; // Allow any other events
 };
 
 // Inter-server events
@@ -50,9 +50,9 @@ export interface SocketData {
 // Server type with our custom events
 export interface Server {
   // Add any custom server methods here
-  to(room: string): any;
-  emit(event: string, ...args: any[]): boolean;
-  in(room: string): any;
+  to(room: string): unknown;
+  emit(event: string, ...args: unknown[]): boolean;
+  in(room: string): unknown;
   sockets: {
     sockets: Map<string, BaseSocket>;
     join(room: string): Promise<void>;
@@ -65,8 +65,8 @@ export interface Socket extends BaseSocket {
   id: string;
   rooms: Set<string>;
   connected: boolean;
-  emit: <T>(event: string, ...args: any[]) => T;
-  on(event: string, listener: (...args: any[]) => void): this;
+  emit: <T>(event: string, ...args: unknown[]) => T;
+  on(event: string, listener: (...args: unknown[]) => void): this;
   join(room: string): Promise<void>;
   leave(room: string): Promise<void>;
   disconnect(close?: boolean): void;

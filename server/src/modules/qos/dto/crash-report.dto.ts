@@ -108,7 +108,7 @@ export class CrashReportDto {
   })
   @IsObject({ each: true })
   @IsOptional()
-  breadcrumbs?: Array<Record<string, any>>;
+  breadcrumbs?: Array<Record<string, unknown>>;
 
   @ApiProperty({
     description: 'Additional context (will be encrypted)',
@@ -117,7 +117,7 @@ export class CrashReportDto {
   })
   @IsObject()
   @IsOptional()
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 
   @ApiProperty({
     description: 'Optional project ID',

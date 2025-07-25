@@ -25,23 +25,23 @@ jest.mock('socket.io-client', () => ({
 // Test Gateway for WebSocket testing
 @WebSocketGateway()
 class TestHeartbeatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer() server: any;
+  @WebSocketServer() server: unknown;
   
-  handleConnection(client: any) {
+  handleConnection(client: unknown) {
     console.log('Client connected:', client.id);
     if (this.server && this.server.sockets) {
       this.server.sockets.set(client.id, client);
     }
   }
   
-  handleDisconnect(client: any) {
+  handleDisconnect(client: unknown) {
     console.log('Client disconnected:', client.id);
     if (this.server && this.server.sockets) {
       this.server.sockets.delete(client.id);
     }
   }
   
-  sendPing(client: any) {
+  sendPing(client: unknown) {
     if (client && typeof client.emit === 'function') {
       client.emit('ping', { timestamp: Date.now() });
     }
@@ -50,7 +50,7 @@ class TestHeartbeatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
 // Mock IoAdapter
 class MockIoAdapter extends IoAdapter {
-  createIOServer(port: number, options?: any): any {
+  createIOServer(port: number, options?: unknown): unknown {
     const server = new EventEmitter() as any;
     server.sockets = {
       sockets: new Map(),

@@ -57,7 +57,7 @@ export class AuthController {
       };
     } catch (error) {
       throw new HttpException(
-        (error as any).message || 'Registration failed',
+        (error as unknown as Error).message || 'Registration failed',
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
@@ -98,11 +98,11 @@ export class AuthController {
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   async refreshToken(
-    @Req() req: any, 
+    @Req() req: unknown, 
     @Res({ passthrough: true }) res: Response
   ) {
-    const userId = req.user.sub;
-    const refreshToken = req.cookies.refreshToken;
+    const userId = (req as any).user.sub;
+    const refreshToken = (req as any).cookies.refreshToken;
 
     if (!refreshToken) {
       throw new HttpException('Refresh token is required', HttpStatus.BAD_REQUEST);
@@ -121,17 +121,17 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout(
-    @Req() req: any, 
+    @Req() req: unknown, 
     @Res({ passthrough: true }) res: Response
   ) {
-    await this.authService.logout(req.user.id);
+    await this.authService.logout((req as any).user.id);
     this.authService.clearRefreshTokenCookie(res);
     return { message: 'Logged out successfully' };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Req() req: any) {
-    return req.user;
+  getProfile(@Req() req: unknown) {
+    return (req as any).user;
   }
 }

@@ -142,7 +142,7 @@ async function bootstrap() {
       await app.listen(port, host);
       
       const server = httpServer;
-      const actualPort = (server.address() as any).port;
+      const actualPort = (server.address() as unknown as { port: number }).port;
       
       logger.log(`✅ Application is running on: http://${host}:${actualPort}`);
       logger.log(`✅ Application is accessible at: http://localhost:${actualPort}`);
@@ -152,11 +152,11 @@ async function bootstrap() {
       const serverInstance = app.getHttpServer();
       
       // Get the underlying HTTP server instance
-      const httpServerInstance = (serverInstance as any).sockets ? 
-        (serverInstance as any).sockets.server : serverInstance;
+      const httpServerInstance = (serverInstance as unknown as { sockets?: { server: any } }).sockets ? 
+        (serverInstance as unknown as { sockets: { server: any } }).sockets.server : serverInstance;
       
       // Safely access the router
-      const router = (httpServerInstance as any)?._events?.request?._router;
+      const router = (httpServerInstance as unknown as { _events?: { request?: { _router: any } } })?._events?.request?._router;
       
       if (router?.stack) {
         const availableRoutes: Array<{
@@ -164,13 +164,13 @@ async function bootstrap() {
           methods: string[];
         }> = [];
         
-        router.stack.forEach((layer: any) => {
-          if (layer?.route?.path) {
+        router.stack.forEach((layer: unknown) => {
+          if ((layer as any)?.route?.path) {
             availableRoutes.push({
-              path: layer.route.path,
-              methods: layer.route.methods 
-                ? Object.keys(layer.route.methods).filter(
-                    (method) => layer.route.methods[method]
+              path: (layer as any).route.path,
+              methods: (layer as any).route.methods 
+                ? Object.keys((layer as any).route.methods).filter(
+                    (method) => (layer as any).route.methods[method]
                   )
                 : [],
             });

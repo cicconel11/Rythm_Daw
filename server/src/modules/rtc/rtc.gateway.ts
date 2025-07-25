@@ -28,7 +28,7 @@ export class RtcGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
     const subClient = pubClient.duplicate();
     await pubClient.connect();
     await subClient.connect();
-    (this.server as any).adapter(createAdapter(pubClient, subClient));
+    (this.server as unknown as any).adapter(createAdapter(pubClient, subClient));
     this.logger.log('RtcGateway initialized with Redis adapter');
   }
 
@@ -41,7 +41,7 @@ export class RtcGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
   }
 
   // Example signaling handler
-  async handleSignal(client: Socket, payload: any) {
+  async handleSignal(client: Socket, payload: unknown) {
     this.logger.log(`Received signal from ${client.id}: ${JSON.stringify(payload)}`);
     this.server.emit('signal', payload);
   }

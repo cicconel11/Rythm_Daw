@@ -3,7 +3,14 @@ interface JuceBridgeMessage {
   data: any;
 }
 
-type EventHandler = (data: any) => void;
+type EventHandler = (data: unknown) => void;
+
+// Define JuceWindow interface for type safety
+interface JuceWindow extends Window {
+  juce?: { postMessage: (msg: string) => void };
+  juceBridge?: unknown;
+  handleJuceMessage?: (messageString: string) => void;
+}
 
 class JuceBridgeClass {
   private eventHandlers: Map<string, EventHandler[]> = new Map();
@@ -12,8 +19,8 @@ class JuceBridgeClass {
     const message: JuceBridgeMessage = { type, data };
 
     // In a real JUCE plugin, this would send to the native layer
-    if (typeof window !== "undefined" && (window as any).juce) {
-      (window as any).juce.postMessage(JSON.stringify(message));
+    if (typeof window !== "undefined" && (window as JuceWindow).juce) {
+      (window as JuceWindow).juce.postMessage(JSON.stringify(message));
     } else {
       console.log("JuceBridge send:", message);
     }
@@ -46,8 +53,8 @@ class JuceBridgeClass {
   init() {
     // In a real JUCE plugin, this would listen for messages from native layer
     if (typeof window !== "undefined") {
-      (window as any).juceBridge = this;
-      (window as any).handleJuceMessage = (messageString: string) => {
+      (window as JuceWindow).juceBridge = this;
+      (window as JuceWindow).handleJuceMessage = (messageString: string) => {
         try {
           const message = JSON.parse(messageString);
           this.handleMessage(message);

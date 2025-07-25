@@ -23,13 +23,13 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
   constructor(private readonly presenceService: PresenceService) {}
 
   handleConnection(client: Socket) {
-    const userId = (client as any).user?.sub; // Set by WsJwtAuthGuard
+    const userId = (client as unknown as { user?: { sub: string } }).user?.sub; // Set by WsJwtAuthGuard
     if (userId) {
       this.userSockets.set(client.id, userId);
       client.join(`user:${userId}`);
       
       // Join project room if specified in handshake
-      const projectId = client.handshake.query.projectId as string;
+      const projectId = (client.handshake.query.projectId as string) || undefined;
       if (projectId) {
         this.joinProjectRoom(client, projectId);
       }
@@ -115,7 +115,7 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   // Called by PresenceService to broadcast presence updates
-  broadcastPresenceUpdate(projectId: string, data: any) {
+  broadcastPresenceUpdate(projectId: string, data: unknown) {
     this.server.to(`project:${projectId}`).emit('presence-update', data);
   }
 }

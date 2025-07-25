@@ -70,9 +70,9 @@ export async function createTestingModule({
   imports = [],
   controllers = [],
 }: {
-  providers?: any[];
-  imports?: any[];
-  controllers?: any[];
+  providers?: unknown[];
+  imports?: unknown[];
+  controllers?: unknown[];
 } = {}) {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [
@@ -123,7 +123,7 @@ export async function createTestingModule({
 /**
  * Create a mock WebSocket client
  */
-export function createMockSocket(token?: string, user: any = { id: 'test-user-id' }): MockSocket {
+export function createMockSocket(token?: string, user: unknown = { id: 'test-user-id' }): MockSocket {
   return {
     id: 'test-socket-id',
     handshake: {

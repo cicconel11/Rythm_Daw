@@ -11,13 +11,13 @@ import { attachMockServer } from './utils/gateway';
 
 type MockSocket = {
   id: string;
-  data: any;
+  data: unknown;
   connected: boolean;
   disconnected: boolean;
   rooms: Set<string>;
-  handshake: any;
-  nsp: any;
-  client: any;
+  handshake: unknown;
+  nsp: unknown;
+  client: unknown;
   on: jest.Mock;
   once: jest.Mock;
   emit: jest.Mock;
@@ -77,10 +77,10 @@ const createMockInterval = (callback: () => void, ms: number): NodeJS.Timeout =>
 
 describe('ChatGateway Heartbeat (Unit)', () => {
   let gateway: ChatGateway;
-  let mockServer: any;
-  let mockSocket: any;
-  let mockPresenceService: any;
-  let mockRtcGateway: any;
+  let mockServer: unknown;
+  let mockSocket: unknown;
+  let mockPresenceService: unknown;
+  let mockRtcGateway: unknown;
   
   // Mock functions for tracking intervals
   let setIntervalSpy: jest.SpyInstance;
@@ -141,18 +141,18 @@ describe('ChatGateway Heartbeat (Unit)', () => {
     attachMockServer(gateway, mockServer as unknown as Server);
 
     // Mock setInterval and clearInterval
-    setIntervalSpy = jest.spyOn(global, 'setInterval').mockImplementation((callback: any) => {
+    setIntervalSpy = jest.spyOn(global, 'setInterval').mockImplementation((callback: unknown) => {
       const id = ++intervalId;
-      intervals.set(id, callback);
+      intervals.set(id, callback as () => void);
       return id as unknown as NodeJS.Timeout;
     });
 
-    clearIntervalSpy = jest.spyOn(global, 'clearInterval').mockImplementation((id: any) => {
+    clearIntervalSpy = jest.spyOn(global, 'clearInterval').mockImplementation((id: unknown) => {
       intervals.delete(id as number);
     });
 
     // Create a mock socket implementation
-    const mockSocketImpl: any = {
+    const mockSocketImpl: unknown = {
       id: 'test-socket-1',
       data: {
         user: {
@@ -169,33 +169,33 @@ describe('ChatGateway Heartbeat (Unit)', () => {
     };
     
     // Add all socket methods
-    mockSocketImpl.disconnect = jest.fn().mockImplementation(function(this: any) {
+    mockSocketImpl.disconnect = jest.fn().mockImplementation(function(this: unknown) {
       this.connected = false;
       this.disconnected = true;
       return this;
     });
-    mockSocketImpl.emit = jest.fn().mockImplementation((event: string, data: any) => {
+    mockSocketImpl.emit = jest.fn().mockImplementation((event: string, data: unknown) => {
       // For ping events, simulate pong response after a short delay
       if (event === 'ping') {
         process.nextTick(() => {
           const pongHandler = pongHandlers.get('test-socket-1');
           if (pongHandler) {
-            pongHandler({ timestamp: data.timestamp });
+            pongHandler({ timestamp: (data as { timestamp: number }).timestamp });
           }
         });
       }
       return mockSocketImpl;
     });
-    mockSocketImpl.on = jest.fn((event: string, callback: any) => {
+    mockSocketImpl.on = jest.fn((event: string, callback: unknown) => {
       if (event === 'pong') {
-        pongHandlers.set('test-socket-1', callback);
+        pongHandlers.set('test-socket-1', callback as PongHandler);
       } else if (event === 'disconnect') {
-        disconnectHandlers.set('test-socket-1', callback);
+        disconnectHandlers.set('test-socket-1', callback as DisconnectHandler);
       }
       return mockSocketImpl;
     });
     // Set up all mock methods
-    mockSocketImpl.once = jest.fn().mockImplementation((event: string, callback: any) => {
+    mockSocketImpl.once = jest.fn().mockImplementation((event: string, callback: unknown) => {
       return mockSocketImpl.on?.(event, callback) || mockSocketImpl;
     });
     
@@ -316,7 +316,7 @@ describe('ChatGateway Heartbeat (Unit)', () => {
     const pingData = pingCall[1];
     
     // Simulate pong response with the same timestamp
-    pongHandler({ timestamp: pingData.timestamp });
+    pongHandler({ timestamp: (pingData as { timestamp: number }).timestamp });
     
     // Should have reset missed pongs counter
     const missedPongs = (gateway as any).missedPongs as Map<string, number>;
@@ -370,7 +370,7 @@ describe('ChatGateway Heartbeat (Unit)', () => {
     
     // Get the checkPongs interval from the connection handler
     const checkPongsCall = setIntervalSpy.mock.calls.find(
-      (call: any[]) => call[1] === 35000
+      (call: unknown[]) => call[1] === 35000
     );
     const checkPongsInterval = checkPongsCall?.[0];
     

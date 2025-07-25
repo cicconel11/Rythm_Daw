@@ -14,13 +14,13 @@ import {
   Share,
   History,
 } from "lucide-react";
-import { useTransfers } from '../../../../shared/hooks/useTransfers';
-import { useFileUpload } from '../../../../shared/hooks/useFileUpload';
-import { useTransferActions } from '../../../../shared/hooks/useTransferActions';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../../../../shared/lib/api';
-import { ActivitySchema } from '../../../../shared/types';
-import { z } from 'zod';
+import { useTransfers } from "../../../../shared/hooks/useTransfers";
+import { useFileUpload } from "../../../../shared/hooks/useFileUpload";
+import { useTransferActions } from "../../../../shared/hooks/useTransferActions";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../../../../shared/lib/api";
+import { ActivitySchema } from "../../../../shared/types";
+import { z } from "zod";
 
 const ActivityListSchema = z.array(ActivitySchema);
 
@@ -29,11 +29,17 @@ function PluginFiles() {
   const upload = useFileUpload();
   const { accept, decline, download } = useTransferActions();
   const [file, setFile] = useState<File | null>(null);
-  const [toUserId, setToUserId] = useState('');
+  const [toUserId, setToUserId] = useState("");
 
   const handleUpload = () => {
     if (file && toUserId) {
-      upload.mutate({ file, toUserId, fileName: file.name, mimeType: file.type, size: file.size });
+      upload.mutate({
+        file,
+        toUserId,
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+      });
     }
   };
 
@@ -41,18 +47,47 @@ function PluginFiles() {
     <div>
       <h2>File Transfers</h2>
       <div>
-        <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
-        <input type="text" placeholder="Recipient User ID" value={toUserId} onChange={e => setToUserId(e.target.value)} />
-        <button onClick={handleUpload} disabled={upload.status === 'pending'}>Upload</button>
+        <input
+          type="file"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+        <input
+          type="text"
+          placeholder="Recipient User ID"
+          value={toUserId}
+          onChange={(e) => setToUserId(e.target.value)}
+        />
+        <button onClick={handleUpload} disabled={upload.status === "pending"}>
+          Upload
+        </button>
       </div>
-      {isLoading ? <div>Loading...</div> : (
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
         <ul>
-          {transfers?.map(t => (
+          {transfers?.map((t) => (
             <li key={t.id}>
-              <span>{t.fileName} ({t.status})</span>
-              <button onClick={() => accept.mutate(t.id)} disabled={t.status !== 'pending'}>Accept</button>
-              <button onClick={() => decline.mutate(t.id)} disabled={t.status !== 'pending'}>Decline</button>
-              <button onClick={() => download.mutate(t.id)} disabled={t.status !== 'accepted'}>Download</button>
+              <span>
+                {t.fileName} ({t.status})
+              </span>
+              <button
+                onClick={() => accept.mutate(t.id)}
+                disabled={t.status !== "pending"}
+              >
+                Accept
+              </button>
+              <button
+                onClick={() => decline.mutate(t.id)}
+                disabled={t.status !== "pending"}
+              >
+                Decline
+              </button>
+              <button
+                onClick={() => download.mutate(t.id)}
+                disabled={t.status !== "accepted"}
+              >
+                Download
+              </button>
             </li>
           ))}
         </ul>
@@ -63,9 +98,9 @@ function PluginFiles() {
 
 function PluginHistory() {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['activity'],
+    queryKey: ["activity"],
     queryFn: async () => {
-      const res = await api.get('/activity');
+      const res = await api.get("/activity");
       return ActivityListSchema.parse(res);
     },
   });
@@ -77,7 +112,9 @@ function PluginHistory() {
       <ul>
         {data?.map((item) => (
           <li key={item.id}>
-            <span>{item.timestamp} — {item.type}: {item.description}</span>
+            <span>
+              {item.timestamp} — {item.type}: {item.description}
+            </span>
           </li>
         ))}
       </ul>

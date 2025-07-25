@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class PluginsService {
-  private pairings: Map<string, { userId: string; status: string; deviceInfo?: any }> = new Map();
+  private pairings: Map<string, { userId: string; status: string; deviceInfo?: unknown }> = new Map();
   private readonly PAIRING_EXPIRY = 15 * 60 * 1000; // 15 minutes
 
   constructor(private prisma: PrismaService) {
@@ -30,7 +30,7 @@ export class PluginsService {
     return { status: pairing.status };
   }
 
-  async confirmPairing(code: string, deviceInfo?: any) {
+  async confirmPairing(code: string, deviceInfo?: unknown) {
     const pairing = this.pairings.get(code);
     if (!pairing) {
       throw new NotFoundException('Pairing not found');

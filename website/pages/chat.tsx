@@ -20,7 +20,11 @@ export default function ChatPage() {
 
   if (isLoading) return <Skeleton className="h-32 w-full" />;
   if (isError) {
-    toast({ title: "Error", description: error?.message || 'Failed to load chat', variant: "destructive" });
+    toast({
+      title: 'Error',
+      description: error?.message || 'Failed to load chat',
+      variant: 'destructive',
+    });
     return <div>Error loading chat.</div>;
   }
 
@@ -32,4 +36,4 @@ export default function ChatPage() {
       </ErrorBoundary>
     </>
   );
-} 
+}

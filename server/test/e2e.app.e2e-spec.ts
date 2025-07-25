@@ -9,7 +9,7 @@ import * as path from 'path';
 
 describe('App E2E (e2e)', () => {
   let app: INestApplication;
-  let httpServer: any;
+  let httpServer: unknown;
   let jwtCookie: string;
   let accessToken: string;
 
@@ -52,7 +52,7 @@ describe('App E2E (e2e)', () => {
     });
     client.on('connect', () => {
       // Listen for a welcome or ready event
-      client.on('welcome', (msg: any) => {
+      client.on('welcome', (msg: unknown) => {
         expect(msg).toBeDefined();
         client.disconnect();
         done();

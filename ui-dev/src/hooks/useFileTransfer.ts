@@ -183,14 +183,14 @@ export const useFileTransfer = (userId: string) => {
     setIsTransferring(false);
   }, []);
 
-  const handleTransferInitiated = useCallback((data: any) => {
+  const handleTransferInitiated = useCallback((data: unknown) => {
     console.log("Transfer initiated with data:", data);
     // Store the S3 URL for fallback
     // In a real implementation, you would use this for the fallback mechanism
   }, []);
 
   const handleOffer = useCallback(
-    async (data: any) => {
+    async (data: unknown) => {
       if (!peerConnection.current) initializePeerConnection();
       if (!peerConnection.current) return;
 
@@ -220,7 +220,7 @@ export const useFileTransfer = (userId: string) => {
     [initializePeerConnection],
   );
 
-  const handleAnswer = useCallback(async (data: any) => {
+  const handleAnswer = useCallback(async (data: unknown) => {
     if (!peerConnection.current) return;
 
     try {
@@ -233,7 +233,7 @@ export const useFileTransfer = (userId: string) => {
     }
   }, []);
 
-  const handleIceCandidate = useCallback(async (data: any) => {
+  const handleIceCandidate = useCallback(async (data: unknown) => {
     if (!peerConnection.current) return;
 
     try {

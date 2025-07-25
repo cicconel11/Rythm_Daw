@@ -141,7 +141,7 @@ describe('RtcGateway Simple Test', () => {
       // Use reflection to set the private server property for testing
       console.log('8. Assigning server to gateway...');
       // Using bracket notation to access private property
-      (gateway as any)['server'] = io;
+      (gateway as unknown as { server: Server })['server'] = io;
       
       // Start listening on a random port
       await new Promise<void>((resolve) => {
@@ -208,11 +208,11 @@ describe('RtcGateway Simple Test', () => {
           const httpPort = server.address().port;
           console.log(`Test HTTP server running on port ${httpPort}`);
           
-          http.get(`http://127.0.0.1:${httpPort}`, (res: any) => {
+          http.get(`http://127.0.0.1:${httpPort}`, (res: unknown) => {
             console.log(`HTTP GET status: ${res.statusCode}`);
             server.close();
             resolve();
-          }).on('error', (err: any) => {
+          }).on('error', (err: unknown) => {
             console.error('HTTP request failed:', err);
             server.close();
             reject(err);
@@ -243,12 +243,12 @@ describe('RtcGateway Simple Test', () => {
           resolve();
         });
         
-        client.on('connect_error', (err: any) => {
-          console.error('7. WebSocket connection error:', err.message);
+        client.on('connect_error', (err: unknown) => {
+          console.error('7. WebSocket connection error:', err);
           reject(err);
         });
         
-        client.on('error', (err: any) => {
+        client.on('error', (err: unknown) => {
           console.error('8. WebSocket error:', err);
           reject(err);
         });

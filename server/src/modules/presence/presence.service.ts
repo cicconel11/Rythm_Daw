@@ -61,7 +61,7 @@ export class PresenceService implements OnModuleDestroy {
     }
   }
 
-  async updateHeartbeat(userId: string, dto: any): Promise<void> {
+  async updateHeartbeat(userId: string, dto: unknown): Promise<void> {
     this.updateUserPresence(userId);
   }
 

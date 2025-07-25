@@ -96,7 +96,7 @@ describe('WebSocket Smoke Tests', () => {
     clientSocket.on('connect', () => {
       const testData = { message: 'test-ping' };
       
-      clientSocket.emit('ping', testData, (response: any) => {
+      clientSocket.emit('ping', testData, (response: unknown) => {
         try {
           expect(response).toBeDefined();
           expect(response.message).toBe(testData.message);
@@ -124,7 +124,7 @@ describe('WebSocket Smoke Tests', () => {
     });
 
     clientSocket.on('connect', () => {
-      clientSocket.emit('health', (response: any) => {
+      clientSocket.emit('health', (response: unknown) => {
         try {
           expect(response).toBeDefined();
           expect(response.status).toBe('ok');

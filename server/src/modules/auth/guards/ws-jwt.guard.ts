@@ -34,8 +34,8 @@ export class WsJwtGuard extends AuthGuard('ws-jwt') {
     }
   }
 
-  private extractTokenFromHeader(client: any): string | undefined {
-    const [type, token] = client.handshake?.auth?.token?.split(' ') ?? [];
+  private extractTokenFromHeader(client: unknown): string | undefined {
+    const [type, token] = (client as any).handshake?.auth?.token?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
 }

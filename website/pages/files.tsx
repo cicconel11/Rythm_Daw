@@ -21,7 +21,11 @@ export default function FilesPage() {
 
   if (isLoading) return <Skeleton className="h-32 w-full" />;
   if (isError) {
-    toast({ title: "Error", description: error?.message || 'Failed to load files', variant: "destructive" });
+    toast({
+      title: 'Error',
+      description: error?.message || 'Failed to load files',
+      variant: 'destructive',
+    });
     return <div>Error loading files.</div>;
   }
 
@@ -33,4 +37,4 @@ export default function FilesPage() {
       </ErrorBoundary>
     </>
   );
-} 
+}

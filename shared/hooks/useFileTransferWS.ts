@@ -14,7 +14,7 @@ export function useFileTransferWS() {
       // Parse and validate event
       const parsed = FileTransferGatewayEventSchema.safeParse(msg);
       if (!parsed.success) {
-        console.error('Invalid WS event', parsed.error, msg);
+        console.error("Invalid WS event", parsed.error, msg);
         return;
       }
       // TODO: handle parsed.data
@@ -23,6 +23,6 @@ export function useFileTransferWS() {
   }, []);
 
   return {
-    send: (msg: any) => ws.current?.send(JSON.stringify(msg)),
+    send: (msg: unknown) => ws.current?.send(JSON.stringify(msg)),
   };
 }

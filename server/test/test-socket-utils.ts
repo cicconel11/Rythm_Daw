@@ -32,7 +32,7 @@ export const makeIoServer = () => {
   };
 };
 
-export const closeIoServer = async (io: any, http: HttpServer) => {
+export const closeIoServer = async (io: unknown, http: HttpServer) => {
   return new Promise<void>((resolve, reject) => {
     try {
       // Close Socket.IO server

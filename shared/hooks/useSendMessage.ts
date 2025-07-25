@@ -1,23 +1,39 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api';
-import { ChatMessageSchema } from './useChatMessages';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "../lib/api";
+import { ChatMessageSchema } from "./useChatMessages";
 
 export const useSendMessage = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ threadId, content }: { threadId: string; content: string }) => {
-      const res = await api.post(`/chat/threads/${threadId}/messages`, { content });
+    mutationFn: async ({
+      threadId,
+      content,
+    }: {
+      threadId: string;
+      content: string;
+    }) => {
+      const res = await api.post(`/chat/threads/${threadId}/messages`, {
+        content,
+      });
       return ChatMessageSchema.parse(res.data);
     },
     onMutate: async ({ threadId, content }) => {
-      await queryClient.cancelQueries({ queryKey: ['chatMessages', threadId] });
-      const previous = queryClient.getQueryData(['chatMessages', threadId]);
-      queryClient.setQueryData(['chatMessages', threadId], (old = []) => [
+      await queryClient.cancelQueries({ queryKey: ["chatMessages", threadId] });
+      const previous = queryClient.getQueryData(["chatMessages", threadId]);
+      queryClient.setQueryData<
+        Array<{
+          id: string;
+          threadId: string;
+          sender: string;
+          content: string;
+          timestamp: string;
+        }>
+      >(["chatMessages", threadId], (old = []) => [
         ...old,
         {
-          id: 'optimistic-' + Math.random(),
+          id: `optimistic-${Math.random()}`,
           threadId,
-          sender: 'me',
+          sender: "me",
           content,
           timestamp: new Date().toISOString(),
         },
@@ -25,10 +41,15 @@ export const useSendMessage = () => {
       return { previous };
     },
     onError: (err, vars, context) => {
-      queryClient.setQueryData(['chatMessages', vars.threadId], context?.previous);
+      queryClient.setQueryData(
+        ["chatMessages", vars.threadId],
+        context?.previous,
+      );
     },
     onSettled: (data, error, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['chatMessages', vars.threadId] });
+      queryClient.invalidateQueries({
+        queryKey: ["chatMessages", vars.threadId],
+      });
     },
   });
-}; 
+};

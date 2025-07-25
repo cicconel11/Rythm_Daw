@@ -21,9 +21,11 @@ export default function History() {
     <div>
       <h2>Activity Timeline</h2>
       <ul>
-        {data?.map((item) => (
+        {data?.map(item => (
           <li key={item.id}>
-            <span>{item.timestamp} — {item.type}: {item.description}</span>
+            <span>
+              {item.timestamp} — {item.type}: {item.description}
+            </span>
           </li>
         ))}
       </ul>

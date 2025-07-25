@@ -1,1 +1,3 @@
-export * from "./useFriendRequests.js";
+export * from "./useFriendRequests";
+export * from "./useDashboard";
+export * from "./withAuth";

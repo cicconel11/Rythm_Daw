@@ -6,7 +6,7 @@ import { AppModule } from '../../src/app.module';
 
 describe('WebSocket Gateway (e2e)', () => {
   let context: WsTestContext;
-  let clients: any[] = [];
+  let clients: unknown[] = [];
 
   beforeAll(async () => {
     // Create test application with WebSocket support
@@ -136,7 +136,7 @@ describe('WebSocket Gateway (e2e)', () => {
       client2.emit('get-presence', { room: testRoom });
       const updatedPresence = await waitForEvent(client2, 'presence-update');
       
-      const userPresence = updatedPresence.users.find((u: any) => u.userId === userId);
+      const userPresence = updatedPresence.users.find((u: unknown) => u.userId === userId);
       expect(userPresence.devices).toHaveLength(2);
       expect(userPresence.devices).toEqual(expect.arrayContaining(['device-1', 'device-2']));
     });

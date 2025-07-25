@@ -3,7 +3,7 @@ import { Server } from 'socket.io';
 
 export class TestIoAdapter extends IoAdapter {
   constructor(app, private ioServer: Server) { super(app); }
-  createIOServer(port: number, opts?: any) {
+  createIOServer(port: number, opts?: unknown) {
     return this.ioServer;
   }
 } 

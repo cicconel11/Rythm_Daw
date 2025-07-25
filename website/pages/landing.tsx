@@ -9,4 +9,4 @@ export default function Landing() {
       onLogin={() => router.push('/auth/login')}
     />
   );
-} 
+}

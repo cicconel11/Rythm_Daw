@@ -19,7 +19,7 @@ export class InventoryGateway implements OnGatewayConnection, OnGatewayDisconnec
   private userSockets = new Map<string, string>();
 
   handleConnection(client: Socket) {
-    const userId = (client as any).user?.sub; // Set by WsJwtAuthGuard
+    const userId = (client as unknown as { user: { sub: string } }).user?.sub; // Set by WsJwtAuthGuard
     if (userId) {
       this.userSockets.set(client.id, userId);
       client.join(`user:${userId}`);
@@ -30,7 +30,5 @@ export class InventoryGateway implements OnGatewayConnection, OnGatewayDisconnec
     this.userSockets.delete(client.id);
   }
 
-  broadcastInventoryUpdate(userId: string, data: any) {
-    this.server.to(`user:${userId}`).emit('inventory-updates', data);
-  }
-}
+  broadcastInventoryUpdate(userId: string, data: unknown) {
+    this.server.to(`user:${userId}`

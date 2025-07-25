@@ -21,13 +21,23 @@ export default function FileShare() {
       <h2>File Transfers</h2>
       <div>
         <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
-        <input type="text" placeholder="Recipient User ID" value={toUserId} onChange={e => setToUserId(e.target.value)} />
-        <button onClick={handleUpload} disabled={upload.status === 'pending'}>Upload</button>
+        <input
+          type="text"
+          placeholder="Recipient User ID"
+          value={toUserId}
+          onChange={e => setToUserId(e.target.value)}
+        />
+        <button onClick={handleUpload} disabled={upload.status === 'pending'}>
+          Upload
+        </button>
       </div>
-      {isLoading ? <div>Loading...</div> : (
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
         <ul>
           {transfers?.map(t => (
-            <li key={t.id}
+            <li
+              key={t.id}
               draggable
               onDragStart={async e => {
                 e.dataTransfer.effectAllowed = 'copy';
@@ -35,10 +45,18 @@ export default function FileShare() {
                 e.dataTransfer.setData('DownloadURL', `${t.file.type}:${t.file.name}:${url}`);
               }}
             >
-              <span>{t.fileName} ({t.status})</span>
-              <button onClick={() => accept.mutate(t.id)} disabled={t.status !== 'pending'}>Accept</button>
-              <button onClick={() => decline.mutate(t.id)} disabled={t.status !== 'pending'}>Decline</button>
-              <button onClick={() => download.mutate(t.id)} disabled={t.status !== 'accepted'}>Download</button>
+              <span>
+                {t.fileName} ({t.status})
+              </span>
+              <button onClick={() => accept.mutate(t.id)} disabled={t.status !== 'pending'}>
+                Accept
+              </button>
+              <button onClick={() => decline.mutate(t.id)} disabled={t.status !== 'pending'}>
+                Decline
+              </button>
+              <button onClick={() => download.mutate(t.id)} disabled={t.status !== 'accepted'}>
+                Download
+              </button>
             </li>
           ))}
         </ul>

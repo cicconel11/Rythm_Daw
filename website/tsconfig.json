@@ -2,57 +2,38 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/components/*": [
-        "src/components/*"
-      ],
-      "@/*": [
-        "./src/*"
-      ],
-      "@ui-kit/*": [
-        "../lovable-src/ui-kit/src/*"
-      ],
-      "@ui-dev/*": [
-        "../ui-dev/src/*"
-      ],
-      "@lovable/*": [
-        "../lovable-src/src/*"
-      ],
-      "@shared/*": [
-        "../shared/*"
-      ],
-      "@shared/lib/*": [
-        "../shared/lib/*"
-      ]
+      "@shared/*": ["../shared/*"],
+      "@ui-kit/*": ["../lovable-src/ui-kit/src/*"],
+      "@lib/*": ["./lib/*"],
+      "@/*": ["./src/*"]
     },
-    "typeRoots": [
-      "types",
-      "node_modules/@types"
-    ],
+    "typeRoots": ["types", "node_modules/@types"],
     "jsx": "preserve",
-    "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "target": "esnext",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "incremental": true,
-    "module": "Node16",
+    "module": "esnext",
+    "moduleResolution": "node",
     "esModuleInterop": true,
-    "moduleResolution": "node16",
     "resolveJsonModule": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "jsxImportSource": "@emotion/react"
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "types/shims.d.ts"
+    "types/shims.d.ts",
+    "../shared/**/*.ts",
+    "../shared/**/*.tsx",
+    "../lovable-src/ui-kit/src/**/*.ts",
+    "../lovable-src/ui-kit/src/**/*.tsx"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

@@ -23,6 +23,8 @@
 
     "baseUrl": ".",
     "paths": {
+      "@shared/*": ["../shared/*"],
+      "@lib/*": ["./lib/*"],
       "@/*": ["./src/*"]
     }
   },

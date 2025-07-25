@@ -1,6 +1,6 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
-import { ReactNode } from "react";
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
+import { ReactNode } from 'react';
 
 interface LayoutProps {
   children: ReactNode;

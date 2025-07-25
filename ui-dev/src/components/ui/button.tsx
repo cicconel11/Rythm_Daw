@@ -36,7 +36,7 @@ export const buttonVariants = cva(
 import { forwardRef } from "react";
 
 // Button component with proper ref forwarding
-export const Button = forwardRef<HTMLButtonElement, any>(
+export const Button = forwardRef<HTMLButtonElement, React.ComponentPropsWithoutRef<'button'>>(
   (
     {
       className = "",

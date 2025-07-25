@@ -5,7 +5,7 @@ import { Server as SocketIOServer } from 'socket.io';
 
 describe('Minimal WebSocket Test', () => {
   let httpServer: Server;
-  let ioServer: any;
+  let ioServer: unknown;
   let socket: Socket;
   let port: number;
 
@@ -27,10 +27,10 @@ describe('Minimal WebSocket Test', () => {
       pingInterval: 25000,
     });
     
-    ioServer.on('connection', (client: any) => {
+    ioServer.on('connection', (client: unknown) => {
       console.log(`Client connected: ${client.id}`);
       
-      client.on('ping', (data: any) => {
+      client.on('ping', (data: unknown) => {
         console.log('Received ping:', data);
         client.emit('pong', { ...data, serverTime: Date.now() });
       });
@@ -101,7 +101,7 @@ describe('Minimal WebSocket Test', () => {
       console.log('Sending ping:', testMessage);
       socket.emit('ping', testMessage);
       
-      socket.on('pong', (response: any) => {
+      socket.on('pong', (response: unknown) => {
         console.log('Received pong:', response);
         
         try {
@@ -121,13 +121,13 @@ describe('Minimal WebSocket Test', () => {
       });
     });
     
-    socket.on('connect_error', (error: any) => {
+    socket.on('connect_error', (error: unknown) => {
       console.error('❌ Connection error:', error.message);
       clearTimeout(testTimeout);
       done(error);
     });
     
-    socket.on('error', (error: any) => {
+    socket.on('error', (error: unknown) => {
       console.error('❌ Socket error:', error.message);
       clearTimeout(testTimeout);
       done(error);
