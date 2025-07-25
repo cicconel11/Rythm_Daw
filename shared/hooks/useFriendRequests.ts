@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@shared/lib/api";
-import { FriendRequestSchema } from '@shared/types';
+import { FriendRequestSchema } from "@shared/types";
 
 export const useFriendRequests = () =>
   useQuery({

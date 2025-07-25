@@ -18,7 +18,7 @@ class MockPresenceService {
 }
 
 class MockRtcGateway {
-  registerWsServer(server: any) {
+  registerWsServer(server: unknown) {
     console.log('[MockRtcGateway] registerWsServer');
   }
 }
@@ -28,8 +28,8 @@ import { ChatGateway } from '../src/modules/chat/chat.gateway';
 
 // Create test instance
 const gateway = new ChatGateway(
-  new MockPresenceService() as any,
-  new MockRtcGateway() as any
+  new MockPresenceService() as unknown,
+  new MockRtcGateway() as unknown
 );
 
 // Mock WebSocket server and socket
@@ -43,7 +43,7 @@ const mockSocket = {
       name: 'Test User',
     },
   },
-  emit: (event: string, data: any) => {
+  emit: (event: string, data: unknown) => {
     console.log(`[Socket] Emitted '${event}':`, data);
     
     // Simulate pong response for ping events
@@ -62,23 +62,23 @@ const mockSocket = {
     console.log('[Socket] disconnect()');
     mockSocket.connected = false;
   },
-  on: (event: string, handler: any) => {
+  on: (event: string, handler: unknown) => {
     console.log(`[Socket] Registered handler for '${event}'`);
     mockSocket[`${event}Handler`] = handler;
   },
-  once: (event: string, handler: any) => {
+  once: (event: string, handler: unknown) => {
     console.log(`[Socket] Registered one-time handler for '${event}'`);
     mockSocket[`${event}OnceHandler`] = handler;
   },
-} as any;
+} as unknown;
 
 // Mock server with sockets
 const mockServer = {
-  emit: (event: string, data: any) => {
+  emit: (event: string, data: unknown) => {
     console.log(`[Server] Emitted '${event}':`, data);
   },
   to: () => ({
-    emit: (event: string, data: any) => {
+    emit: (event: string, data: unknown) => {
       console.log(`[Server] Emitted '${event}' to room:`, data);
     }
   }),
@@ -90,7 +90,7 @@ const mockServer = {
 };
 
 // Assign mock server to gateway
-(gateway as any).server = mockServer;
+(gateway as unknown as any).server = mockServer;
 
 // Test the heartbeat functionality
 async function testHeartbeat() {
@@ -99,7 +99,7 @@ async function testHeartbeat() {
   
   console.log('\n=== Test 2: Simulate Ping ===');
   // Manually trigger the ping interval
-  const pingInterval = (gateway as any).pingInterval;
+  const pingInterval = (gateway as unknown as any).pingInterval;
   
   if (!pingInterval) {
     console.log('No ping interval found, creating a manual test...');
@@ -125,7 +125,7 @@ async function testHeartbeat() {
     
     // The pong handler should have been called by our mock socket.emit
     // and reset the missedPongs counter
-    const missedPongs = (gateway as any).missedPongs.get(mockSocket.id);
+    const missedPongs = (gateway as unknown as any).missedPongs.get(mockSocket.id);
     console.log(`Missed pongs count: ${missedPongs} (should be 0 after pong)`);
     
     // Test disconnection after missed pongs
@@ -135,8 +135,8 @@ async function testHeartbeat() {
     // Simulate missing pongs by directly incrementing the counter
     const MAX_MISSED_PONGS = 2;
     for (let i = 0; i < MAX_MISSED_PONGS + 1; i++) {
-      const currentMissed = (gateway as any).missedPongs.get(mockSocket.id) || 0;
-      (gateway as any).missedPongs.set(mockSocket.id, currentMissed + 1);
+      const currentMissed = (gateway as unknown as any).missedPongs.get(mockSocket.id) || 0;
+      (gateway as unknown as any).missedPongs.set(mockSocket.id, currentMissed + 1);
       console.log(`Set missed pongs to ${currentMissed + 1}`);
     }
     

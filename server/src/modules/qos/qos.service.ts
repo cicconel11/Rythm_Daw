@@ -18,7 +18,7 @@ interface WebRtcMetricRecord {
   iceCandidatePairId?: string | null;
   localCandidateId?: string | null;
   remoteCandidateId?: string | null;
-  metadata?: Record<string, any> | null;
+  metadata?: Record<string, unknown> | null;
   createdAt: Date;
 }
 
@@ -228,10 +228,10 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
     endDate: Date;
     limit?: number;
     category?: string;
-  }): Promise<Array<Record<string, any>>> {
+  }): Promise<Array<Record<string, unknown>>> {
     const { userId, projectId, startDate, endDate, limit = 1000, category } = options;
 
-    const where: any = {
+    const where: unknown = {
       timestamp: {
         gte: startDate,
         lte: endDate,
@@ -265,10 +265,10 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
     type?: string;
     limit?: number;
     includeSensitive?: boolean;
-  }): Promise<Array<Record<string, any>>> {
+  }): Promise<Array<Record<string, unknown>>> {
     const { userId, projectId, startDate, endDate, type, limit = 100, includeSensitive = false } = options;
 
-    const where: any = {
+    const where: unknown = {
       createdAt: {
         gte: startDate,
         lte: endDate,
@@ -286,8 +286,8 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
         orderBy: { createdAt: 'desc' },
       });
 
-      return reports.map((report: any) => {
-        const result: Record<string, any> = {
+      return reports.map((report: unknown) => {
+        const result: Record<string, unknown> = {
           id: report.id,
           error: report.error,
           stack: includeSensitive ? report.stack : (report.stack ? '[REDACTED]' : null),

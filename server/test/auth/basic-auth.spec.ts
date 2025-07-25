@@ -60,7 +60,7 @@ describe('AuthService', () => {
     // Reset mock implementations
     mockPrisma.user.findUnique.mockReset();
     mockPrisma.user.update.mockReset();
-    mockPrisma.user.create.mockImplementation(({ data }: { data: any }) => Promise.resolve({
+    mockPrisma.user.create.mockImplementation(({ data }: { data: unknown }) => Promise.resolve({
       ...TEST_USER,
       email: data.email,
       name: data.name || data.email.split('@')[0],
@@ -76,7 +76,7 @@ describe('AuthService', () => {
     });
 
     // Mock JWT methods
-    const mockVerify = jest.spyOn(jwtService, 'verify').mockImplementation((token: string, options: any) => {
+    const mockVerify = jest.spyOn(jwtService, 'verify').mockImplementation((token: string, options: unknown) => {
       if (options.secret === 'test-refresh-secret' || options.secret === 'test-access-secret') {
         return { sub: 'test-user-id', email: TEST_USER.email, name: TEST_USER.name };
       }
@@ -84,7 +84,7 @@ describe('AuthService', () => {
     });
     
     jest.spyOn(jwtService, 'sign').mockImplementation(() => 'test-token');
-    jest.spyOn(jwtService, 'signAsync').mockImplementation((payload: any, options: any) => {
+    jest.spyOn(jwtService, 'signAsync').mockImplementation((payload: unknown, options: unknown) => {
       if (options.secret === 'test-refresh-secret') {
         return Promise.resolve('test-refresh-token');
       }
@@ -131,7 +131,7 @@ describe('AuthService', () => {
       });
       
       // Mock the JWT verification to return a valid payload
-      const mockVerify = jest.spyOn(jwtService, 'verify').mockImplementation((token: string, options: any) => {
+      const mockVerify = jest.spyOn(jwtService, 'verify').mockImplementation((token: string, options: unknown) => {
         if (options.secret !== 'test-refresh-secret') {
           throw new Error('Invalid token');
         }

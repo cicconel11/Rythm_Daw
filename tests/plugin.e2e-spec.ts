@@ -1,4 +1,4 @@
-// @ts-ignore
+// @ts-expect-error - jest.e2e.setup is a custom setup file without type definitions
 import { testRequest } from "../jest.e2e.setup";
 
 describe("Plugin API E2E", () => {

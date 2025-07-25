@@ -76,11 +76,11 @@ export class ActivityLoggerService implements OnModuleInit {
     try {
       // Create activity data
       // Build activity data with optional fields
-      const activityData: any = {
+      const activityData: unknown = {
         action,
         entityId,
         entityType,
-        metadata: metadata as any, // Using any to avoid Prisma type issues
+        metadata: metadata as unknown, // Using unknown to avoid Prisma type issues
         ...(ipAddress && { ipAddress }),
         ...(userAgent && { userAgent }),
         // userId is optional, only include if provided
@@ -153,7 +153,7 @@ export class ActivityLoggerService implements OnModuleInit {
       
       return activityWithUser;
     } catch (error) {
-      this.logger.error(`Failed to log activity: ${(error as any).message}`, (error as any).stack);
+      this.logger.error(`Failed to log activity: ${typeof error === 'object' && error && 'message' in error ? (error as { message: string }).message : String(error)}`, typeof error === 'object' && error && 'stack' in error ? (error as { stack: string }).stack : undefined);
       throw error;
     }
   }
@@ -184,7 +184,7 @@ export class ActivityLoggerService implements OnModuleInit {
 
     // Build the WHERE clause
     const whereClauses: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
     let paramIndex = 1;
 
     if (projectId) {

@@ -8,4 +8,4 @@ test.describe('Settings', () => {
     // await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: JSON.stringify({ event: 'user:update' }) })));
     // await expect(page.locator('input[name="email"]').inputValue()).not.toBe('');
   });
-}); 
+});

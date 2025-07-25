@@ -56,7 +56,7 @@ export class SnapshotsController {
   async create(
     @Req() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
-    @Body() createSnapshotDto: any, // Using any to handle multipart form data
+    @Body() createSnapshotDto: unknown, // Using unknown to handle multipart form data
   ) {
     // Parse metadata if it's a string
     let metadata = {};

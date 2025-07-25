@@ -48,7 +48,7 @@ export class WsAdapter extends IoAdapter {
     }
   }
   
-  public createIOServer(port: number, options?: ServerOptions): any {
+  public createIOServer(port: number, options?: ServerOptions): unknown {
     try {
       this.logger.log(`Creating Socket.IO server on port ${port}`);
       
@@ -80,7 +80,7 @@ export class WsAdapter extends IoAdapter {
         });
       });
 
-      io.engine.on('connection_error', (error: any) => {
+      io.engine.on('connection_error', (error: unknown) => {
         this.logger.error('Socket.IO connection error:', error);
       });
       
@@ -91,7 +91,7 @@ export class WsAdapter extends IoAdapter {
     }
   }
 
-  create(port: number, options?: ServerOptions): any {
+  create(port: number, options?: ServerOptions): unknown {
     try {
       this.logger.log(`Creating WebSocket server on port ${port}`);
       
@@ -133,7 +133,7 @@ export class WsAdapter extends IoAdapter {
             const io = this.createIOServer(port, options);
             
             // Store the IO instance for cleanup
-            (this as any).io = io;
+            (this as unknown as { io?: unknown }).io = io;
             
             // Handle process exit to clean up resources
             process.on('SIGTERM', () => this.close());
@@ -154,7 +154,7 @@ export class WsAdapter extends IoAdapter {
 
   // Allow e2e tests to swap CORS quickly
   updateCors(app: INestApplication, origin = '*') {
-    const io = (app.getHttpServer() as any).io as any;
+    const io = (app.getHttpServer() as unknown as { io?: unknown }).io as unknown;
     if (io?.engine) {
       io.opts.cors = { 
         origin, 
@@ -169,9 +169,9 @@ export class WsAdapter extends IoAdapter {
       this.logger.log('Closing WebSocket server...');
       
       // Close Socket.IO server if it exists
-      if ((this as any).io) {
+      if ((this as unknown as { io?: { close: (cb: () => void) => void } }).io) {
         await new Promise<void>((resolve) => {
-          (this as any).io.close(() => {
+          (this as unknown as { io?: { close: (cb: () => void) => void } }).io.close(() => {
             this.logger.log('Socket.IO server closed');
             resolve();
           });

@@ -32,11 +32,11 @@ jest.mock('ws', () => {
     public readyState = MockWebSocket.OPEN;
     public bufferedAmount = 0;
     public onopen: (() => void) | null = null;
-    public onmessage: ((data: any) => void) | null = null;
+    public onmessage: ((data: unknown) => void) | null = null;
     public onclose: (() => void) | null = null;
     public onerror: ((error: Error) => void) | null = null;
 
-    public send = jest.fn((data: any, cb: (err?: Error) => void) => cb());
+    public send = jest.fn((data: unknown, cb: (err?: Error) => void) => cb());
     public close = jest.fn();
     public terminate = jest.fn();
     public pause = jest.fn();
@@ -62,7 +62,7 @@ jest.mock('ws', () => {
   };
 
   // Add static properties to the mock WebSocket
-  const mockWebSocket: any = MockWebSocket;
+  const mockWebSocket: unknown = MockWebSocket;
   mockWebSocket.Server = jest.fn(() => mockServer);
   mockWebSocket.WebSocket = MockWebSocket;
 

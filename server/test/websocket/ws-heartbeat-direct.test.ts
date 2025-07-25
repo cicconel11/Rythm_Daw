@@ -31,7 +31,7 @@ describe('ChatGateway', () => {
     },
   };
   
-  const createMockSocket = (overrides: any = {}) => ({
+  const createMockSocket = (overrides: unknown = {}) => ({
     id: 'test-socket-id',
     connected: true,
     data: {
@@ -168,7 +168,7 @@ describe('ChatGateway', () => {
     
     // Mock the pong handler
     const pongHandler = jest.fn();
-    mockSocket.on.mockImplementation((event: string, handler: any) => {
+    mockSocket.on.mockImplementation((event: string, handler: unknown) => {
       if (event === 'pong') {
         pongHandler(handler);
       }
@@ -176,7 +176,7 @@ describe('ChatGateway', () => {
     });
     
     // Mock the disconnect handler
-    mockSocket.once.mockImplementation((event: string, handler: any) => {
+    mockSocket.once.mockImplementation((event: string, handler: unknown) => {
       if (event === 'disconnect') {
         // Simulate disconnect after a short delay
         setTimeout(() => handler(), 10);
@@ -205,8 +205,8 @@ describe('ChatGateway', () => {
     mockSocket = createMockSocket();
     
     // Set up the pong handler
-    let pongHandler: (data: any) => void = () => {};
-    mockSocket.on.mockImplementation((event: string, handler: any) => {
+    let pongHandler: (data: unknown) => void = () => {};
+    mockSocket.on.mockImplementation((event: string, handler: unknown) => {
       if (event === 'pong') {
         pongHandler = handler;
       }

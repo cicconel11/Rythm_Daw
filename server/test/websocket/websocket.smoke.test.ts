@@ -55,7 +55,7 @@ describe('WebSocket Smoke Test', () => {
     
     // Get gateway instance and attach server
     const gateway = module.get<RtcGateway>(RtcGateway);
-    (gateway as any)['server'] = ioServer;
+    (gateway as unknown as { server: unknown })['server'] = ioServer;
     
     // Initialize application
     await app.init();
@@ -133,14 +133,14 @@ describe('WebSocket Smoke Test', () => {
     });
     
     // Error handling
-    socket.on('connect_error', (error: any) => {
-      console.error('❌ Connection error:', error.message);
+    socket.on('connect_error', (error: unknown) => {
+      console.error('❌ Connection error:', (error as unknown as { message: string }).message);
       clearTimeout(testTimeout);
       done(error);
     });
     
-    socket.on('error', (error: any) => {
-      console.error('❌ Socket error:', error.message);
+    socket.on('error', (error: unknown) => {
+      console.error('❌ Socket error:', (error as unknown as { message: string }).message);
       clearTimeout(testTimeout);
       done(error);
     });

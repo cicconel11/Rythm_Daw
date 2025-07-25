@@ -122,14 +122,14 @@ export class SnapshotsService {
 
     // Generate signed URLs for files
     const snapshotsWithUrls = await Promise.all(
-      snapshots.map(async (snapshot: any) => {
+      snapshots.map(async (snapshot: unknown) => {
         const files: Array<{ path: string; downloadUrl: string }> = [];
         try {
-          const snapshotData = snapshot.data as { files?: Array<{ path: string }> };
+          const snapshotData = (snapshot as any).data as { files?: Array<{ path: string }> };
           if (snapshotData?.files?.length) {
             const filePromises = snapshotData.files.map(async (file) => ({
               ...file,
-              downloadUrl: await this.generateDownloadUrl(projectId, snapshot.id, file.path),
+              downloadUrl: await this.generateDownloadUrl(projectId, (snapshot as any).id, file.path),
             }));
             
             const processedFiles = await Promise.all(filePromises);

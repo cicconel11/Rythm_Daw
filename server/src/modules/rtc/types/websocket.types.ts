@@ -67,7 +67,7 @@ export interface TrackUpdate {
   trackId: string;
   type: 'audio' | 'midi' | 'automation' | 'effect';
   action: 'add' | 'update' | 'remove' | 'mute' | 'solo' | 'volume' | 'pan' | 'effect';
-  data: any;
+  data: unknown;
   userId?: string;
   timestamp?: number;
   version: number; // For conflict resolution
@@ -107,11 +107,11 @@ export interface SignalingMessage {
   to: string; // Recipient user ID
   from?: string; // Sender user ID (auto-filled by server)
   type: 'offer' | 'answer' | 'candidate' | 'reject' | 'close' | 'busy';
-  payload: any;
+  payload: unknown;
   roomId?: string;
   metadata?: {
     sdpType?: string;
-    candidate?: any;
+    candidate?: unknown;
   };
 }
 
@@ -124,5 +124,5 @@ export interface WsErrorResponse {
   message: string | object;
   error: string;
   code?: string;
-  details?: any;
+  details?: unknown;
 }

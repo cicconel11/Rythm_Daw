@@ -45,11 +45,11 @@ export class TagsService {
       },
     });
 
-    const existingTagNames = new Set(existingTags.map((et: any) => et.tag.name));
+    const existingTagNames = new Set(existingTags.map((et: unknown) => (et as { tag: { name: string } }).tag.name));
     const newTagNames = normalizedTags.filter((name) => !existingTagNames.has(name));
 
     // Remove tags that are no longer present
-    const tagsToRemove = existingTags.filter((et: any) => !normalizedTags.includes(et.tag.name));
+    const tagsToRemove = existingTags.filter((et: unknown) => !normalizedTags.includes((et as { tag: { name: string } }).tag.name));
 
     // Create any new tags that don't exist
     const newTags = await Promise.all(
@@ -66,14 +66,14 @@ export class TagsService {
     );
 
     // Use a transaction to ensure data consistency
-    await this.prisma.$transaction(async (prisma: any) => {
+    await this.prisma.$transaction(async (prisma: unknown) => {
       // Remove old tags that are not in the new list
       if (tagsToRemove.length > 0) {
         await prisma.entityTag.deleteMany({
           where: {
             entityType,
             entityId,
-            tagId: { in: tagsToRemove.map((t: any) => t.id) },
+            tagId: { in: tagsToRemove.map((t: unknown) => (t as { id: string }).id) },
           },
         });
       }
@@ -90,7 +90,7 @@ export class TagsService {
           select: { tagId: true },
         });
 
-        const existingTagIds = new Set(existingEntityTags.map((et: any) => et.tagId));
+        const existingTagIds = new Set(existingEntityTags.map((et: unknown) => (et as { tagId: string }).tagId));
         const tagsToCreate = newTags.filter((tag) => !existingTagIds.has(tag.id));
 
         if (tagsToCreate.length > 0) {
@@ -108,20 +108,20 @@ export class TagsService {
 
     // Return all tags for the entity after update
     const result = await Promise.all(
-      existingTags.map(async (et: any) => {
+      existingTags.map(async (et: unknown) => {
         const tag = await this.prisma.tag.findUnique({
-          where: { id: et.tagId },
+          where: { id: (et as { tagId: string }).tagId },
         });
         
         if (!tag) {
-          throw new NotFoundException(`Tag with ID ${et.tagId} not found`);
+          throw new NotFoundException(`Tag with ID ${(et as { tagId: string }).tagId} not found`);
         }
         
         return {
           id: tag.id,
           name: tag.name,
           color: tag.color,
-          createdAt: et.createdAt,
+          createdAt: (et as { createdAt: Date }).createdAt,
         };
       })
     );
@@ -168,11 +168,11 @@ export class TagsService {
       },
     });
 
-    return entityTags.map((et: any) => ({
-      id: et.tag.id,
-      name: et.tag.name,
-      color: et.tag.color,
-      createdAt: et.createdAt,
+    return entityTags.map((et: unknown) => ({
+      id: (et as { tag: { id: string } }).tag.id,
+      name: (et as { tag: { name: string } }).tag.name,
+      color: (et as { tag: { color: string } }).tag.color,
+      createdAt: (et as { tag: { createdAt: Date } }).tag.createdAt,
     }));
   }
 
@@ -182,7 +182,7 @@ export class TagsService {
    * @returns Array of tags with their usage counts
    */
   async findAll(filter?: { search?: string; limit?: number }) {
-    const where: any = {}; // Using any to avoid Prisma type issues
+    const where: unknown = {}; // Using unknown to avoid Prisma type issues
     
     if (filter?.search) {
       where.OR = [
@@ -202,12 +202,12 @@ export class TagsService {
       take: filter?.limit,
     });
     
-    return tags.map((tag: any) => ({
-      id: tag.id,
-      name: tag.name,
-      description: tag.description,
-      color: tag.color,
-      count: tag._count.entityTags,
+    return tags.map((tag: unknown) => ({
+      id: (tag as { id: string }).id,
+      name: (tag as { name: string }).name,
+      description: (tag as { description: string }).description,
+      color: (tag as { color: string }).color,
+      count: (tag as { _count: { entityTags: number } })._count.entityTags,
     }));
   }
 

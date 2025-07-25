@@ -11,6 +11,7 @@ export { Settings } from "./components/Settings";
 export { SettingsAccount } from "./components/SettingsAccount";
 export { PluginList } from "./components/PluginList";
 export { ConfettiBurst } from "./components/ConfettiBurst";
+export { NotFound } from "./components/NotFound";
 
 // Design tokens
 export { theme } from "./design/theme";

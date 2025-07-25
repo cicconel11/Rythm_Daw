@@ -20,18 +20,32 @@ export const FileItemSchema = z.object({
 export type FileItem = z.infer<typeof FileItemSchema>;
 
 // File Transfer
+export const FileTransferStatusEnum = {
+  PENDING: "pending",
+  UPLOADING: "uploading",
+  SENT: "sent",
+  RECEIVED: "received",
+  FAILED: "failed",
+  DECLINED: "declined",
+  ACCEPTED: "accepted", // Adding accepted status for consistency
+} as const;
+
+export type FileTransferStatus =
+  (typeof FileTransferStatusEnum)[keyof typeof FileTransferStatusEnum];
+
 export const FileTransferSchema = z.object({
   id: z.string(),
   file: FileItemSchema,
   fromUser: FriendSchema.optional(),
   toUser: FriendSchema.optional(),
   status: z.enum([
-    "pending",
-    "uploading",
-    "sent",
-    "received",
-    "failed",
-    "declined",
+    FileTransferStatusEnum.PENDING,
+    FileTransferStatusEnum.UPLOADING,
+    FileTransferStatusEnum.SENT,
+    FileTransferStatusEnum.RECEIVED,
+    FileTransferStatusEnum.FAILED,
+    FileTransferStatusEnum.DECLINED,
+    FileTransferStatusEnum.ACCEPTED,
   ]),
   progress: z.number(),
   timestamp: z.string().transform((s) => new Date(s)),

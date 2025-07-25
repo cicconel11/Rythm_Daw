@@ -249,9 +249,9 @@ export class FileShare {
         const { Body } = await s3Client.send(command);
         const writeStream = fs.createWriteStream(filePath);
         
-        const handleStream = (stream: any) => {
+        const handleStream = (stream: unknown) => {
           return new Promise((resolve, reject) => {
-            stream.pipe(writeStream)
+            (stream as any).pipe(writeStream)
               .on('error', reject)
               .on('close', resolve);
           });

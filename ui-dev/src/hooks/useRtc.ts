@@ -66,11 +66,11 @@ export const useRtc = <T extends keyof EventMap>(
     }
   }, []);
 
-  const sendTrackUpdate = useCallback((update: any) => {
+  const sendTrackUpdate = useCallback((update: unknown) => {
     rtcService.sendTrackUpdate(update);
   }, []);
 
-  const sendSignal = useCallback((signal: any) => {
+  const sendSignal = useCallback((signal: unknown) => {
     rtcService.sendSignal(signal);
   }, []);
 

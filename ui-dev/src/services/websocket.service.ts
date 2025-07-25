@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { getAuthToken } from "../utils/auth";
 
-export type MessageHandler = (data: any) => void;
+export type MessageHandler = (data: unknown) => void;
 
 type EventHandlers = {
   [event: string]: MessageHandler[];
@@ -119,7 +119,7 @@ export class WebSocketService {
     }
   }
 
-  private handleMessage(message: { event: string; data: any }) {
+  private handleMessage(message: { event: string; data: unknown }) {
     const { event, data } = message;
     const handlers = this.eventHandlers[event] || [];
     handlers.forEach((handler) => handler(data));
@@ -143,7 +143,7 @@ export class WebSocketService {
     }
   }
 
-  public emit(event: string, data: any): void {
+  public emit(event: string, data: unknown): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
       const message = JSON.stringify({ event, data });
       this.socket.send(message);
@@ -163,7 +163,7 @@ export class WebSocketService {
     this.emit("leaveRoom", { roomId });
   }
 
-  public sendTrackUpdate(trackData: any): void {
+  public sendTrackUpdate(trackData: unknown): void {
     this.emit("trackUpdate", trackData);
   }
 
@@ -200,7 +200,7 @@ export const useWebSocket = () => {
     wsService.current?.off(event, handler);
   }, []);
 
-  const emit = useCallback((event: string, data: any) => {
+  const emit = useCallback((event: string, data: unknown) => {
     wsService.current?.emit(event, data);
   }, []);
 
@@ -212,7 +212,7 @@ export const useWebSocket = () => {
     wsService.current?.leaveRoom(roomId);
   }, []);
 
-  const sendTrackUpdate = useCallback((trackData: any) => {
+  const sendTrackUpdate = useCallback((trackData: unknown) => {
     wsService.current?.sendTrackUpdate(trackData);
   }, []);
 

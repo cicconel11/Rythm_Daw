@@ -201,7 +201,7 @@ describe('RtcEnhancedGateway (e2e)', () => {
     });
 
     it('should allow joining a room', (done) => {
-      testClient.emit(ClientEvents.JOIN_ROOM, { roomId: TEST_ROOM }, (response: any) => {
+      testClient.emit(ClientEvents.JOIN_ROOM, { roomId: TEST_ROOM }, (response: unknown) => {
         try {
           expect(response.success).toBe(true);
           expect(response.roomId).toBe(TEST_ROOM);
@@ -216,7 +216,7 @@ describe('RtcEnhancedGateway (e2e)', () => {
       createTestClient().then((secondClient) => {
         testClient.emit(ClientEvents.JOIN_ROOM, { roomId: TEST_ROOM });
 
-        secondClient.on(ServerEvents.USER_JOINED, (data: any) => {
+        secondClient.on(ServerEvents.USER_JOINED, (data: unknown) => {
           expect(data.roomId).toBe(TEST_ROOM);
           expect(data.userId).toBe(TEST_USER.userId);
           secondClient.disconnect();
@@ -229,7 +229,7 @@ describe('RtcEnhancedGateway (e2e)', () => {
 
     it('should allow leaving a room', (done) => {
       testClient.emit(ClientEvents.JOIN_ROOM, { roomId: TEST_ROOM }, () => {
-        testClient.emit(ClientEvents.LEAVE_ROOM, { roomId: TEST_ROOM }, (response: any) => {
+        testClient.emit(ClientEvents.LEAVE_ROOM, { roomId: TEST_ROOM }, (response: unknown) => {
           expect(response.success).toBe(true);
           expect(response.roomId).toBe(TEST_ROOM);
           done();
@@ -261,7 +261,7 @@ describe('RtcEnhancedGateway (e2e)', () => {
       client1.emit(ClientEvents.JOIN_ROOM, { roomId: TEST_ROOM });
       
       client2.emit(ClientEvents.JOIN_ROOM, { roomId: TEST_ROOM }, () => {
-        client2.on(ServerEvents.SIGNAL, (data: any) => {
+        client2.on(ServerEvents.SIGNAL, (data: unknown) => {
           expect(data.signal).toEqual(testSignal);
           done();
         });
@@ -285,7 +285,7 @@ describe('RtcEnhancedGateway (e2e)', () => {
       });
 
       testClient.once('connect', () => {
-        testClient.emit(ClientEvents.PING, (response: any) => {
+        testClient.emit(ClientEvents.PING, (response: unknown) => {
           expect(response.timestamp).toBeDefined();
           testClient.disconnect();
           done();

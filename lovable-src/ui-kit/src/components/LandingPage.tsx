@@ -48,7 +48,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
       <div className="container mx-auto px-6 py-16">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 font-['Inter']">
+            <h1
+              data-testid="landing-main-heading"
+              className="text-5xl md:text-7xl font-bold text-foreground mb-6 font-['Inter']"
+            >
               Collaborate in your DAW—
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple to-[#6B3FE6]">
                 instantly.
@@ -60,12 +63,14 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button
+                data-testid="btn-get-started"
                 onClick={onGetStarted}
                 className="bg-purple hover:bg-[#976BFF] text-white px-8 py-4 text-lg font-semibold font-['Inter']"
               >
                 Get Started Free
               </Button>
               <Button
+                data-testid="btn-login"
                 onClick={onLogin}
                 variant="outline"
                 className="border-border text-muted-foreground hover:bg-secondary px-8 py-4 text-lg font-['Inter']"
@@ -79,7 +84,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             <LandingArt />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
+          <div
+            data-testid="features"
+            className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20"
+          >
             <Card className="bg-gradient-to-br from-card to-secondary border-border">
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-purple/20 rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -125,7 +133,10 @@ export function LandingPage({ onGetStarted, onLogin }: LandingPageProps) {
             </Card>
           </div>
 
-          <footer className="mt-20 text-center border-t border-border pt-8">
+          <footer
+            data-testid="footer-links"
+            className="mt-20 text-center border-t border-border pt-8"
+          >
             <div className="flex justify-center gap-6 text-sm text-muted-foreground">
               <button className="hover:text-foreground transition-colors">
                 Terms of Service

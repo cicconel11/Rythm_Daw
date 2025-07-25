@@ -1,10 +1,10 @@
 import React from "react";
 import { useStore } from "@store";
 import { Button } from "../components/Button";
-import { useTransfers } from '../../../../shared/hooks/useTransfers';
-import { useFileUpload } from '../../../../shared/hooks/useFileUpload';
-import { useTransferActions } from '../../../../shared/hooks/useTransferActions';
-import { useState } from 'react';
+import { useTransfers } from "../../../../shared/hooks/useTransfers";
+import { useFileUpload } from "../../../../shared/hooks/useFileUpload";
+import { useTransferActions } from "../../../../shared/hooks/useTransferActions";
+import { useState } from "react";
 
 const FilesTab: React.FC = () => {
   const { uploads } = useStore();
@@ -12,11 +12,17 @@ const FilesTab: React.FC = () => {
   const upload = useFileUpload();
   const { accept, decline, download } = useTransferActions();
   const [file, setFile] = useState<File | null>(null);
-  const [toUserId, setToUserId] = useState('');
+  const [toUserId, setToUserId] = useState("");
 
   const handleUpload = () => {
     if (file && toUserId) {
-      upload.mutate({ file, toUserId, fileName: file.name, mimeType: file.type, size: file.size });
+      upload.mutate({
+        file,
+        toUserId,
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+      });
     }
   };
 

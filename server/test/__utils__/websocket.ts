@@ -20,7 +20,7 @@ export function createWsTestApp(app: INestApplication): Promise<{ httpServer: ht
   });
 }
 
-export function createSocketClient(port: number, options: any = {}): Socket {
+export function createSocketClient(port: number, options: unknown = {}): Socket {
   return io(`http://localhost:${port}`, {
     transports: ['websocket'],
     forceNew: true,

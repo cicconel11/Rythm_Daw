@@ -126,7 +126,7 @@ export class WebRtcMetricDto {
     required: false,
   })
   @IsOptional()
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 
   @ApiProperty({
     description: 'ICE candidate pair ID',

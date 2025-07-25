@@ -24,7 +24,7 @@ export class JwtWsAuthGuard extends AuthGuard('jwt') {
     };
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest(err: unknown, user: unknown, info: unknown) {
     if (err || !user) {
       throw err || new WsException('Unauthorized');
     }

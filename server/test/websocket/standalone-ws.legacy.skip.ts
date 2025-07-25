@@ -186,7 +186,7 @@ describe('Standalone WebSocket Server', () => {
     const onConnect = () => {
       const testMessage = { test: 'data' };
       
-      const responseHandler = (response: any) => {
+      const responseHandler = (response: unknown) => {
         try {
           expect(response).toHaveProperty('test', 'data');
           expect(response).toHaveProperty('timestamp');

@@ -28,7 +28,7 @@ describe('WebSocket Server', () => {
       serverSocket = socket;
       
       // Handle ping event
-      socket.on('ping', (data: any, callback: (response: any) => void) => {
+      socket.on('ping', (data: unknown, callback: (response: unknown) => void) => {
         console.log('Server received ping:', data);
         if (typeof callback === 'function') {
           callback({ ...data, timestamp: Date.now() });
@@ -91,7 +91,7 @@ describe('WebSocket Server', () => {
     clientSocket.on('connect', () => {
       const testData = { message: 'test-ping' };
       
-      clientSocket.emit('ping', testData, (response: any) => {
+      clientSocket.emit('ping', testData, (response: unknown) => {
         expect(response).toBeDefined();
         expect(response.message).toBe(testData.message);
         expect(response.timestamp).toBeDefined();

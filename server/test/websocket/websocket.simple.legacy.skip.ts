@@ -20,14 +20,14 @@ class TestGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // Simple echo handler
-  handleEcho(client: Socket, data: any) {
+  handleEcho(client: Socket, data: unknown) {
     client.emit('echo', data);
   }
 }
 
 describe('WebSocket (Simple)', () => {
   let app: INestApplication;
-  let httpServer: any;
+  let httpServer: unknown;
   let port: number;
   
   beforeAll(async () => {
@@ -76,7 +76,7 @@ describe('WebSocket (Simple)', () => {
       done();
     });
     
-    client.on('connect_error', (error: any) => {
+    client.on('connect_error', (error: unknown) => {
       console.error('Connection error:', error);
       done(error);
     });

@@ -11,12 +11,9 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@rythm/ui-kit/*": [
-        "../ui-kit/src/*"
-      ],
-      "@rythm/ui-kit": [
-        "../ui-kit/src/index.ts"
-      ]
+      "@shared/*": ["../shared/*"],
+      "@lib/*": ["./lib/*"],
+      "@/*": ["./src/*"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

@@ -100,7 +100,7 @@ describe('RtcGateway (Manual Test)', () => {
     });
     
     // Manually attach the WebSocket server to the gateway
-    (gateway as any)['server'] = io;
+    (gateway as unknown as { server: unknown })['server'] = io;
     
     // Initialize the application
     await app.init();
@@ -254,7 +254,7 @@ describe('RtcGateway (Manual Test)', () => {
       socket.emit('message', testMessage);
       
       // Listen for messages from the server
-      socket.on('message', (data: any) => {
+      socket.on('message', (data: unknown) => {
         console.log('Received message from server:', data);
         
         // Clean up and complete the test
@@ -265,14 +265,14 @@ describe('RtcGateway (Manual Test)', () => {
     });
     
     // Error handling
-    socket.on('connect_error', (error: any) => {
-      console.error('❌ Connection error:', error.message);
+    socket.on('connect_error', (error: unknown) => {
+      console.error('❌ Connection error:', (error as Error).message);
       clearTimeout(testTimeout);
       done(error);
     });
     
-    socket.on('error', (error: any) => {
-      console.error('❌ Socket error:', error.message);
+    socket.on('error', (error: unknown) => {
+      console.error('❌ Socket error:', (error as Error).message);
       clearTimeout(testTimeout);
       done(error);
     });

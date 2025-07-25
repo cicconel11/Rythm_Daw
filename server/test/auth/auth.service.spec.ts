@@ -10,19 +10,19 @@ import * as bcrypt from 'bcrypt';
 // Create a mock JWT service that implements the required methods
 const createMockJwtService = (): jest.Mocked<JwtService> => {
   const mock = {
-    sign: jest.fn().mockImplementation((payload: any, options?: any) => {
+    sign: jest.fn().mockImplementation((payload: unknown, options?: unknown) => {
       if (options?.expiresIn === '15m') return 'mocked-access-token';
       if (options?.expiresIn === '7d') return 'mocked-refresh-token';
       return 'mocked-token';
     }),
     
-    verify: jest.fn().mockImplementation((token: string, options: any) => ({
+    verify: jest.fn().mockImplementation((token: string, options: unknown) => ({
       sub: 'test-user-id',
       email: 'test@example.com',
       name: 'Test User'
     })),
     
-    signAsync: jest.fn().mockImplementation((payload: any, options?: any) => {
+    signAsync: jest.fn().mockImplementation((payload: unknown, options?: unknown) => {
       if (options?.expiresIn === '15m') return Promise.resolve('mocked-access-token');
       if (options?.expiresIn === '7d') return Promise.resolve('mocked-refresh-token');
       return Promise.resolve('mocked-token');
@@ -72,9 +72,9 @@ const TEST_USER = {
 
 describe('AuthService', () => {
   let service: AuthService;
-  let prisma: any;
+  let prisma: unknown;
   let jwtService: jest.Mocked<JwtService>;
-  let configService: any;
+  let configService: unknown;
   let consoleErrorSpy: jest.SpyInstance;
 
   beforeEach(async () => {
@@ -114,7 +114,7 @@ describe('AuthService', () => {
     };
 
     // Setup Prisma mocks
-    prisma.user.findUnique.mockImplementation(({ where }: any) => {
+    prisma.user.findUnique.mockImplementation(({ where }: unknown) => {
       if (where.id === 'test-user-id' || where.email === 'test@example.com') {
         return Promise.resolve({ ...TEST_USER, ...where });
       }
@@ -122,7 +122,7 @@ describe('AuthService', () => {
     });
     
     prisma.user.create.mockResolvedValue(TEST_USER);
-    prisma.user.update.mockImplementation(({ where, data }: any) => 
+    prisma.user.update.mockImplementation(({ where, data }: unknown) => 
       Promise.resolve({ ...TEST_USER, ...data })
     );
     prisma.user.findFirst.mockResolvedValue(TEST_USER);

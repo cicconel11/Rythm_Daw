@@ -107,7 +107,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
   }, []);
 
   // Helper to send messages
-  const emit = useCallback((event: string, data: any) => {
+  const emit = useCallback((event: string, data: unknown) => {
     wsService.current?.emit(event, data);
   }, []);
 
@@ -121,7 +121,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
   }, []);
 
   // Audio track updates
-  const sendTrackUpdate = useCallback((trackData: any) => {
+  const sendTrackUpdate = useCallback((trackData: unknown) => {
     wsService.current?.sendTrackUpdate(trackData);
   }, []);
 

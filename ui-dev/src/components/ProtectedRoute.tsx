@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import PendingApproval from "@/pages/PendingApproval";
+import { Auth } from "../types/auth";
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;
@@ -20,7 +21,8 @@ const ProtectedRoute = ({
   requireApproved = true,
 }: ProtectedRouteProps) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [authState, setAuthState] = useState<any>(null);
+  // Replace 'any' with a more specific type for authState
+  const [authState, setAuthState] = useState<Auth | null>(null);
 
   useEffect(() => {
     const auth = getAuthState();

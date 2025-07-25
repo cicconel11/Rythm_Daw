@@ -98,7 +98,7 @@ describe('RtcGateway', () => {
     sockets: {
       sockets: new Map(),
     },
-  } as unknown as Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, any>;
+  } as unknown as Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, unknown>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -129,8 +129,8 @@ describe('RtcGateway', () => {
     })
       .overrideGuard(JwtWsAuthGuard)
       .useValue({
-        canActivate: (context: any) => {
-          const client = context.switchToWs().getClient();
+        canActivate: (context: unknown) => {
+          const client = (context as any).switchToWs().getClient();
           client.handshake.user = mockUser;
           client.data = { user: mockUser, userId: mockUser.userId };
           return true;

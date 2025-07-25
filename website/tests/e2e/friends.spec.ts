@@ -8,4 +8,4 @@ test.describe('Friends', () => {
     // await page.evaluate(() => window.dispatchEvent(new MessageEvent('message', { data: JSON.stringify({ event: 'presence:update' }) })));
     // await expect(page.locator('.online')).toBeVisible();
   });
-}); 
+});

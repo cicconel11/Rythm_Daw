@@ -82,7 +82,7 @@ interface Store {
   markAsRead: (messageId: string) => void;
 
   // Projects
-  projects: any[]; // Define proper type later
+  projects: unknown[]; // Define proper type later
 }
 
 const useStore = create<Store>((set, get) => ({

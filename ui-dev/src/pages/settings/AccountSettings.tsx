@@ -58,7 +58,8 @@ const AccountSettings = () => {
 
       // Update localStorage
       const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const updatedUsers = users.map((user: any) =>
+      // TODO: Replace 'unknown' with a specific User type if available
+      const updatedUsers = users.map((user: unknown) =>
         user.id === updatedUser.id ? updatedUser : user,
       );
       localStorage.setItem("users", JSON.stringify(updatedUsers));
@@ -122,7 +123,8 @@ const AccountSettings = () => {
         avatar: avatarUrl,
       };
 
-      const updatedUsers = users.map((user: any) =>
+      // TODO: Replace 'unknown' with a specific User type if available
+      const updatedUsers = users.map((user: unknown) =>
         user.id === updatedUser.id ? updatedUser : user,
       );
 

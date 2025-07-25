@@ -69,7 +69,7 @@ export class EventContextDto {
 
   @IsOptional()
   @IsObject()
-  traits?: Record<string, any>;
+  traits?: Record<string, unknown>;
 }
 
 export class EventDto {
@@ -109,7 +109,7 @@ export class EventDto {
 
   @IsObject()
   @IsOptional()
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
 
   @IsOptional()
   @Type(() => EventContextDto)

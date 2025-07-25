@@ -17,15 +17,15 @@ describe('WebSocket Integration Tests', () => {
     // Handle WebSocket connections
     wss.on('connection', (ws: WebSocket) => {
       const clientId = Math.random().toString(36).substring(2, 9);
-      (ws as any).id = clientId;
+      (ws as unknown as { id: string }).id = clientId;
       
       // Store the WebSocket connection
       clients.push(ws);
       
       // Handle incoming messages
-      ws.on('message', (data: any) => {
+      ws.on('message', (data: unknown) => {
         try {
-          const message = data.toString();
+          const message = (data as Buffer).toString();
           
           // Echo the message back to the client
           ws.send(JSON.stringify({ 
@@ -93,8 +93,8 @@ describe('WebSocket Integration Tests', () => {
       ws.send(JSON.stringify({ type: 'test', message: 'Hello' }));
     });
     
-    ws.on('message', (data: any) => {
-      const message = JSON.parse(data.toString());
+    ws.on('message', (data: unknown) => {
+      const message = JSON.parse((data as Buffer).toString());
       expect(message.type).toBe('echo');
       expect(message.data).toContain('Hello');
       ws.close();
@@ -129,14 +129,14 @@ describe('WebSocket Integration Tests', () => {
       ws2.send(JSON.stringify({ type: 'test', message: 'Client 2' }));
     });
     
-    ws1.on('message', (data: any) => {
-      const message = JSON.parse(data.toString());
+    ws1.on('message', (data: unknown) => {
+      const message = JSON.parse((data as Buffer).toString());
       expect(message.type).toBe('echo');
       checkComplete();
     });
     
-    ws2.on('message', (data: any) => {
-      const message = JSON.parse(data.toString());
+    ws2.on('message', (data: unknown) => {
+      const message = JSON.parse((data as Buffer).toString());
       expect(message.type).toBe('echo');
       checkComplete();
     });

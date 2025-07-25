@@ -4,6 +4,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { WsAdapter } from './ws/ws-adapter';
 import helmet from 'helmet';
+import { Request, Response } from 'express';
 
 // Global error handlers
 process.on('uncaughtException', (error) => {
@@ -77,7 +78,7 @@ async function bootstrap() {
 
     // Add a simple root route for e2e/security testing
     const expressApp = app.getHttpAdapter().getInstance();
-    expressApp.get('/', (req: any, res: any) => {
+    expressApp.get('/', (req: Request, res: Response) => {
       res.status(200).send('OK');
     });
 
@@ -109,7 +110,7 @@ async function bootstrap() {
       const router = server._events.request._router;
       if (router && router.stack) {
         const routes = router.stack
-          .map((layer: any) => {
+          .map((layer: unknown) => {
             if (layer.route) {
               return {
                 route: {
@@ -119,7 +120,7 @@ async function bootstrap() {
               };
             }
           })
-          .filter((item: any) => item !== undefined);
+          .filter((item: unknown) => item !== undefined);
         
         logger.log('Registered routes:', JSON.stringify(routes, null, 2));
       }

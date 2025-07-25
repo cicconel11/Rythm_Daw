@@ -51,15 +51,15 @@ describe('AuthService', () => {
   // Create a mock JWT service with proper typing
   const mockJwtService = {
     sign: jest.fn().mockReturnValue('mocked-token'),
-    signAsync: jest.fn().mockImplementation((payload: any, options: any) => {
-      if (options && options.secret === 'test-access-secret') {
+    signAsync: jest.fn().mockImplementation((payload: unknown, options: unknown) => {
+      if (options && (options as any).secret === 'test-access-secret') {
         return Promise.resolve('new-access-token');
-      } else if (options && options.secret === 'test-refresh-secret') {
+      } else if (options && (options as any).secret === 'test-refresh-secret') {
         return Promise.resolve('new-refresh-token');
       }
       return Promise.resolve('mocked-token');
     }),
-    verify: jest.fn().mockImplementation((token: string, options: any) => {
+    verify: jest.fn().mockImplementation((token: string, options: unknown) => {
       // For testing purposes, we'll accept any token that's not explicitly invalid
       if (token === 'invalid-refresh-token') {
         throw new Error('Invalid token');
@@ -86,10 +86,10 @@ describe('AuthService', () => {
         ...mockUser,
         refreshToken: 'test-refresh-token',
       }),
-      update: jest.fn().mockImplementation((args: any) => {
+      update: jest.fn().mockImplementation((args: unknown) => {
         return Promise.resolve({
           ...mockUser,
-          refreshToken: args.data.refreshToken || 'new-refresh-token',
+          refreshToken: (args as any).data.refreshToken || 'new-refresh-token',
         });
       }),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),

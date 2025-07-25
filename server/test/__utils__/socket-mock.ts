@@ -10,7 +10,7 @@ function generateUUID(): string {
 }
 
 export function createMockSocket(id: string = generateUUID()) {
-  const s: any = new EventEmitter();
+  const s: unknown = new EventEmitter();
   s.id = id;
   s.join = jest.fn();
   s.emit = jest.fn();
@@ -23,7 +23,7 @@ export function createMockSocket(id: string = generateUUID()) {
 }
 
 export function createMockServer() {
-  const server = new EventEmitter() as any;
+  const server = new EventEmitter() as unknown;
   server.sockets = {
     sockets: new Map(),
     to: jest.fn().mockReturnThis(),

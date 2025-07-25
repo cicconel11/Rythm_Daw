@@ -1,26 +1,26 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileTransferSchema } from '../types';
-import { DownloadUrlSchema } from '../types';
-import api from '../lib/api';
-import { useEffect } from 'react';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { FileTransferSchema } from "../types";
+import { DownloadUrlSchema } from "../types";
+import api from "../lib/api";
+import { useEffect } from "react";
 
 export const useTransfers = () => {
   const queryClient = useQueryClient();
   const query = useQuery({
-    queryKey: ['transfers'],
+    queryKey: ["transfers"],
     queryFn: async () => {
-      const data = await api.get('/files/transfers');
-      return data.map((item: any) => FileTransferSchema.parse(item));
+      const data = await api.get("/files/transfers");
+      return data.map((item: unknown) => FileTransferSchema.parse(item));
     },
   });
 
   // Subscribe to WS transfer_status events
   useEffect(() => {
-    const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL + '/file-transfer');
+    const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL + "/file-transfer");
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      if (msg.event === 'transfer_status') {
-        queryClient.invalidateQueries(['transfers']);
+      if (msg.event === "transfer_status") {
+        queryClient.invalidateQueries(["transfers"]);
       }
     };
     return () => ws.close();

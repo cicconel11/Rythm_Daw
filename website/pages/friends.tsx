@@ -4,4 +4,4 @@ import { useFriends } from '@shared/hooks/useFriends';
 export default function FriendsPage() {
   const hook = useFriends();
   return <FriendsPanel {...hook} />;
-} 
+}

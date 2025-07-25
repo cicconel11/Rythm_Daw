@@ -53,7 +53,7 @@ describe('Basic Test Environment', () => {
     console.log('Testing HTTP request...');
     const port = (httpServer.address() as AddressInfo).port;
     const response = await new Promise<{ statusCode?: number }>((resolve) => {
-      require('http').get(`http://127.0.0.1:${port}`, (res: any) => {
+      require('http').get(`http://127.0.0.1:${port}`, (res: unknown) => {
         let data = '';
         res.on('data', (chunk: string) => (data += chunk));
         res.on('end', () => resolve({ statusCode: res.statusCode, data }));

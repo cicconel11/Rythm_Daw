@@ -27,14 +27,14 @@ type TransactionClient = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' |
     }) => Promise<ActivityLog>;
     groupBy: (args: { 
       by: string[]; 
-      where?: Record<string, any>;
+      where?: Record<string, unknown>;
       _count?: boolean;
     }) => Promise<Array<{ action: string; _count: number }>>;
-    findMany: (args?: { where?: Record<string, any> }) => Promise<ActivityLog[]>;
-    count: (args?: { where?: Record<string, any> }) => Promise<number>;
+    findMany: (args?: { where?: Record<string, unknown> }) => Promise<ActivityLog[]>;
+    count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
   };
-  $queryRaw: <T = any>(query: TemplateStringsArray, ...values: any[]) => Promise<T[]>;
-  $executeRaw: (query: TemplateStringsArray, ...values: any[]) => Promise<number>;
+  $queryRaw: <T = unknown>(query: TemplateStringsArray, ...values: unknown[]) => Promise<T[]>;
+  $executeRaw: (query: TemplateStringsArray, ...values: unknown[]) => Promise<number>;
 };
 
 interface EventStats {
@@ -68,13 +68,13 @@ interface TrackEvent {
   projectId?: string;
   timestamp?: Date | string;
   context?: EventContext;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   entityType?: string;
   entityId?: string;
   name?: string;
   anonymousId?: string;
   sessionId?: string;
-  [key: string]: any; // Allow additional properties
+  [key: string]: unknown; // Allow additional properties
 }
 
 // EventDto should match the TrackEvent interface but with timestamp as string | Date
@@ -84,7 +84,7 @@ type EventDto = {
   timestamp?: string | Date;
   projectId?: string;
   context?: EventContext;
-  properties?: Record<string, any>;
+  properties?: Record<string, unknown>;
   entityType?: string;
   entityId?: string;
   name?: string;
@@ -210,7 +210,7 @@ export class EventsService implements OnModuleInit {
     const batch = this.eventQueue.splice(0, this.BATCH_SIZE);
 
     try {
-      await (this.prisma as any).$transaction(async (prismaTx: any) => {
+      await (this.prisma as unknown).$transaction(async (prismaTx: unknown) => {
         const tx = prismaTx as unknown as TransactionClient;
         for (const event of batch) {
           if (!event.userId) {
@@ -249,7 +249,7 @@ export class EventsService implements OnModuleInit {
     entityType?: string,
     entityId?: string,
     projectId?: string,
-    properties: Record<string, any> = {},
+    properties: Record<string, unknown> = {},
     context: EventContext = {},
     timestamp?: string | Date
   ): Promise<ActivityLog> {

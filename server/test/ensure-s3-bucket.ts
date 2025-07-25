@@ -9,7 +9,7 @@ export async function ensureTestBucket() {
 
   try {
     await s3.send(new HeadBucketCommand({ Bucket: bucket })); // exists ✔︎
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err.$metadata?.httpStatusCode === 404) {
       // us-east-1 MUST omit LocationConstraint
       const params =

@@ -12,7 +12,11 @@ function DashboardPage() {
 
   if (isLoading) return <Skeleton className="h-32 w-full" />;
   if (isError) {
-    toast({ title: "Error", description: error?.message || 'Failed to load dashboard', variant: "destructive" });
+    toast({
+      title: 'Error',
+      description: error?.message || 'Failed to load dashboard',
+      variant: 'destructive',
+    });
     return <div>Error loading dashboard.</div>;
   }
 

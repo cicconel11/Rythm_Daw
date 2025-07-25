@@ -3,7 +3,7 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import { AppModule } from '../../src/app.module';
 import { AwsS3Service } from '../../src/modules/files/aws-s3.service';
 
-declare const global: any;
+declare const global: unknown;
 
 interface PrismaOverrides {
   $connect?: jest.Mock;

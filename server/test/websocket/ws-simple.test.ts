@@ -15,7 +15,7 @@ describe('WebSocket Simple Tests', () => {
     
     // Handle connections
     wss.on('connection', (ws: WebSocket) => {
-      ws.on('message', (message: any) => {
+      ws.on('message', (message: unknown) => {
         const data = message.toString();
         ws.send(`Echo: ${data}`);
       });

@@ -12,7 +12,7 @@ const mockRtcGateway = {
 
 describe('ChatGateway (Unit)', () => {
   let gateway: ChatGateway;
-  let mockServer: any;
+  let mockServer: unknown;
 
   beforeEach(() => {
     mockServer = {
@@ -54,7 +54,7 @@ describe('ChatGateway (Unit)', () => {
         connected: true,
       };
 
-      await gateway.handleConnection(mockSocket as any);
+      await gateway.handleConnection(mockSocket as unknown as any);
       
       expect(presenceServiceMock.updateUserPresence).toHaveBeenCalledWith('test-user');
       expect(mockServer.emit).toHaveBeenCalledWith('userOnline', { userId: 'test-user' });
@@ -79,7 +79,7 @@ describe('ChatGateway (Unit)', () => {
         connected: false,
       };
 
-      await gateway.handleDisconnect(mockSocket as any);
+      await gateway.handleDisconnect(mockSocket as unknown as any);
       expect(mockServer.emit).toHaveBeenCalledWith('userOffline', { userId: 'test-user' });
     });
   });
@@ -108,7 +108,7 @@ describe('ChatGateway (Unit)', () => {
         content: 'Hello, world!',
       };
 
-      const result = await gateway.handleMessage(mockSocket as any, messageData);
+      const result = await gateway.handleMessage(mockSocket as unknown as any, messageData);
       
       expect(result).toBeUndefined();
       

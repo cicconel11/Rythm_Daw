@@ -52,7 +52,9 @@ const useAuth = () => {
   const login = (authData: AuthState) => {
     // Get users from localStorage
     const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const user = users.find((u: any) => u.email === authData.user.email);
+    const user = users.find(
+      (u: unknown) => (u as { email: string }).email === authData.user.email,
+    );
 
     // Merge with existing user data (to preserve isAdmin status)
     const updatedAuth = {
