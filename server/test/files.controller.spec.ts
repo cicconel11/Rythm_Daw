@@ -14,7 +14,7 @@ describe('FilesController', () => {
         putUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
         getUrl: 'https://s3.amazonaws.com/test-bucket/test-file.txt',
       }),
-    } as any;
+    } as unknown;
 
     // Create an instance of the controller with the mock service
     filesController = new FilesController(mockFilesService);

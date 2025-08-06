@@ -1,17 +1,10 @@
 import { IsString, IsNumber, IsUUID, IsOptional } from 'class-validator';
 
 export class PresignDto {
-  @IsString()
-  fileName: string;
-
-  @IsString()
-  mimeType: string;
-
-  @IsNumber()
-  size: number;
-
-  @IsUUID()
-  toUserId: string;
+  fileName!: string;
+  mimeType!: string;
+  size!: number;
+  toUserId!: string;
 }
 
 export class AcceptDto {

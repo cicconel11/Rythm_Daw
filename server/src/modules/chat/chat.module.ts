@@ -4,6 +4,9 @@ import { PresenceService } from '../presence/presence.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RtcModule } from '../rtc/rtc.module';
 
+// Temporary module declaration for missing '../rtc/rtc.module'
+declare module '../rtc/rtc.module';
+
 @Module({
   imports: [RtcModule],
   providers: [ChatGateway, PresenceService, PrismaService],

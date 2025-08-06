@@ -22,7 +22,7 @@ export class InventoryService {
       // 1. Upsert all plugins
       const upsertedPlugins = await Promise.all(
         plugins.map((plugin) =>
-          (prisma as any).plugin.upsert({
+          (prisma as unknown as { plugin: { upsert: (args: unknown) => Promise<unknown> } }).plugin.upsert({
             where: { id: plugin.uid },
             update: {
               name: plugin.name,
@@ -40,12 +40,7 @@ export class InventoryService {
       );
 
       // Get the Prisma userPlugin delegate with proper typing
-      const userPlugin = (prisma as any).userPlugin as {
-        findMany: (args: unknown) => Promise<Array<{ pluginId: string }>>;
-        createMany: (args: unknown) => Promise<unknown>;
-        deleteMany: (args: unknown) => Promise<unknown>;
-        updateMany: (args: unknown) => Promise<unknown>;
-      };
+      const userPlugin = (prisma as unknown as { userPlugin: { findMany: (args: unknown) => Promise<Array<{ pluginId: string }>>; createMany: (args: unknown) => Promise<unknown>; deleteMany: (args: unknown) => Promise<unknown>; updateMany: (args: unknown) => Promise<unknown>; } }).userPlugin;
 
       // 2. Get current user plugins using the userPlugin delegate
       const currentUserPlugins = await userPlugin.findMany({
@@ -122,7 +117,7 @@ export class InventoryService {
       await Promise.all(updatePromises);
 
       // 5. Update user's inventory hash
-      await (prisma as any).user.update({
+      await (prisma as unknown as { user: { update: (args: unknown) => Promise<unknown> } }).user.update({
         where: { id: userId },
         data: {
           inventoryHash,
@@ -131,7 +126,7 @@ export class InventoryService {
       });
 
       // 6. Get the complete updated inventory
-      const updatedInventory = await (prisma as any).userPlugin.findMany({
+      const updatedInventory = await (prisma as unknown as { userPlugin: { findMany: (args: unknown) => Promise<Array<{ plugin: unknown; isActive: boolean; updatedAt: Date }>> } }).userPlugin.findMany({
         where: { userId },
         include: {
           plugin: true,
@@ -145,7 +140,7 @@ export class InventoryService {
         added: pluginsToAdd,
         removed: pluginsToRemove,
         inventory: updatedInventory.map((up: { plugin: unknown; isActive: boolean; updatedAt: Date }) => ({
-          ...up.plugin,
+          ...(typeof up.plugin === 'object' && up.plugin !== null ? up.plugin : {}),
           isActive: up.isActive,
           lastSynced: up.updatedAt,
         })),
@@ -164,7 +159,7 @@ export class InventoryService {
   }
 
   async getUserInventory(userId: string) {
-    return (this.prisma as any).userPlugin.findMany({
+    return (this.prisma as unknown as { userPlugin: { findMany: (args: unknown) => Promise<Array<{ plugin: unknown; isActive: boolean; updatedAt: Date }>> } }).userPlugin.findMany({
       where: { userId },
       include: {
         plugin: true,

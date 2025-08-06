@@ -1,5 +1,5 @@
-const { WebSocket, WebSocketServer } = require('ws');
-const { createServer } = require('http');
+import { WebSocket, WebSocketServer } from 'ws';
+import { createServer } from 'http';
 
 // Simple WebSocket echo server for testing
 function createWebSocketServer(port = 0) {

@@ -23,7 +23,7 @@ describe('FilesController (Direct Test)', () => {
         uploadUrl: 'https://s3.amazonaws.com/test-bucket/test-user-id/test-file.txt',
         downloadUrl: 'https://s3.amazonaws.com/test-bucket/test-user-id/test-file.txt',
       })
-    } as any;
+    } as unknown;
     
     // Create a new instance of FilesService with the mock AwsS3Service
     filesService = new FilesService(mockAwsS3Service);

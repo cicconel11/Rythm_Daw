@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsObject, IsIn, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsObject, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CrashReportDto {

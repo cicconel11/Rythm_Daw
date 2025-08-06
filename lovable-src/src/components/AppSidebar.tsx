@@ -50,12 +50,25 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-3 py-4">
-        <SidebarMenu>
+        <SidebarMenu data-testid="main-nav">
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild>
                 <Link
                   to={item.url}
+                  data-testid={
+                    item.url === "/files"
+                      ? "nav-files"
+                      : item.url === "/history"
+                        ? "nav-history"
+                        : item.url === "/friends"
+                          ? "nav-friends"
+                          : item.url === "/chat"
+                            ? "nav-chat"
+                            : item.url === "/settings"
+                              ? "nav-settings"
+                              : undefined
+                  }
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
                     location.pathname === item.url

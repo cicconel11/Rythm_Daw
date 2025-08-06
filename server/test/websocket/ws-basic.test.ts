@@ -3,9 +3,9 @@ import { Server } from 'socket.io';
 import { io as Client } from 'socket.io-client';
 
 describe('Basic WebSocket Test', () => {
-  let io: any;
-  let httpServer: any;
-  let clientSocket: any;
+  let io: Server;
+  let httpServer: ReturnType<typeof createServer>;
+  let clientSocket: ReturnType<typeof Client>;
   const port = 3001;
 
   beforeAll((done) => {
@@ -16,13 +16,13 @@ describe('Basic WebSocket Test', () => {
     io = new Server(httpServer);
     
     // Listen for connections
-    io.on('connection', (socket: any) => {
-      console.log('Client connected:', socket.id);
+    io.on('connection', (socket: unknown) => {
+      console.log('Client connected:', (socket as any).id);
       
       // Handle ping event
-      socket.on('ping', (data: any, callback: Function) => {
+      (socket as any).on('ping', (data: unknown, callback: (response: unknown) => void) => {
         console.log('Server received ping:', data);
-        callback({ ...data, timestamp: Date.now() });
+        callback({ ...(data as object), timestamp: Date.now() });
       });
     });
     
@@ -48,16 +48,16 @@ describe('Basic WebSocket Test', () => {
       
       const testData = { message: 'test' };
       
-      clientSocket.emit('ping', testData, (response: any) => {
+      clientSocket.emit('ping', testData, (response: unknown) => {
         expect(response).toBeDefined();
-        expect(response.message).toBe(testData.message);
-        expect(response.timestamp).toBeDefined();
+        expect((response as any).message).toBe(testData.message);
+        expect((response as any).timestamp).toBeDefined();
         done();
       });
     });
     
-    clientSocket.on('connect_error', (err: any) => {
-      done(err);
+    clientSocket.on('connect_error', (err: unknown) => {
+      done(err as Error);
     });
   });
 });

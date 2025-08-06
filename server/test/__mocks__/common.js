@@ -92,7 +92,7 @@ function SetMetadata() {
 class ValidationPipe {}
 
 class HttpException extends Error {
-  constructor(message, status) {
+  constructor(message: string, status: number) {
     super(message);
     this.status = status;
   }
@@ -121,23 +121,23 @@ class Response {
 
 // Common utilities
 class Logger {
-  static log(message, context) {
+  static log(message: string, context: string) {
     console.log(`[${context || 'App'}]`, message);
   }
   
-  static error(message, trace, context) {
+  static error(message: string, trace: unknown, context: string) {
     console.error(`[${context || 'App'}] ERROR:`, message, trace || '');
   }
   
-  static warn(message, context) {
+  static warn(message: string, context: string) {
     console.warn(`[${context || 'App'}] WARN:`, message);
   }
   
-  static debug(message, context) {
+  static debug(message: string, context: string) {
     console.debug(`[${context || 'App'}] DEBUG:`, message);
   }
   
-  static verbose(message, context) {
+  static verbose(message: string, context: string) {
     console.log(`[${context || 'App'}] VERBOSE:`, message);
   }
 }
@@ -150,7 +150,7 @@ Logger.prototype.debug = jest.fn();
 Logger.prototype.verbose = jest.fn();
 
 // Request-scoped provider token
-exports.REQUEST = 'REQUEST';
+export const REQUEST = 'REQUEST';
 
 // Export all mocks
 module.exports = {
@@ -174,13 +174,13 @@ module.exports = {
   Request,
   Response,
   Logger,
-  Injectable: () => (target) => target,
-  Inject: () => (target, propertyKey, parameterIndex) => {},
-  Optional: () => (target, propertyKey, parameterIndex) => {},
+  Injectable: (target: unknown) => (target: unknown) => target,
+  Inject: (target: unknown, propertyKey: string, parameterIndex: number) => {},
+  Optional: (target: unknown, propertyKey: string, parameterIndex: number) => {},
   CACHE_MANAGER: 'CACHE_MANAGER',
-  Cache: () => (target, propertyKey, parameterIndex) => {},
-  CacheKey: () => (target, propertyKey) => {},
-  CacheTTL: () => (target, propertyKey) => {},
-  createParamDecorator: (factory) => (target, key, index) => {},
-  REQUEST: exports.REQUEST,
+  Cache: (target: unknown, propertyKey: string, parameterIndex: number) => {},
+  CacheKey: (target: unknown, propertyKey: string) => {},
+  CacheTTL: (target: unknown, propertyKey: string) => {},
+  createParamDecorator: (factory: (arg0: { arg: unknown; arg1: unknown; arg2: unknown }) => unknown) => (target: unknown, key: string, index: number) => {},
+  REQUEST: REQUEST,
 };

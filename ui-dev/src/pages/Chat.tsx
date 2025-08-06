@@ -335,7 +335,7 @@ export default function Chat() {
         {/* Messages area */}
         <ScrollArea className="flex-1 p-4 overflow-y-auto">
           <div className="space-y-4">
-            {messages.map((message) => (
+            {messages.map((message, _index) => (
               <div
                 key={message.id}
                 className={`flex ${message.sender === "me" ? "justify-end" : "justify-start"}`}
@@ -374,12 +374,13 @@ export default function Chat() {
             className="flex items-end space-x-2"
           >
             <div className="flex-1 bg-gray-800 rounded-lg border border-gray-700 flex items-end">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon"
                 className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-l-md"
               >
                 <Paperclip className="h-5 w-5" />
-              </button>
+              </Button>
               <Input
                 type="text"
                 placeholder={`Message ${activeFriend.name.split(" ")[0]}...`}
@@ -394,18 +395,20 @@ export default function Chat() {
                 }}
               />
               <div className="flex">
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="p-2 text-gray-400 hover:text-white hover:bg-gray-700"
                 >
                   <Smile className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-r-md"
                 >
                   <Mic className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
             </div>
             <Button

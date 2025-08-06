@@ -8,13 +8,40 @@ type User = {
   displayName: string;
 };
 
-type Message = {
-  roomId: string;
-  userId: string;
-  ts: number;
-  type: 'chat' | 'presence' | 'inventory' | 'system';
-  payload: unknown;
-};
+type ChatPayload = { text: string };
+type PresencePayload = { status: 'online' | 'offline' | 'away' };
+type InventoryPayload = Record<string, unknown>; // Adjust as needed
+type SystemPayload = { action: string };
+
+type Message =
+  | {
+      roomId: string;
+      userId: string;
+      ts: number;
+      type: 'chat';
+      payload: ChatPayload;
+    }
+  | {
+      roomId: string;
+      userId: string;
+      ts: number;
+      type: 'presence';
+      payload: PresencePayload;
+    }
+  | {
+      roomId: string;
+      userId: string;
+      ts: number;
+      type: 'inventory';
+      payload: InventoryPayload;
+    }
+  | {
+      roomId: string;
+      userId: string;
+      ts: number;
+      type: 'system';
+      payload: SystemPayload;
+    };
 
 type Client = {
   ws: WebSocket;

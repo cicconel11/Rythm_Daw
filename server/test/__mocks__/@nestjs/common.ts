@@ -3,14 +3,14 @@ const actual = jest.requireActual('@nestjs/common');
 
 // Create a proper Logger class
 class NoopLogger {
-  constructor(private context?: string) {}
+  constructor(private _context?: string) {}
   
-  log(message: any, context?: string) {}
-  error(message: any, trace?: string, context?: string) {}
-  warn(message: any, context?: string) {}
-  debug(message: any, context?: string) {}
-  verbose(message: any, context?: string) {}
-  static overrideLogger(logger: any) {}
+  log(_message: unknown, _context?: string) {}
+  error(_message: unknown, _trace?: string, _context?: string) {}
+  warn(_message: unknown, _context?: string) {}
+  debug(_message: unknown, _context?: string) {}
+  verbose(_message: unknown, _context?: string) {}
+  static overrideLogger(_logger: unknown) {}
   static flush() {}
 }
 

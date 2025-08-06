@@ -21,7 +21,7 @@ interface SettingsLayoutProps {
 
 export function SettingsLayout({ children }: SettingsLayoutProps) {
   const location = useLocation();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("account");
 
   useEffect(() => {

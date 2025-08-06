@@ -10,7 +10,7 @@ import { JwtRefreshStrategy } from '../../src/modules/auth/strategies/jwt-refres
 import { JwtAuthGuard } from '../../src/modules/auth/guards/jwt-auth.guard';
 import { RefreshTokenGuard } from '../../src/modules/auth/guards/refresh-token.guard';
 import { prismaMock, resetPrismaMocks } from '../utils/prisma-mock';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
 
 describe('AuthService', () => {
@@ -96,8 +96,8 @@ describe('AuthService', () => {
     );
 
     // Mock bcrypt
-    jest.spyOn(require('bcrypt'), 'compare').mockImplementation(() => Promise.resolve(true));
-    jest.spyOn(require('bcrypt'), 'hash').mockImplementation(() => Promise.resolve('hashed-password'));
+    jest.spyOn(bcrypt, 'compare').mockImplementation(() => Promise.resolve(true));
+    jest.spyOn(bcrypt, 'hash').mockImplementation(() => Promise.resolve('hashed-password'));
 
     // Create auth service with mocked dependencies
     authService = new AuthService(jwtService, mockPrisma, configService);

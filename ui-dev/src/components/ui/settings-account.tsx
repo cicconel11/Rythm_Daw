@@ -31,7 +31,7 @@ export const SettingsAccount = ({
   onAvatarChange,
 }: SettingsAccountProps) => {
   const [formData, setFormData] = React.useState(initialData);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, _setIsLoading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleChange = (

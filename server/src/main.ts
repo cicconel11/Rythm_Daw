@@ -110,7 +110,7 @@ async function bootstrap() {
       const router = server._events.request._router;
       if (router && router.stack) {
         const routes = router.stack
-          .map((layer: unknown) => {
+          .map((layer: { route?: { path: string; methods: Record<string, boolean> } }) => {
             if (layer.route) {
               return {
                 route: {
@@ -120,7 +120,7 @@ async function bootstrap() {
               };
             }
           })
-          .filter((item: unknown) => item !== undefined);
+          .filter((item: unknown): item is { route: { path: string; methods: Record<string, boolean> } } => !!item);
         
         logger.log('Registered routes:', JSON.stringify(routes, null, 2));
       }

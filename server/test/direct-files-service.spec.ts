@@ -21,7 +21,7 @@ describe('FilesService (Direct Test)', () => {
         putUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
         getUrl: 'https://test-bucket.s3.amazonaws.com/test-file.txt',
       }),
-    } as any;
+    } as unknown;
     
     // Create a new instance of FilesService with the mock AwsS3Service
     filesService = new FilesService(mockAwsS3Service);

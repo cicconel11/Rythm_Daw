@@ -2,15 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Server } from 'socket.io';
-import { Server as HttpServer } from 'http';
+import { createServer } from 'http';
 import { AddressInfo } from 'net';
+import http from 'http';
 
 // Simple smoke test to verify the testing environment works
 // This doesn't test the actual RTC functionality, just the test setup
 
 describe('Basic Test Environment', () => {
   let app: INestApplication;
-  let httpServer: HttpServer;
+  let httpServer: createServer;
 
   beforeAll(async () => {
     console.log('1. Creating test module...');
@@ -22,7 +23,7 @@ describe('Basic Test Environment', () => {
     app = moduleFixture.createNestApplication();
     
     // Basic HTTP server for testing
-    httpServer = require('http').createServer();
+    httpServer = createServer();
     
     console.log('3. Starting HTTP server...');
     await new Promise<void>((resolve) => {
@@ -53,7 +54,7 @@ describe('Basic Test Environment', () => {
     console.log('Testing HTTP request...');
     const port = (httpServer.address() as AddressInfo).port;
     const response = await new Promise<{ statusCode?: number }>((resolve) => {
-      require('http').get(`http://127.0.0.1:${port}`, (res: unknown) => {
+      http.get(`http://127.0.0.1:${port}`, (res: unknown) => {
         let data = '';
         res.on('data', (chunk: string) => (data += chunk));
         res.on('end', () => resolve({ statusCode: res.statusCode, data }));

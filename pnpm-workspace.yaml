@@ -2,6 +2,7 @@ packages:
   - server
   - ui-dev
   - ui-kit
+  - web
 
 onlyBuiltDependencies:
   - '@prisma/client'

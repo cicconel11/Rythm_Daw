@@ -3,29 +3,29 @@ import { Server } from 'socket.io';
 import { io as Client } from 'socket.io-client';
 
 describe('Minimal WebSocket Test', () => {
-  let httpServer: any;
-  let io: any;
-  let port: number;
+  let httpServer: unknown;
+  let io: unknown;
+  let _port: number;
 
   beforeAll((done) => {
     // Create HTTP server
     httpServer = createServer();
     
     // Create Socket.IO server
-    io = new Server(httpServer);
+    io = new Server(httpServer as any);
     
     // Start listening on a random port
-    httpServer.listen(0, () => {
-      port = httpServer.address().port;
-      console.log(`Test server listening on port ${port}`);
+    (httpServer as any).listen(0, () => {
+      _port = (httpServer as any).address().port;
+      console.log(`Test server listening on port ${_port}`);
       done();
     });
   });
 
   afterAll((done) => {
     // Close everything
-    io.close();
-    httpServer.close(() => {
+    (io as any).close();
+    (httpServer as any).close(() => {
       console.log('Test server closed');
       done();
     });
@@ -33,25 +33,27 @@ describe('Minimal WebSocket Test', () => {
 
   test('should handle client connection', (done) => {
     // Set up server-side handler using the 'sockets' namespace
-    io.sockets.on('connection', (socket: any) => {
-      console.log('Client connected:', socket.id);
+    (io as any).sockets.on('connection', (socket: unknown) => {
+      const _socket = socket as any;
+      console.log('Client connected:', _socket.id);
       
       // Handle ping event
-      socket.on('ping', (data: any, callback: Function) => {
-        console.log('Server received ping:', data);
+      (socket as any).on('ping', (data: unknown, callback: (arg: unknown) => void) => {
+        const _data = data as any;
+        console.log('Server received ping:', _data);
         if (typeof callback === 'function') {
-          callback({ ...data, timestamp: Date.now() });
+          callback({ ..._data, timestamp: Date.now() });
         }
       });
       
       // Handle disconnection
-      socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
+      (socket as any).on('disconnect', () => {
+        console.log('Client disconnected:', _socket.id);
       });
     });
 
     // Create client with explicit options
-    const client = Client(`http://localhost:${port}`, {
+    const client = Client(`http://localhost:${_port}`, {
       transports: ['websocket'],
       reconnection: false,
       forceNew: true
@@ -68,11 +70,12 @@ describe('Minimal WebSocket Test', () => {
       
       // Test ping-pong
       const testData = { message: 'test' };
-      client.emit('ping', testData, (response: any) => {
+      (client as any).emit('ping', testData, (response: unknown) => {
         try {
-          expect(response).toBeDefined();
-          expect(response.message).toBe(testData.message);
-          expect(response.timestamp).toBeDefined();
+          const _response = response as any;
+          expect(_response).toBeDefined();
+          expect(_response.message).toBe(testData.message);
+          expect(_response.timestamp).toBeDefined();
           clearTimeout(testTimeout);
           client.disconnect();
           done();
@@ -84,10 +87,11 @@ describe('Minimal WebSocket Test', () => {
       });
     });
     
-    client.on('connect_error', (err: any) => {
+    (client as any).on('connect_error', (err: unknown) => {
+      const _err = err as any;
       clearTimeout(testTimeout);
       client.disconnect();
-      done(err);
+      done(_err);
     });
     
     client.on('disconnect', () => {

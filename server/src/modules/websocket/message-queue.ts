@@ -2,7 +2,7 @@ import { Socket } from 'socket.io';
 
 export interface QueuedMessage {
   event: string;
-  payload: any;
+  payload: unknown;
 }
 
 export class MessageQueue {
@@ -18,7 +18,7 @@ export class MessageQueue {
   /**
    * Add a message to the queue and start processing if not already
    */
-  enqueue(event: string, payload: any): void {
+  enqueue(event: string, payload: unknown): void {
     if (!this.isActive) return;
 
     this.queue.push({ event, payload });

@@ -10,7 +10,7 @@ import History from "./pages/History";
 import Friends from "./pages/Friends";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
+import NotFound from "@/components/NotFound";
 
 const queryClient = new QueryClient();
 

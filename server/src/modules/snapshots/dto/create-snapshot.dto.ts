@@ -27,7 +27,7 @@ export class CreateSnapshotDto {
   description?: string;
 
   @IsObject()
-  metadata!: Record<string, any>;
+  metadata!: Record<string, unknown>;
 
   @IsArray()
   @IsOptional()

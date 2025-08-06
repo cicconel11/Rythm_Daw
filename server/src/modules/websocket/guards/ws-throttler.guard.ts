@@ -28,12 +28,12 @@ export class WsThrottlerGuard implements CanActivate {
     }
   }
 
-  private getClientIp(client: any): string {
+  private getClientIp(client: unknown): string {
     // Try to get IP from WebSocket connection
-    if (client._socket && client._socket.remoteAddress) {
-      return client._socket.remoteAddress;
+    if (client && (client as any)._socket && (client as any)._socket.remoteAddress) {
+      return (client as any)._socket.remoteAddress;
     }
     // Fallback to connection ID if IP is not available
-    return client.id || 'unknown';
+    return (client as any).id || 'unknown';
   }
 }

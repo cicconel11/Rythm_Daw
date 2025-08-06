@@ -9,13 +9,10 @@ import { ConfigService } from '@nestjs/config';
 import { createWsTestApp, createSocketClient } from './__utils__/websocket';
 import type { Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
-import { AddressInfo } from 'net';
 
 describe('ChatGateway (e2e)', () => {
   let app: INestApplication;
-  let chatGateway: ChatGateway;
   let httpServer: HttpServer;
-  let io: Server;
   let port: number;
   
   // Mock services
@@ -63,15 +60,11 @@ describe('ChatGateway (e2e)', () => {
     .compile();
 
     app = moduleRef.createNestApplication();
-    chatGateway = moduleRef.get<ChatGateway>(ChatGateway);
     
     // Set up WebSocket server
     const wsConfig = await createWsTestApp(app);
     httpServer = wsConfig.httpServer;
     port = wsConfig.port;
-    
-    // Create Socket.IO server instance
-    io = new Server(httpServer);
     
     await app.init();
   });

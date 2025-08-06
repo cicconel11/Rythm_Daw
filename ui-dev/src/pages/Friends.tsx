@@ -138,7 +138,7 @@ const suggestedFriends: Omit<Friend, "status">[] = [
 
 export default function Friends() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
+  const [_activeTab, setActiveTab] = useState("all");
   const [showAddFriendDialog, setShowAddFriendDialog] = useState(false);
   const [friendRequestInput, setFriendRequestInput] = useState("");
 

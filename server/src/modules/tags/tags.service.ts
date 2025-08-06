@@ -66,10 +66,10 @@ export class TagsService {
     );
 
     // Use a transaction to ensure data consistency
-    await this.prisma.$transaction(async (prisma: unknown) => {
+    await this.prisma.$transaction(async (prisma: any) => {
       // Remove old tags that are not in the new list
       if (tagsToRemove.length > 0) {
-        await prisma.entityTag.deleteMany({
+        await (prisma as any).entityTag.deleteMany({
           where: {
             entityType,
             entityId,
@@ -81,21 +81,21 @@ export class TagsService {
       // Add new tags
       if (newTags.length > 0) {
         // First, find existing entity tags to avoid duplicates
-        const existingEntityTags = await prisma.entityTag.findMany({
+        const existingEntityTags = await (prisma as any).entityTag.findMany({
           where: {
             entityType,
             entityId,
-            tagId: { in: newTags.map((tag) => tag.id) },
+            tagId: { in: newTags.map((tag: any) => tag.id) },
           },
           select: { tagId: true },
         });
 
         const existingTagIds = new Set(existingEntityTags.map((et: unknown) => (et as { tagId: string }).tagId));
-        const tagsToCreate = newTags.filter((tag) => !existingTagIds.has(tag.id));
+        const tagsToCreate = newTags.filter((tag: any) => !existingTagIds.has(tag.id));
 
         if (tagsToCreate.length > 0) {
-          await prisma.entityTag.createMany({
-            data: tagsToCreate.map((tag) => ({
+          await (prisma as any).entityTag.createMany({
+            data: tagsToCreate.map((tag: any) => ({
               entityType,
               entityId,
               tagId: tag.id,
@@ -127,7 +127,7 @@ export class TagsService {
     );
 
     const newTagResults = await Promise.all(
-      newTags.map(async (tag) => {
+      newTags.map(async (tag: any) => {
         const entityTag = await this.prisma.entityTag.create({
           data: {
             entityType,
@@ -185,7 +185,7 @@ export class TagsService {
     const where: unknown = {}; // Using unknown to avoid Prisma type issues
     
     if (filter?.search) {
-      where.OR = [
+      (where as Record<string, unknown>).OR = [
         { name: { contains: filter.search } },
         { name: { contains: filter.search.toLowerCase() } },
         { name: { contains: filter.search.toUpperCase() } },
@@ -193,7 +193,7 @@ export class TagsService {
     }
     
     const tags = await this.prisma.tag.findMany({
-      where,
+      where: (where as any),
       include: {
         _count: {
           select: { entityTags: true },

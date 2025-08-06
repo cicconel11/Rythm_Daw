@@ -5,18 +5,18 @@ declare module "react" {
   namespace React {
     // Type definitions for React
     interface FunctionComponent<P = {}> {
-      (props: P, context?: any): ReactElement<any, any> | null;
+      (props: P, context?: unknown): ReactElement<unknown, unknown> | null;
       propTypes?: WeakValidationMap<P> | undefined;
-      contextTypes?: ValidationMap<any> | undefined;
+      contextTypes?: ValidationMap<unknown> | undefined;
       defaultProps?: Partial<P> | undefined;
       displayName?: string | undefined;
     }
 
     interface ReactElement<
-      P = any,
-      T extends string | JSXElementConstructor<any> =
+      P = unknown,
+      T extends string | JSXElementConstructor<unknown> =
         | string
-        | JSXElementConstructor<any>,
+        | JSXElementConstructor<unknown>,
     > {
       type: T;
       props: P;
@@ -24,20 +24,20 @@ declare module "react" {
     }
 
     type JSXElementConstructor<P> =
-      | ((props: P) => ReactElement<any, any> | null)
-      | (new (props: P) => Component<P, any>);
+      | ((props: P) => ReactElement<unknown, unknown> | null)
+      | (new (props: P) => Component<P, unknown>);
 
     type Key = string | number;
 
-    interface Component<P = {}, S = {}, SS = any>
+    interface Component<P = {}, S = {}, SS = unknown>
       extends ComponentLifecycle<P, S, SS> {}
 
-    interface ComponentLifecycle<P, S, SS = any> {
+    interface ComponentLifecycle<P, S, SS = unknown> {
       componentDidMount?(): void;
       shouldComponentUpdate?(
         nextProps: Readonly<P>,
         nextState: Readonly<S>,
-        nextContext: any,
+        nextContext: unknown,
       ): boolean;
       componentWillUnmount?(): void;
       componentDidCatch?(error: Error, errorInfo: ErrorInfo): void;

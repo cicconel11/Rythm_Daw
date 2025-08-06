@@ -70,7 +70,7 @@ export class FileTransferService {
     return transfers;
   }
 
-  async accept(id: string, userId: string, dto: AcceptDto) {
+  async accept(id: string, userId: string, _dto: AcceptDto) {
     const transfer = await this.prisma.fileTransfer.findUnique({ where: { id } });
 
     if (!transfer) throw new NotFoundException('Transfer not found');
@@ -79,7 +79,7 @@ export class FileTransferService {
 
     const getCommand = new GetObjectCommand({
       Bucket: this.config.get('S3_BUCKET_NAME'),
-      Key: transfer.fileKey,
+      Key: transfer.fileKey ?? undefined,
     });
 
     const downloadUrl = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });
@@ -92,7 +92,7 @@ export class FileTransferService {
     return { downloadUrl };
   }
 
-  async decline(id: string, userId: string, dto: DeclineDto) {
+  async decline(id: string, userId: string, _dto: DeclineDto) {
     const transfer = await this.prisma.fileTransfer.findUnique({ where: { id } });
 
     if (!transfer) throw new NotFoundException('Transfer not found');
@@ -116,7 +116,7 @@ export class FileTransferService {
 
     const getCommand = new GetObjectCommand({
       Bucket: this.config.get('S3_BUCKET_NAME'),
-      Key: transfer.fileKey,
+      Key: transfer.fileKey ?? undefined,
     });
 
     const downloadUrl = await getSignedUrl(this.s3Client, getCommand, { expiresIn: 3600 });

@@ -201,7 +201,7 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
                 key={tab.key}
                 variant={activeTab === tab.key ? "default" : "outline"}
                 size="sm"
-                onClick={() => setActiveTab(tab.key as any)}
+                onClick={() => setActiveTab(tab.key as unknown)}
                 className={
                   activeTab === tab.key ? "bg-[#7E4FFF] hover:bg-[#6B3FE6]" : ""
                 }

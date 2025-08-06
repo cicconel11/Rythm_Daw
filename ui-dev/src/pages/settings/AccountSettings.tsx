@@ -22,8 +22,6 @@ const AccountSettings = () => {
     avatar: "",
   });
 
-  const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     // Only update state if we have auth data
     if (auth?.user) {
@@ -34,7 +32,6 @@ const AccountSettings = () => {
         bio: auth.user.bio || "",
         avatar: auth.user.avatar || "",
       });
-      setIsLoading(false);
     } else if (auth === null) {
       // Only redirect if we're certain there's no auth (not just loading)
       navigate("/signin");
@@ -59,9 +56,14 @@ const AccountSettings = () => {
       // Update localStorage
       const users = JSON.parse(localStorage.getItem("users") || "[]");
       // TODO: Replace 'unknown' with a specific User type if available
-      const updatedUsers = users.map((user: unknown) =>
-        user.id === updatedUser.id ? updatedUser : user,
-      );
+      const updatedUsers = users.map((user: unknown) => {
+        if (typeof user === "object" && user !== null && "id" in user) {
+          // Type assertion for user with id
+          const typedUser = user as { id: string };
+          return typedUser.id === updatedUser.id ? updatedUser : user;
+        }
+        return user;
+      });
       localStorage.setItem("users", JSON.stringify(updatedUsers));
 
       // Update auth state
@@ -124,9 +126,13 @@ const AccountSettings = () => {
       };
 
       // TODO: Replace 'unknown' with a specific User type if available
-      const updatedUsers = users.map((user: unknown) =>
-        user.id === updatedUser.id ? updatedUser : user,
-      );
+      const updatedUsers = users.map((user: unknown) => {
+        if (typeof user === "object" && user !== null && "id" in user) {
+          const typedUser = user as { id: string };
+          return typedUser.id === updatedUser.id ? updatedUser : user;
+        }
+        return user;
+      });
 
       localStorage.setItem("users", JSON.stringify(updatedUsers));
 

@@ -30,7 +30,7 @@ export class EncryptionService implements OnModuleInit {
   /**
    * Encrypts a string using AES-256-GCM
    */
-  encrypt(text: string): string {
+  encrypt(text: unknown): unknown {
     if (!text) return text;
     
     try {
@@ -42,7 +42,7 @@ export class EncryptionService implements OnModuleInit {
         { authTagLength: this.AUTH_TAG_LENGTH }
       );
       
-      let encrypted = cipher.update(text, 'utf8', 'base64');
+      let encrypted = cipher.update(text as string, 'utf8', 'base64');
       encrypted += cipher.final('base64');
       const authTag = cipher.getAuthTag();
       
@@ -55,7 +55,7 @@ export class EncryptionService implements OnModuleInit {
       
       return result.toString('base64');
     } catch (error) {
-      this.logger.error('Encryption failed', (error as any).stack);
+      this.logger.error('Encryption failed', (error as unknown as Error).stack);
       throw new Error('Failed to encrypt data');
     }
   }
@@ -63,11 +63,11 @@ export class EncryptionService implements OnModuleInit {
   /**
    * Decrypts a string encrypted with AES-256-GCM
    */
-  decrypt(encryptedText: string): string {
-    if (!encryptedText) return encryptedText;
+  decrypt(encryptedText: unknown): string | null {
+    if (!encryptedText) return null;
     
     try {
-      const data = Buffer.from(encryptedText, 'base64');
+      const data = Buffer.from(encryptedText as string, 'base64');
       
       // Extract IV (first 12 bytes)
       const iv = data.subarray(0, this.IV_LENGTH);
@@ -92,7 +92,7 @@ export class EncryptionService implements OnModuleInit {
       
       return decrypted;
     } catch (error) {
-      this.logger.error('Decryption failed', (error as any).stack);
+      this.logger.error('Decryption failed', (error as unknown as Error).stack);
       throw new Error('Failed to decrypt data - it may be corrupted or tampered with');
     }
   }
@@ -110,6 +110,8 @@ export class EncryptionService implements OnModuleInit {
    */
   decryptObject<T>(encrypted: string | null): T | null {
     if (!encrypted) return null;
-    return JSON.parse(this.decrypt(encrypted)) as T;
+    const decrypted = this.decrypt(encrypted);
+    if (typeof decrypted !== 'string') return null;
+    return JSON.parse(decrypted) as T;
   }
 }

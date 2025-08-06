@@ -6,13 +6,11 @@ import {
   SubscribeMessage,
   ConnectedSocket,
   MessageBody,
-  WebSocketServerOptions,
 } from '@nestjs/websockets';
 import { Server, WebSocket } from 'ws';
 import { Logger, UseGuards } from '@nestjs/common';
 import { JwtWsAuthGuard } from '../auth/guards/jwt-ws-auth.guard';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { FileTransferService } from './file-transfer.service';
 

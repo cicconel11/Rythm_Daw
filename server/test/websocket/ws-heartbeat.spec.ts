@@ -1,5 +1,3 @@
-import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { EventEmitter } from 'events';
@@ -51,7 +49,7 @@ class TestHeartbeatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 // Mock IoAdapter
 class MockIoAdapter extends IoAdapter {
   createIOServer(port: number, options?: unknown): unknown {
-    const server = new EventEmitter() as any;
+    const server = new EventEmitter() as unknown;
     server.sockets = {
       sockets: new Map(),
     };

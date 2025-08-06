@@ -1,4 +1,4 @@
-import { WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
+import { WebSocketGateway, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UseGuards } from '@nestjs/common';
 import { WsJwtAuthGuard } from '../auth/guards/ws-jwt-auth.guard';
@@ -31,4 +31,6 @@ export class InventoryGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   broadcastInventoryUpdate(userId: string, data: unknown) {
-    this.server.to(`user:${userId}`
+    this.server.to(`user:${userId}`).emit('inventory-update', data);
+  }
+}

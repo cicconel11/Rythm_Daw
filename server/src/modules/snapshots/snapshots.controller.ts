@@ -56,13 +56,13 @@ export class SnapshotsController {
   async create(
     @Req() req: RequestWithUser,
     @UploadedFile() file: Express.Multer.File,
-    @Body() createSnapshotDto: unknown, // Using unknown to handle multipart form data
+    @Body() createSnapshotDto: Record<string, unknown>, // Use Record<string, any> for multipart form
   ) {
     // Parse metadata if it's a string
     let metadata = {};
     if (createSnapshotDto.metadata) {
       try {
-        metadata = JSON.parse(createSnapshotDto.metadata);
+        metadata = JSON.parse(createSnapshotDto.metadata as string);
       } catch (e) {
         // If parsing fails, use as is (handles both string and object)
         metadata = createSnapshotDto.metadata;
@@ -70,9 +70,9 @@ export class SnapshotsController {
     }
 
     const dto: CreateSnapshotDto = {
-      projectId: createSnapshotDto.projectId,
-      name: createSnapshotDto.name,
-      description: createSnapshotDto.description,
+      projectId: createSnapshotDto.projectId as string,
+      name: createSnapshotDto.name as string,
+      description: createSnapshotDto.description as string,
       metadata,
     };
 

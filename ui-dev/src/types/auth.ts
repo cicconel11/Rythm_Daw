@@ -7,4 +7,4 @@ export interface Auth {
   email: string;
   isApproved: boolean;
   user?: AuthUser;
-} 
+}

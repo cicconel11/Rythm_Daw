@@ -2,8 +2,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Injectable, Logger } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { ServerOptions, Server as SocketIOServer, Socket } from 'socket.io';
-import { createServer, Server as HttpServer, IncomingMessage, ServerResponse } from 'http';
-import { Server as WsServer } from 'ws';
+import { createServer, Server as HttpServer, Server as WsServer } from 'http';
 import { INestApplicationContext } from '@nestjs/common/interfaces/nest-application-context.interface';
 
 // Global error handler for uncaught exceptions in WebSocket handlers

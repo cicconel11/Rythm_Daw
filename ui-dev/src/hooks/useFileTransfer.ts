@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as _uuidv4 } from "uuid";
 
 interface FileTransferOptions {
   onProgress?: (progress: number) => void;
@@ -11,7 +11,7 @@ export const useFileTransfer = (userId: string) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [transferProgress, setTransferProgress] = useState(0);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   const ws = useRef<WebSocket | null>(null);
   const peerConnection = useRef<RTCPeerConnection | null>(null);

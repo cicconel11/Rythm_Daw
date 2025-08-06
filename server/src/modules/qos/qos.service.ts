@@ -231,7 +231,7 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
   }): Promise<Array<Record<string, unknown>>> {
     const { userId, projectId, startDate, endDate, limit = 1000, category } = options;
 
-    const where: unknown = {
+    const where: Record<string, unknown> = {
       timestamp: {
         gte: startDate,
         lte: endDate,
@@ -268,7 +268,7 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
   }): Promise<Array<Record<string, unknown>>> {
     const { userId, projectId, startDate, endDate, type, limit = 100, includeSensitive = false } = options;
 
-    const where: unknown = {
+    const where: Record<string, unknown> = {
       createdAt: {
         gte: startDate,
         lte: endDate,
@@ -286,7 +286,7 @@ export class QosService implements OnModuleInit, OnModuleDestroy {
         orderBy: { createdAt: 'desc' },
       });
 
-      return reports.map((report: unknown) => {
+      return reports.map((report: Record<string, unknown>) => {
         const result: Record<string, unknown> = {
           id: report.id,
           error: report.error,

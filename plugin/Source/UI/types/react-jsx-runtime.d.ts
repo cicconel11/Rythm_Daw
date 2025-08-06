@@ -1,7 +1,15 @@
 declare module "react/jsx-runtime" {
-  export function jsx(type: any, props: any, key?: any): React.ReactElement;
+  export function jsx(
+    type: unknown,
+    props: unknown,
+    key?: unknown,
+  ): React.ReactElement;
 
-  export function jsxs(type: any, props: any, key?: any): React.ReactElement;
+  export function jsxs(
+    type: unknown,
+    props: unknown,
+    key?: unknown,
+  ): React.ReactElement;
 
   export const Fragment: unique symbol;
 }

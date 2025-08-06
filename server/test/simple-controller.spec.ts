@@ -86,7 +86,7 @@ describe('FilesController (Simple)', () => {
         getUrl: `https://s3.amazonaws.com/test-bucket/${user.id}/${dto.name}`,
       }));
 
-      const result = await controller.create(fileDataWithoutMime as any, mockUser);
+      const result = await controller.create(fileDataWithoutMime as unknown, mockUser);
       
       expect(result).toBeDefined();
       expect(result.putUrl).toContain(testFileData.name);

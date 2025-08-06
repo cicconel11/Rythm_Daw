@@ -91,7 +91,7 @@ describe('AuthController', () => {
       authService.setRefreshTokenCookie.mockImplementation(() => {});
 
       // Act - Call the controller method directly
-      const result = await controller.refreshToken(req as any, { cookie: jest.fn() } as any);
+      const result = await controller.refreshToken(req as unknown as { user: { sub: string }; cookies: { refreshToken: string } }, { cookie: jest.fn() } as unknown as { cookie: (name: string, value: string, options?: any) => void });
 
       // Assert
       expect(authService.refreshTokens).toHaveBeenCalledWith(
@@ -117,7 +117,7 @@ describe('AuthController', () => {
       };
 
       // Act & Assert
-      await expect(controller.refreshToken(req as any, res as any))
+      await expect(controller.refreshToken(req as unknown as { user: { sub: string }; cookies: {} }, res as unknown as MockResponse))
         .rejects
         .toThrow('Refresh token is required');
     });

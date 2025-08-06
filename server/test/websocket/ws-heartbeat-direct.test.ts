@@ -1,15 +1,15 @@
 import { Test } from '@nestjs/testing';
-import { Logger } from '@nestjs/common';
 import { ChatGateway } from '../src/modules/chat/chat.gateway';
 import { PresenceService } from '../src/modules/presence/presence.service';
 import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
 import { WsJwtGuard } from '../src/modules/auth/guards/ws-jwt.guard';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { Socket } from 'socket.io';
 
 // Mock setInterval to track intervals
-const setIntervalSpy = jest.spyOn(global, 'setInterval') as jest.Mock;
-const clearIntervalSpy = jest.spyOn(global, 'clearInterval') as jest.Mock;
+const setIntervalSpy = jest.spyOn(global, 'setInterval') as unknown;
+const clearIntervalSpy = jest.spyOn(global, 'clearInterval') as unknown;
 
 // Mock WsJwtGuard to avoid JWT validation in tests
 jest.mock('../src/modules/auth/guards/ws-jwt.guard', () => ({
@@ -69,12 +69,12 @@ describe('ChatGateway', () => {
     mockPresenceService = {
       updateUserPresence: jest.fn(),
       getUserPresence: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<PresenceService>;
     
     // Mock the RTC gateway
     mockRtcGateway = {
       registerWsServer: jest.fn(),
-    } as any;
+    } as unknown as jest.Mocked<RtcGateway>;
     
     // Mock JWT and Config services
     const mockJwtService = {
@@ -185,7 +185,7 @@ describe('ChatGateway', () => {
     });
     
     // Call handleConnection
-    chatGateway.handleConnection(mockSocket as any);
+    chatGateway.handleConnection(mockSocket as unknown as Socket);
     
     // Verify presence was updated
     expect(mockPresenceService.updateUserPresence).toHaveBeenCalledWith('test-user-id');
@@ -214,7 +214,7 @@ describe('ChatGateway', () => {
     });
     
     // First connect the client
-    chatGateway.handleConnection(mockSocket as any);
+    chatGateway.handleConnection(mockSocket as unknown as Socket);
     
     // Verify the pong handler was set up
     expect(mockSocket.on).toHaveBeenCalledWith('pong', expect.any(Function));
@@ -247,7 +247,7 @@ describe('ChatGateway', () => {
     });
     
     // Connect the client
-    chatGateway.handleConnection(mockSocket as any);
+    chatGateway.handleConnection(mockSocket as unknown as Socket);
     
     // First check - increment missed pongs
     (chatGateway as any).checkStaleClients();
@@ -266,10 +266,10 @@ describe('ChatGateway', () => {
     mockSocket = createMockSocket();
     
     // Connect the client
-    chatGateway.handleConnection(mockSocket as any);
+    chatGateway.handleConnection(mockSocket as unknown as Socket);
     
     // Disconnect the client
-    chatGateway.handleDisconnect(mockSocket as any);
+    chatGateway.handleDisconnect(mockSocket as unknown as Socket);
     
     // Verify missed pongs counter was cleaned up
     expect((chatGateway as any).missedPongs.has(mockSocket.id)).toBe(false);
@@ -283,7 +283,7 @@ describe('ChatGateway', () => {
     });
     
     // Add socket to server's sockets map
-    mockServer.sockets.sockets.set('test-socket', mockSocket as any);
+    mockServer.sockets.sockets.set('test-socket', mockSocket as unknown as Socket);
     
     // Manually set up the missed pongs counter
     (chatGateway as any).missedPongs.set(mockSocket.id, 0);

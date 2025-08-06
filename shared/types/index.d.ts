@@ -82,7 +82,6 @@ export declare const FileTransferGatewayEventSchema: z.ZodDiscriminatedUnion<
           {
             uploadUrl: z.ZodString;
             fileKey: z.ZodString;
-            stunServers: z.ZodArray<z.ZodAny>;
           },
           z.core.$strip
         >;
@@ -118,21 +117,14 @@ export declare const FileTransferGatewayEventSchema: z.ZodDiscriminatedUnion<
     z.ZodObject<
       {
         event: z.ZodLiteral<"offer">;
-        data: z.ZodAny;
+        data: z.ZodUnknown;
       },
       z.core.$strip
     >,
     z.ZodObject<
       {
         event: z.ZodLiteral<"answer">;
-        data: z.ZodAny;
-      },
-      z.core.$strip
-    >,
-    z.ZodObject<
-      {
-        event: z.ZodLiteral<"ice-candidate">;
-        data: z.ZodAny;
+        data: z.ZodUnknown;
       },
       z.core.$strip
     >,

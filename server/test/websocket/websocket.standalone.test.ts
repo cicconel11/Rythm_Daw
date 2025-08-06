@@ -1,8 +1,7 @@
-import WebSocket, { Server as WebSocketServer } from 'ws';
 import { createServer, Server as HttpServer } from 'http';
 import { AddressInfo } from 'net';
-import { io, Socket } from 'socket.io-client';
-import { Server as SocketIOServer } from 'socket.io';
+import { io as clientIo, Socket as ClientSocket } from 'socket.io-client';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 
 jest.mock('uws', () => ({
   restoreAdapter: jest.fn(),
@@ -11,8 +10,7 @@ jest.mock('uws', () => ({
 // Simple WebSocket server test that doesn't depend on NestJS
 describe('Standalone WebSocket Server', () => {
   let httpServer: HttpServer;
-  let wsServer: WebSocketServer;
-  let socket: Socket;
+  let socket: ClientSocket;
   let port: number;
 
   beforeAll((done) => {
@@ -23,8 +21,6 @@ describe('Standalone WebSocket Server', () => {
       httpServer = createServer();
       
       // 2. Create WebSocket server
-      wsServer = new WebSocketServer({ server: httpServer });
-      
       // Add error handler to HTTP server
       httpServer.on('error', (error) => {
         console.error('HTTP server error:', error);
@@ -56,24 +52,24 @@ describe('Standalone WebSocket Server', () => {
       console.log('3. Setting up connection handlers...');
       
       // Simple connection handler with detailed logging (Socket.IO v4+ compatible)
-      ioServer.on('connection', (client: any) => {
-        const transport = client.conn?.transport || client.conn?._transport;
+      ioServer.on('connection', (client: Socket) => {
+        const transport = client.conn?.transport || (client.conn as any)?._transport;
         const transportName = transport?.name || 'unknown';
         
         console.log(`Client connected: ${client.id} (transport: ${transportName})`);
         
         // Log transport upgrade if available
-        if (client.conn?.on) {
-          client.conn.on('upgrade', () => {
-            const newTransport = client.conn?.transport || client.conn?._transport;
+        if ((client.conn as any)?.on) {
+          (client.conn as any).on('upgrade', () => {
+            const newTransport = (client.conn as any)?.transport || (client.conn as any)?._transport;
             const newTransportName = newTransport?.name || 'unknown';
             console.log(`Client ${client.id} upgraded to: ${newTransportName}`);
           });
         }
         
-        client.on('ping', (data: any) => {
+        client.on('ping', (data: { message: string; timestamp: number; testId: string }, callback: (response: { message: string; testId: string; serverTime: number; transport: string }) => void) => {
           console.log(`Received ping from ${client.id}:`, data);
-          const transport = client.conn?.transport || client.conn?._transport;
+          const transport = client.conn?.transport || (client.conn as any)?._transport;
           const transportName = transport?.name || 'unknown';
           
           client.emit('pong', { 
@@ -153,7 +149,7 @@ describe('Standalone WebSocket Server', () => {
       
       console.log('2. Creating socket.io client with options:', JSON.stringify(socketOptions, null, 2));
       
-      socket = io(socketUrl, socketOptions);
+      socket = clientIo(socketUrl, socketOptions);
       
       // Set test timeout
       const testTimeout = setTimeout(() => {
@@ -180,7 +176,7 @@ describe('Standalone WebSocket Server', () => {
       socket.on('connect', () => {
         console.log('✅ Connected to WebSocket server');
         console.log('   - Socket ID:', socket.id);
-        console.log('   - Transport:', socket.io.engine.transport.name);
+        console.log('   - Transport:', (socket.io.engine.transport as any).name);
         
         // Send a test message
         const testMessage = { 
@@ -193,7 +189,7 @@ describe('Standalone WebSocket Server', () => {
         socket.emit('ping', testMessage);
         
         // Listen for pong response
-        socket.on('pong', (response: any) => {
+        socket.on('pong', (response: { message: string; testId: string; serverTime: number; transport: string }) => {
           console.log('4. Received pong:', response);
           try {
             expect(response).toHaveProperty('message', 'ping');
@@ -216,14 +212,13 @@ describe('Standalone WebSocket Server', () => {
       });
       
       // Error handling
-      socket.on('connect_error', (error: any) => {
+      socket.on('connect_error', (error: Error) => {
         console.error('❌ Connection error:', error.message);
         console.error('Error details:', error);
         clearTimeout(testTimeout);
         done(error);
       });
-      
-      socket.on('error', (error: any) => {
+      socket.on('error', (error: Error) => {
         console.error('❌ Socket error:', error.message);
         console.error('Error details:', error);
         clearTimeout(testTimeout);

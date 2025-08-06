@@ -33,7 +33,6 @@ export type ServerToClientEvents = {
   [ServerEvents.PRESENCE_UPDATE]: (update: PresenceUpdate) => void;
   [ServerEvents.ERROR]: (error: WsErrorResponse) => void;
   [ServerEvents.PONG]: () => void;
-  [key: string]: (...args: unknown[]) => void; // Allow any other events
 };
 
 // Inter-server events

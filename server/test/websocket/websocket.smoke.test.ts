@@ -4,6 +4,7 @@ import { RtcGateway } from '../src/modules/rtc/rtc.gateway';
 import { createServer, Server as HttpServer } from 'http';
 import { AddressInfo } from 'net';
 import { io, Socket } from 'socket.io-client';
+import { Server as IOServer } from 'socket.io';
 
 // Simple mock for JWT service
 const mockJwtService = {
@@ -46,7 +47,7 @@ describe('WebSocket Smoke Test', () => {
     httpServer = createServer();
     
     // Create WebSocket server
-    const ioServer = require('socket.io')(httpServer, {
+    const ioServer = new IOServer(httpServer, {
       cors: {
         origin: '*',
         methods: ['GET', 'POST'],

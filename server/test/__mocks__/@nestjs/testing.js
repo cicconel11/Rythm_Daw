@@ -25,27 +25,27 @@ class TestingModuleBuilder {
     this.exports = [];
   }
 
-  overrideProvider(token) {
+  overrideProvider(token: unknown) {
     return this;
   }
 
-  overrideGuard() {
+  overrideGuard(token: unknown) {
     return this;
   }
 
-  overrideInterceptor() {
+  overrideInterceptor(token: unknown) {
     return this;
   }
 
-  overridePipe() {
+  overridePipe(token: unknown) {
     return this;
   }
 
-  overrideFilter() {
+  overrideFilter(token: unknown) {
     return this;
   }
 
-  overrideModule() {
+  overrideModule(token: unknown) {
     return this;
   }
 

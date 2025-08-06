@@ -78,7 +78,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
         clearTimeout(reconnectTimeoutRef.current);
       }
 
-      // Clean up any registered event handlers
+      // Clean up any registered event handlers (now using unknown)
       eventHandlersRef.current.forEach((cleanup) => cleanup());
       eventHandlersRef.current = [];
     };

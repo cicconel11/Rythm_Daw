@@ -1,7 +1,6 @@
 import { 
   WebSocketGateway, 
   WebSocketServer, 
-  OnGatewayInit, 
   OnGatewayConnection, 
   OnGatewayDisconnect, 
   SubscribeMessage, 
@@ -10,11 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { 
   Logger, 
-  UseFilters, 
   UseGuards, 
-  UseInterceptors, 
-  Inject, 
-  forwardRef, 
   OnModuleInit, 
   OnModuleDestroy 
 } from '@nestjs/common';
@@ -31,9 +26,6 @@ import { MessageQueue } from './message-queue';
 
 // Import types first to avoid circular dependencies
 import { 
-  ClientEvents, 
-  ServerEvents, 
-  InterServerEvents, 
   SocketData 
 } from './types/websocket.types';
 
@@ -47,9 +39,9 @@ interface CustomSocket extends Socket {
     query: {
       userId?: string;
       username?: string;
-      [key: string]: any;
+      [key: string]: unknown;
     };
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -92,7 +84,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
   private readonly rooms = new Map<string, Set<string>>();
 
   constructor(
-    @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
     private readonly presenceService: PresenceService,
@@ -331,12 +322,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
       }
 
       // Store user info on the socket
-      (client as any).user = user;
+      (client as unknown as { user: unknown }).user = user;
 
       // Join project room if projectId is provided
       if (data.projectId) {
         await client.join(`project:${data.projectId}`);
-        (client as any).projectId = data.projectId;
+        (client as unknown as { projectId: string }).projectId = data.projectId;
       }
 
       return { success: true, user: { id: user.id, username: user.username } };
@@ -403,7 +394,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect, On
     }
   }
 
-  private async broadcastToRoom(roomId: string, event: string, data: any, excludeClientId?: string): Promise<void> {
+  private async broadcastToRoom(roomId: string, event: string, data: unknown, excludeClientId?: string): Promise<void> {
     const room = this.rooms.get(roomId);
     if (!room) {
       this.logger.warn(`Attempted to broadcast to non-existent room: ${roomId}`);

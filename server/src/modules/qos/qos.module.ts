@@ -1,5 +1,5 @@
 import { Module, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { QosController } from './qos.controller';
 import { QosService } from './qos.service';

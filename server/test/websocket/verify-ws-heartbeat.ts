@@ -3,7 +3,7 @@ console.log('=== Testing WebSocket Heartbeat Functionality ===\n');
 
 // Mock dependencies
 class MockPresenceService {
-  calls: {[key: string]: any[]} = {
+  calls: {[key: string]: unknown[]} = {
     updateUserPresence: [],
     removeUserPresence: [],
     isOnline: []
@@ -35,7 +35,7 @@ class MockPresenceService {
 }
 
 class MockRtcGateway {
-  registerWsServer(server: any) {
+  registerWsServer(server: unknown) {
     console.log('[MockRtcGateway] registerWsServer');
   }
 }
@@ -48,8 +48,8 @@ const mockPresenceService = new MockPresenceService();
 const mockRtcGateway = new MockRtcGateway();
 
 const gateway = new ChatGateway(
-  mockPresenceService as any,
-  mockRtcGateway as any
+  mockPresenceService as unknown as any,
+  mockRtcGateway as unknown as any
 );
 
 // Track setInterval calls
@@ -66,17 +66,17 @@ function findInterval(ms: number) {
 }
 
 // Mock WebSocket server and socket
-const mockSocketHandlers: Record<string, Function> = {};
+const mockSocketHandlers: Record<string, (...args: unknown[]) => void> = {};
 const mockSocket = {
   id: 'test-socket-1',
   connected: true,
   calls: {
-    emit: [] as Array<{event: string; data: any}>,
-    on: [] as Array<{event: string; handler: Function}>,
-    once: [] as Array<{event: string; handler: Function}>,
-    join: [] as any[],
-    leave: [] as any[],
-    disconnect: [] as any[]
+    emit: [] as Array<{event: string; data: unknown}>,
+    on: [] as Array<{event: string; handler: (...args: unknown[]) => void}>,
+    once: [] as Array<{event: string; handler: (...args: unknown[]) => void}>,
+    join: [] as unknown[],
+    leave: [] as unknown[],
+    disconnect: [] as unknown[]
   },
   data: {
     user: {
@@ -85,7 +85,7 @@ const mockSocket = {
       name: 'Test User',
     },
   },
-  emit(event: string, data: any) {
+  emit(event: string, data: unknown) {
     console.log(`[Socket] Emitted '${event}':`, data);
     this.calls.emit.push({event, data});
     
@@ -95,34 +95,34 @@ const mockSocket = {
       setTimeout(() => mockSocketHandlers['pong'](data), 10);
     }
   },
-  join() {
+  join(..._args: unknown[]) {
     console.log('[Socket] join()');
     this.calls.join.push(arguments);
   },
-  leave() {
+  leave(..._args: unknown[]) {
     console.log('[Socket] leave()');
     this.calls.leave.push(arguments);
   },
-  disconnect() {
+  disconnect(..._args: unknown[]) {
     console.log('[Socket] disconnect()');
     this.connected = false;
     this.calls.disconnect.push(arguments);
   },
-  on(event: string, handler: Function) {
+  on(event: string, handler: (...args: unknown[]) => void) {
     console.log(`[Socket] Registered handler for '${event}'`);
     this.calls.on.push({event, handler});
     mockSocketHandlers[event] = handler;
   },
-  once(event: string, handler: Function) {
+  once(event: string, handler: (...args: unknown[]) => void) {
     console.log(`[Socket] Registered one-time handler for '${event}'`);
     this.calls.once.push({event, handler});
     mockSocketHandlers[`${event}Once`] = handler;
   },
   // Helper to get a registered handler
   getHandler(event: string) {
-    const onHandler = this.calls.on.find((call: {event: string, handler: Function}) => call.event === event)?.handler;
+    const onHandler = this.calls.on.find((call: {event: string, handler: (...args: unknown[]) => void}) => call.event === event)?.handler;
     if (onHandler) return onHandler;
-    return this.calls.once.find((call: {event: string, handler: Function}) => call.event === event)?.handler;
+    return this.calls.once.find((call: {event: string, handler: (...args: unknown[]) => void}) => call.event === event)?.handler;
   },
   reset() {
     this.calls = {
@@ -138,20 +138,20 @@ const mockSocket = {
 } as any;
 
 // Track server events
-const serverEvents: Array<{event: string; data: any}> = [];
+const serverEvents: Array<{event: string; data: unknown}> = [];
 const mockServer = {
   calls: {
-    emit: [] as Array<{event: string; data: any}>,
-    to: [] as Array<{room: string, data: any}>
+    emit: [] as Array<{event: string; data: unknown}>,
+    to: [] as Array<{room: string, data: unknown}>
   },
-  emit(event: string, data: any) {
+  emit(event: string, data: unknown) {
     console.log(`[Server] Emitted '${event}':`, data);
     serverEvents.push({event, data});
     this.calls.emit.push({event, data});
   },
   to(room: string) {
     return {
-      emit: (event: string, data: any) => {
+      emit: (event: string, data: unknown) => {
         console.log(`[Server] Emitted '${event}' to room '${room}':`, data);
         serverEvents.push({event, data});
         this.calls.to.push({room, data});
@@ -186,7 +186,7 @@ function assert(condition: boolean, message: string) {
   }
 }
 
-function assertEqual(actual: any, expected: any, message: string) {
+function assertEqual(actual: unknown, expected: unknown, message: string) {
   const actualStr = JSON.stringify(actual);
   const expectedStr = JSON.stringify(expected);
   const condition = actualStr === expectedStr;
@@ -198,8 +198,8 @@ function assertEqual(actual: any, expected: any, message: string) {
   }
 }
 
-function assertCalled(method: any, message: string) {
-  const called = Array.isArray(method) ? method.length > 0 : method.calls.length > 0;
+function assertCalled(method: unknown, message: string) {
+  const called = Array.isArray(method) ? method.length > 0 : (method as any).calls.length > 0;
   if (!called) {
     console.error(`❌ Assertion failed: ${message} was not called`);
     process.exit(1);
@@ -250,7 +250,7 @@ async function testHeartbeat() {
   assert(mockSocket.calls.emit.length > 0, 'Ping was sent');
   const pingCall = mockSocket.calls.emit[0];
   assert(pingCall.event === 'ping', 'Ping event was emitted');
-  assert(pingCall.data && typeof pingCall.data.timestamp === 'number', 'Ping contains timestamp');
+  assert(pingCall.data && typeof (pingCall.data as {timestamp: number}).timestamp === 'number', 'Ping contains timestamp');
   
   // Wait for pong response (simulated with setTimeout)
   console.log('Waiting for pong response...');

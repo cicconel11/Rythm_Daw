@@ -10,16 +10,6 @@ function createWebSocket(url: string): WebSocket {
   return new WebSocketModule.WebSocket(url);
 }
 
-// Helper function to create a WebSocket client
-function createWebSocketClient(url: string): Promise<WebSocket> {
-  return new Promise((resolve, reject) => {
-    const ws = new WebSocketModule.WebSocket(url);
-    
-    ws.on('open', () => resolve(ws));
-    ws.on('error', reject);
-  });
-}
-
 describe('WebSocket Server', () => {
   let server: HttpServer;
   let wss: WebSocketModule.Server;

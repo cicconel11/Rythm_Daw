@@ -181,7 +181,10 @@ export class RtcService {
     this.socket.emit(event, data);
   }
 
-  public on<T = unknown>(event: string, callback: EventCallback<T>): () => void {
+  public on<T = unknown>(
+    event: string,
+    callback: EventCallback<T>,
+  ): () => void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
     }
@@ -234,7 +237,9 @@ export class RtcService {
         { roomId },
         (response: unknown) => {
           if ((response as unknown as { error?: string })?.error) {
-            reject(new Error((response as unknown as { error?: string }).error));
+            reject(
+              new Error((response as unknown as { error?: string }).error),
+            );
           } else {
             resolve(response as { success: boolean; roomId: string });
           }
@@ -256,7 +261,9 @@ export class RtcService {
         { roomId },
         (response: unknown) => {
           if ((response as unknown as { error?: string })?.error) {
-            reject(new Error((response as unknown as { error?: string }).error));
+            reject(
+              new Error((response as unknown as { error?: string }).error),
+            );
           } else {
             resolve(response as { success: boolean; roomId: string });
           }

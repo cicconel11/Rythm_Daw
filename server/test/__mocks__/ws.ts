@@ -32,11 +32,11 @@ class MockWebSocket extends EventEmitter {
     });
   }
 
-  send(data: any) {
+  send(data: unknown) {
     this.emit('send', data);
     
     // Simulate server response for echo functionality
-    if (typeof data === 'string' && data.includes('Hello')) {
+    if (typeof data === 'string' && (data as string).includes('Hello')) {
       process.nextTick(() => {
         const response = `Echo: ${data}`;
         if (this.onmessage) this.onmessage({ data: response, type: 'message' });
@@ -72,7 +72,7 @@ class MockWebSocket extends EventEmitter {
   }
 
   // Test helpers
-  _simulateMessage(data: any) {
+  _simulateMessage(data: unknown) {
     if (this.onmessage) this.onmessage({ data, type: 'message' });
     this.emit('message', { data });
   }
@@ -85,10 +85,10 @@ class MockWebSocket extends EventEmitter {
 
 // Mock WebSocket Server class
 class MockWebSocketServer extends EventEmitter {
-  options: any;
+  options: unknown;
   clients = new Set<MockWebSocket>();
   
-  constructor(options: any) {
+  constructor(options: unknown) {
     super();
     this.options = options;
   }

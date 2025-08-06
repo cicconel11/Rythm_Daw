@@ -1,4 +1,4 @@
-import { Module, OnModuleInit, OnModuleDestroy, Logger, Global } from '@nestjs/common';
+import { Module, OnModuleInit, OnModuleDestroy, Global } from '@nestjs/common';
 import { ChatGateway } from './chat.gateway';
 import { WsThrottlerGuard } from '../../common/guards/ws-throttler.guard';
 import { APP_GUARD } from '@nestjs/core';
@@ -37,7 +37,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
     // In-memory storage for WebSocket connections
     {
       provide: 'WS_CONNECTIONS',
-      useValue: new Map<string, any>(),
+      useValue: new Map<string, unknown>(),
     },
     {
       provide: APP_GUARD,

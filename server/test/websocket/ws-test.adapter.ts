@@ -2,7 +2,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Server, ServerOptions, Socket } from 'socket.io';
 
 export class WsTestAdapter extends IoAdapter {
-  createIOServer(port: number, options?: ServerOptions): any {
+  createIOServer(port: number, options?: ServerOptions): unknown {
     const server: Server = super.createIOServer(port, {
       ...options,
       cors: {
@@ -17,7 +17,7 @@ export class WsTestAdapter extends IoAdapter {
       console.log('Test WebSocket client connected');
       
       // Example: Echo back any message
-      socket.on('echo', (data, callback) => {
+      socket.on('echo', (data: unknown, callback: (arg: unknown) => void) => {
         if (typeof callback === 'function') {
           callback({ ...data, timestamp: Date.now() });
         }

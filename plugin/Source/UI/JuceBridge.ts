@@ -12,7 +12,7 @@ interface JuceBridgeMessage {
   data: any;
 }
 
-type EventHandler = (data: any) => void;
+type EventHandler = (data: unknown) => void;
 
 class JuceBridgeClass {
   private eventHandlers: Map<string, EventHandler[]> = new Map();

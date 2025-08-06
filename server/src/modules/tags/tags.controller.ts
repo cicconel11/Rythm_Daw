@@ -5,23 +5,6 @@ import { GetUser } from '../../common/decorators/get-user.decorator';
 import type { JwtPayload } from '../../auth/interfaces/jwt-payload.interface';
 import { TagsService } from './tags.service';
 import { UpdateTagsDto } from './dto/update-tags.dto';
-// Local interface for Tag based on Prisma schema
-interface Tag {
-  id: string;
-  name: string;
-  description: string | null;
-  color: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  entityTags: Array<{
-    id: string;
-    entityType: string;
-    entityId: string;
-    tagId: string;
-    snapshotId: string | null;
-    createdAt: Date;
-  }>;
-}
 
 @ApiTags('tags')
 @Controller('api/tags')

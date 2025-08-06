@@ -11,6 +11,6 @@ declare module "framer-motion" {
     initial?: boolean;
     onExitComplete?: () => void;
     exitBeforeEnter?: boolean;
-    custom?: any;
+    custom?: unknown;
   }>;
 }

@@ -8,6 +8,7 @@
   ],
   "dependencies": {
     "@headlessui/react": "^2.2.4",
+    "@prisma/client": "5.22.0",
     "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
     "aws-cdk": "^2.1021.0",
@@ -30,6 +31,8 @@
     "build": "tsc -b",
     "dev": "pnpm --parallel --workspace-concurrency=2 --filter=website dev & pnpm --filter=server start:dev",
     "test": "pnpm --filter=server test",
+    "test:e2e": "pnpm --filter=website exec playwright test --reporter=list",
+    "ci:e2e": "pnpm --filter=web exec playwright test --reporter=list",
     "db:migrate": "prisma migrate dev"
   },
   "devDependencies": {
@@ -42,6 +45,7 @@
     "@babel/preset-typescript": "^7.27.1",
     "@nestjs/cli": "^11.0.7",
     "@pact-foundation/pact": "^12.1.1",
+    "@playwright/test": "^1.54.2",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.3.1",
@@ -72,6 +76,7 @@
     "jest-environment-jsdom": "^29.6.4",
     "jest-environment-jsdom-global": "^4.0.0",
     "jest-websocket-mock": "^2.5.0",
+    "jscodeshift": "^17.3.0",
     "lighthouse": "^11.3.0",
     "lighthouse-ci": "^1.13.1",
     "node-gyp-build": "^4.8.4",

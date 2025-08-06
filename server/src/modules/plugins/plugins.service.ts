@@ -11,6 +11,7 @@ export class PluginsService {
 
   async getLatest(platform = 'mac'): Promise<{ url: string; filename: string }> {
     // TODO: pull from Prisma; hard-code for now
+    const _platform = process.platform;
     const Key = 'installers/Rythm-0.9.3.dmg';
     const Bucket = this.config.get('PLUGIN_BUCKET');
     const url = await getSignedUrl(

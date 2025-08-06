@@ -21,15 +21,15 @@ const mockJwtService = {
 
 // Mock Config service
 const mockConfigService = {
-  get: jest.fn(<T = any>(key: string): T | null => {
-    const config: Record<string, any> = {
+  get: jest.fn(<T = unknown>(key: string): T | null => {
+    const config: Record<string, unknown> = {
       'JWT_SECRET': 'test-secret',
       'JWT_EXPIRES_IN': '1h',
       'REFRESH_TOKEN_SECRET': 'test-refresh-secret',
       'REFRESH_TOKEN_EXPIRES_IN': '7d',
       'NODE_ENV': 'test',
     };
-    return config[key] ?? null;
+    return (config[key] as T) ?? null;
   }),
 };
 
@@ -54,7 +54,7 @@ interface MockSocket {
       token?: string;
     };
   };
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   join: jest.Mock;
   leave: jest.Mock;
   emit: jest.Mock;
@@ -70,9 +70,9 @@ export async function createTestingModule({
   imports = [],
   controllers = [],
 }: {
-  providers?: unknown[];
-  imports?: unknown[];
-  controllers?: unknown[];
+  providers?: any[];
+  imports?: any[];
+  controllers?: any[];
 } = {}) {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [

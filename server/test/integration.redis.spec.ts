@@ -6,6 +6,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import { createClient } from 'redis';
 import { AppModule } from '../src/app.module';
 import { TestIoAdapter } from './utils/test-io-adapter';
+import { io as socketIoClient } from 'socket.io-client';
 
 describe('Redis Adapter Broadcast (integration)', () => {
   let appA: INestApplication, appB: INestApplication;
@@ -52,8 +53,8 @@ describe('Redis Adapter Broadcast (integration)', () => {
   it('should broadcast messages between instances', done => {
     const portA = (httpA.address() as any).port;
     const portB = (httpB.address() as any).port;
-    const { io: clientA } = require('socket.io-client')(`http://localhost:${portA}`);
-    const { io: clientB } = require('socket.io-client')(`http://localhost:${portB}`);
+    const { io: clientA } = socketIoClient(`http://localhost:${portA}`);
+    const { io: clientB } = socketIoClient(`http://localhost:${portB}`);
     clientB.on('test-broadcast', (msg) => {
       expect(msg).toBe('hello-redis');
       clientA.close();

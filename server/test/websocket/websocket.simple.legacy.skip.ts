@@ -5,6 +5,7 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Server, Socket } from 'socket.io';
 import { createServer } from 'http';
 import { AddressInfo } from 'net';
+import { io as socketIoClient } from 'socket.io-client';
 
 // Simple Test Gateway
 @WebSocketGateway()
@@ -68,7 +69,7 @@ describe('WebSocket (Simple)', () => {
   });
 
   it('should connect to the WebSocket server', (done) => {
-    const client = require('socket.io-client')(`http://localhost:${port}`);
+    const client = socketIoClient(`http://localhost:${port}`);
     
     client.on('connect', () => {
       expect(client.connected).toBe(true);
@@ -83,7 +84,7 @@ describe('WebSocket (Simple)', () => {
   });
 
   it('should handle disconnection', (done) => {
-    const client = require('socket.io-client')(`http://localhost:${port}`);
+    const client = socketIoClient(`http://localhost:${port}`);
     
     client.on('connect', () => {
       client.on('disconnect', () => {

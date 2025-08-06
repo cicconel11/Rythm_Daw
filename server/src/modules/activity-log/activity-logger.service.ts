@@ -1,5 +1,4 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server } from 'socket.io';
@@ -12,7 +11,7 @@ type RawActivityLog = {
   action: string;
   entityType: string;
   entityId: string;
-  metadata: any; // Using any to avoid Prisma type issues
+  metadata: Record<string, unknown>; // Use Record<string, unknown>
   ipAddress: string | null;
   userAgent: string | null;
   userId: string;
@@ -26,7 +25,7 @@ type ActivityWithUser = {
   action: string;
   entityType: string;
   entityId: string;
-  metadata: any; // Using any to avoid Prisma type issues
+  metadata: Record<string, unknown>; // Use Record<string, unknown>
   ipAddress: string | null;
   userAgent: string | null;
   createdAt: Date;
@@ -76,11 +75,11 @@ export class ActivityLoggerService implements OnModuleInit {
     try {
       // Create activity data
       // Build activity data with optional fields
-      const activityData: unknown = {
+      const activityData: Record<string, unknown> = {
         action,
         entityId,
         entityType,
-        metadata: metadata as unknown, // Using unknown to avoid Prisma type issues
+        metadata: metadata as Record<string, unknown>,
         ...(ipAddress && { ipAddress }),
         ...(userAgent && { userAgent }),
         // userId is optional, only include if provided

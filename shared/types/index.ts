@@ -60,7 +60,6 @@ export const FileTransferGatewayEventSchema = z.discriminatedUnion("event", [
     data: z.object({
       uploadUrl: z.string(),
       fileKey: z.string(),
-      stunServers: z.array(z.any()),
     }),
   }),
   z.object({
@@ -75,9 +74,8 @@ export const FileTransferGatewayEventSchema = z.discriminatedUnion("event", [
     event: z.literal("transfer-error"),
     data: z.object({ message: z.string() }),
   }),
-  z.object({ event: z.literal("offer"), data: z.any() }),
-  z.object({ event: z.literal("answer"), data: z.any() }),
-  z.object({ event: z.literal("ice-candidate"), data: z.any() }),
+  z.object({ event: z.literal("offer"), data: z.unknown() }),
+  z.object({ event: z.literal("answer"), data: z.unknown() }),
 ]);
 export type FileTransferGatewayEvent = z.infer<
   typeof FileTransferGatewayEventSchema

@@ -265,7 +265,7 @@ describe('ChatGateway Heartbeat (Unit)', () => {
     setIntervalSpy.mockClear();
     
     // Call onModuleInit to set up the ping interval
-    (gateway as any).onModuleInit();
+    (gateway as unknown as { onModuleInit: () => void }).onModuleInit();
     
     // Verify the WebSocket server was registered with RTC gateway
     expect(mockRtcGateway.registerWsServer).toHaveBeenCalledWith(expect.anything());
@@ -274,7 +274,7 @@ describe('ChatGateway Heartbeat (Unit)', () => {
     expect(setIntervalSpy).toHaveBeenCalledWith(expect.any(Function), 30000);
     
     // The interval should be stored in the instance
-    expect((gateway as any).pingInterval).toBeDefined();
+    expect((gateway as unknown as { pingInterval: unknown }).pingInterval).toBeDefined();
     
     // Clean up intervals
     jest.clearAllTimers();
@@ -282,7 +282,7 @@ describe('ChatGateway Heartbeat (Unit)', () => {
 
   it('should send ping and handle pong', async () => {
     // Setup
-    (gateway as any).onModuleInit();
+    (gateway as unknown as { onModuleInit: () => void }).onModuleInit();
     
     // Simulate connection
     gateway.handleConnection(mockSocket);
@@ -319,7 +319,7 @@ describe('ChatGateway Heartbeat (Unit)', () => {
     pongHandler({ timestamp: (pingData as { timestamp: number }).timestamp });
     
     // Should have reset missed pongs counter
-    const missedPongs = (gateway as any).missedPongs as Map<string, number>;
+    const missedPongs = (gateway as unknown as { missedPongs: Map<string, number> }).missedPongs as Map<string, number>;
     expect(missedPongs.get('test-socket-1')).toBe(0);
     
     // Verify presence was updated
@@ -332,13 +332,13 @@ describe('ChatGateway Heartbeat (Unit)', () => {
 
   it('should clean up on disconnection', () => {
     // Setup
-    (gateway as any).onModuleInit();
+    (gateway as unknown as { onModuleInit: () => void }).onModuleInit();
     
     // Simulate connection
     gateway.handleConnection(mockSocket);
     
     // Get the missedPongs map
-    const missedPongs = (gateway as any).missedPongs as Map<string, number>;
+    const missedPongs = (gateway as unknown as { missedPongs: Map<string, number> }).missedPongs as Map<string, number>;
     
     // Add test data
     missedPongs.set('test-socket-1', 1);
@@ -358,13 +358,13 @@ describe('ChatGateway Heartbeat (Unit)', () => {
 
   it('should handle missed pongs and disconnect', () => {
     // Setup
-    (gateway as any).onModuleInit();
+    (gateway as unknown as { onModuleInit: () => void }).onModuleInit();
     
     // Simulate connection
     gateway.handleConnection(mockSocket);
     
     // Get the missedPongs map and set a high missed pong count
-    const missedPongs = (gateway as any).missedPongs as Map<string, number>;
+    const missedPongs = (gateway as unknown as { missedPongs: Map<string, number> }).missedPongs as Map<string, number>;
     const MAX_MISSED_PONGS = 2;
     missedPongs.set('test-socket-1', MAX_MISSED_PONGS + 1);
     

@@ -28,7 +28,7 @@ export function createSocketClient(port: number, options: unknown = {}): Socket 
   });
 }
 
-export async function waitForEvent(socket: Socket, event: string, timeout = 1000): Promise<any> {
+export async function waitForEvent(socket: Socket, event: string, timeout = 1000): Promise<unknown> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new Error(`Timeout waiting for event: ${event}`));

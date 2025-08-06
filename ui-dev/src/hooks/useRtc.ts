@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef } from "react";
 import { rtcService, EventCallback } from "../services/rtc.service";
-import { ServerEvents, ClientEvents } from "../types/websocket.types";
+import { ServerEvents } from "../types/websocket.types";
 
 type EventMap = {
   [K in keyof typeof ServerEvents]: Parameters<EventCallback>[0];

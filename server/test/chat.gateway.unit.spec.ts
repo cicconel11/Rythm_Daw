@@ -22,8 +22,8 @@ describe('ChatGateway (Unit)', () => {
     };
     gateway = new ChatGateway(presenceServiceMock, mockRtcGateway);
     Object.defineProperty(gateway, 'server', { get: () => mockServer });
-    (gateway as any).userSockets  = new Map();
-    (gateway as any).socketToUser = new Map();
+    (gateway as unknown as { userSockets: Map<unknown, unknown> }).userSockets  = new Map();
+    (gateway as unknown as { socketToUser: Map<unknown, unknown> }).socketToUser = new Map();
     presenceServiceMock.updateUserPresence = jest.fn();
   });
 
@@ -54,7 +54,7 @@ describe('ChatGateway (Unit)', () => {
         connected: true,
       };
 
-      await gateway.handleConnection(mockSocket as unknown as any);
+      await gateway.handleConnection(mockSocket as unknown);
       
       expect(presenceServiceMock.updateUserPresence).toHaveBeenCalledWith('test-user');
       expect(mockServer.emit).toHaveBeenCalledWith('userOnline', { userId: 'test-user' });
@@ -79,7 +79,7 @@ describe('ChatGateway (Unit)', () => {
         connected: false,
       };
 
-      await gateway.handleDisconnect(mockSocket as unknown as any);
+      await gateway.handleDisconnect(mockSocket as unknown);
       expect(mockServer.emit).toHaveBeenCalledWith('userOffline', { userId: 'test-user' });
     });
   });
@@ -108,7 +108,7 @@ describe('ChatGateway (Unit)', () => {
         content: 'Hello, world!',
       };
 
-      const result = await gateway.handleMessage(mockSocket as unknown as any, messageData);
+      const result = await gateway.handleMessage(mockSocket as unknown, messageData);
       
       expect(result).toBeUndefined();
       

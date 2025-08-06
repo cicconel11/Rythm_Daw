@@ -11,7 +11,7 @@ type ToasterToast = ToastProps & {
   variant?: ToastVariant;
 };
 
-const actionTypes = {
+const _actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const;
@@ -23,7 +23,7 @@ function genId() {
   return count.toString();
 }
 
-type ActionType = typeof actionTypes;
+type ActionType = typeof _actionTypes;
 
 type Action =
   | {

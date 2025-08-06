@@ -36,8 +36,12 @@ function App() {
           {/* Public routes without layout */}
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/pending-approval" element={<PendingApproval />} />
+          {process.env.NEXT_PUBLIC_ENABLE_ADMIN && (
+            <Route path="/signin" element={<SignIn />} />
+          )}
+          {process.env.NEXT_PUBLIC_ENABLE_ADMIN && (
+            <Route path="/pending-approval" element={<PendingApproval />} />
+          )}
 
           {/* Main app routes with layout */}
           <Route
@@ -54,7 +58,9 @@ function App() {
             <Route path="friends" element={<FriendsPage />} />
             <Route path="chat" element={<ChatPage />} />
             <Route path="settings" element={<AccountSettings />} />
-            <Route path="admin" element={<Admin />} />
+            {process.env.NEXT_PUBLIC_ENABLE_ADMIN && (
+              <Route path="admin" element={<Admin />} />
+            )}
           </Route>
 
           {/* Catch-all route */}

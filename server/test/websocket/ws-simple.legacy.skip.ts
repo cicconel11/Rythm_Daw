@@ -1,8 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { IoAdapter } from '@nestjs/platform-socket.io';
 import { Server } from 'socket.io';
-import { io as clientIo, Socket } from 'socket.io-client';
+import { io as clientIo } from 'socket.io-client';
 import { AppModule } from '../src/app.module';
 
 async function createTestApp() {
@@ -41,15 +40,13 @@ async function createTestApp() {
 
 describe('WebSocket (Simple Test)', () => {
   let app: INestApplication;
-  let httpServer: any;
-  let io: Server;
+  let httpServer: unknown;
   let port: number;
   
   beforeAll(async () => {
     const testApp = await createTestApp();
     app = testApp.app;
     httpServer = testApp.httpServer;
-    io = testApp.io;
     port = httpServer.address().port;
   });
   
@@ -67,7 +64,7 @@ describe('WebSocket (Simple Test)', () => {
       expect(socket.connected).toBe(true);
       
       const testMessage = { test: 'data' };
-      socket.emit('echo', testMessage, (response: any) => {
+      socket.emit('echo', testMessage, (response: unknown) => {
         try {
           expect(response).toHaveProperty('test', 'data');
           expect(response).toHaveProperty('timestamp');
@@ -93,7 +90,7 @@ describe('WebSocket (Simple Test)', () => {
     socket.on('connect', () => {
       expect(socket.connected).toBe(true);
       
-      socket.on('disconnect', (reason) => {
+      socket.on('disconnect', () => {
         expect(socket.connected).toBe(false);
         done();
       });

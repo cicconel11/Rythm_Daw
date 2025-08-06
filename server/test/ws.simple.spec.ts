@@ -26,7 +26,6 @@ describe('WebSocket Server', () => {
   let httpServer: HttpServer;
   let wss: WebSocketServer;
   const TEST_PORT = 3001;
-  let mockWebSocket: jest.Mocked<WebSocket>;
 
   beforeAll((done) => {
     // Create HTTP server
@@ -90,11 +89,7 @@ describe('WebSocket Server', () => {
     });
 
     // Simulate a connection
-    const mockRequest = {} as any;
-    const mockSocket = {} as any;
-    const mockHead = {} as any;
-    
-    // Trigger the connection event
+    const mockRequest = {} as Record<string, unknown>;
     wss.emit('connection', mockClient, mockRequest);
   });
 
