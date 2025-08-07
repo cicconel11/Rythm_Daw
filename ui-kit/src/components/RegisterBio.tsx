@@ -1,19 +1,18 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Button } from "./ui/button";
-import { Textarea } from "./ui/textarea";
-import { Label } from "./ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Progress } from "./ui/progress";
+import { Button } from "./ui/button.js";
+import { Textarea } from "./ui/textarea.js";
+import { Label } from "./ui/label.js";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.js";
+import { Progress } from "./ui/progress.js";
 
 interface RegisterBioProps {
   onSuccess: () => void;
+  onNavigate?: (path: string) => void;
 }
 
-export function RegisterBio({ onSuccess }: RegisterBioProps) {
-  const navigate = useNavigate();
+export function RegisterBio({ onSuccess, onNavigate }: RegisterBioProps) {
   const [bio, setBio] = useState("");
   const maxLength = 140;
 
@@ -33,9 +32,12 @@ export function RegisterBio({ onSuccess }: RegisterBioProps) {
       }
       return response.json();
     },
-    onSuccess: () => {
-      onSuccess();
-      navigate("/onboard/scan");
+    onSuccess: (_data) => {
+      if (onNavigate) {
+        onNavigate("/dashboard");
+      } else {
+        onSuccess();
+      }
     },
     onError: (error) => {
       toast.error(error.message || "Failed to save bio");

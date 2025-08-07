@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Badge } from "./ui/badge";
-import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "./ui/button.js";
+import { Input } from "./ui/input.js";
+import { Badge } from "./ui/badge.js";
+import { ScrollArea } from "./ui/scroll-area.js";
 import { Send, Search, Music, Info } from "lucide-react";
 
 interface ChatPanelProps {
@@ -77,7 +76,7 @@ const friendPlugins = [
 
 const currentUserPlugins = ["serum", "fabfilter"]; // Mock user's plugins
 
-export function ChatPanel({ onNavigate }: ChatPanelProps) {
+export function ChatPanel({ onNavigate: _onNavigate }: ChatPanelProps) {
   const [selectedFriend, setSelectedFriend] = useState(friends[0]);
   const [message, setMessage] = useState("");
   const [activeTab, setActiveTab] = useState<"plugins" | "details">("plugins");

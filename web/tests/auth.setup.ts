@@ -21,7 +21,7 @@ export async function setupAuth() {
 
   // Save storage state
   await fs.mkdir('tests', { recursive: true });
-  await fs.writeFile('tests/state.json', await page.context().storageState());
+  await fs.writeFile('tests/state.json', JSON.stringify(await page.context().storageState()));
 
   await browser.close();
 }

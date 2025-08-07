@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button.js";
+import { Input } from "./ui/input.js";
+import { Label } from "./ui/label.js";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.js";
 
 interface LoginPageProps {
   onLogin: (data: { email: string; password: string }) => void;

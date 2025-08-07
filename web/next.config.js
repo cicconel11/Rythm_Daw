@@ -17,8 +17,7 @@ const nextConfig = {
   // Disable React's StrictMode for now to avoid double-rendering in development
   reactStrictMode: false,
 
-  // Enable static exports for the test environment
-  output: process.env.NODE_ENV === 'test' ? 'export' : undefined,
+  // output: process.env.NODE_ENV === 'test' ? 'export' : undefined, // DISABLED: breaks API routes for NextAuth/E2E
 
   // Disable SSR for testing to avoid React hook errors
   ...(process.env.NODE_ENV === 'test' && {

@@ -1,56 +1,37 @@
 import React, { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { useRouter } from "next/navigation.js";
+
+import { Button } from "./ui/button.js";
+import { Input } from "./ui/input.js";
+import { Label } from "./ui/label.js";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.js";
 
 interface RegisterCredentialsProps {
-  onSuccess: () => void;
+  onContinue: () => void; // navigate only – no payload needed now
 }
 
-export function RegisterCredentials({ onSuccess }: RegisterCredentialsProps) {
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-
-  const { mutate: signup, isPending } = useMutation({
-    mutationFn: async (data: {
-      email: string;
-      password: string;
-      displayName: string;
-    }) => {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Signup failed");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      onSuccess();
-      navigate("/onboard/bio");
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to create account");
-    },
+export function RegisterCredentials({ onContinue }: RegisterCredentialsProps) {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    displayName: "",
   });
+  const [isPending, setIsPending] = useState(false);
 
   const isValid =
-    email.includes("@") && password.length >= 8 && displayName.length >= 2;
+    formData.email.includes("@") &&
+    formData.password.length >= 8 &&
+    formData.displayName.length >= 2;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    if (isValid) {
-      signup({ email, password, displayName });
-    }
+    if (!isValid) return;
+
+    setIsPending(true);
+    sessionStorage.setItem("rtm_reg_creds", JSON.stringify(formData));
+    onContinue();
+    router.push("/register/bio");
   };
 
   return (
@@ -76,8 +57,10 @@ export function RegisterCredentials({ onSuccess }: RegisterCredentialsProps) {
               <Input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="bg-[#0D1126] border-gray-600 text-white"
                 placeholder="your@email.com"
                 required
@@ -90,11 +73,14 @@ export function RegisterCredentials({ onSuccess }: RegisterCredentialsProps) {
               <Input
                 id="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 className="bg-[#0D1126] border-gray-600 text-white"
                 placeholder="8+ characters"
                 required
+                minLength={8}
               />
             </div>
             <div>
@@ -104,19 +90,22 @@ export function RegisterCredentials({ onSuccess }: RegisterCredentialsProps) {
               <Input
                 id="displayName"
                 type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                value={formData.displayName}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setFormData({ ...formData, displayName: e.target.value })
+                }
                 className="bg-[#0D1126] border-gray-600 text-white"
                 placeholder="Your producer name"
                 required
+                minLength={2}
               />
             </div>
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#7E4FFF] to-[#6B3FE6] text-white hover:opacity-90 transition-opacity"
               disabled={!isValid || isPending}
+              className="w-full bg-[#7E4FFF] hover:bg-[#6B3FE6] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold"
             >
-              {isPending ? "Creating account..." : "Continue"}
+              {isPending ? "Saving…" : "Continue"}
             </Button>
           </form>
         </CardContent>

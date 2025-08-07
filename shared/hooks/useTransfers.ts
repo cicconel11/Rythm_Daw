@@ -1,7 +1,7 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, QueryKey } from "@tanstack/react-query";
 import { FileTransferSchema } from "../types";
 import { DownloadUrlSchema } from "../types";
-import api from "../lib/api";
+import { api } from "../lib/api";
 import { useEffect } from "react";
 
 export const useTransfers = () => {
@@ -9,8 +9,8 @@ export const useTransfers = () => {
   const query = useQuery({
     queryKey: ["transfers"],
     queryFn: async () => {
-      const data = await api.get("/files/transfers");
-      return data.map((item: unknown) => FileTransferSchema.parse(item));
+      const { data } = await api.get<unknown[]>("/files/transfers");
+      return data.map((item) => FileTransferSchema.parse(item));
     },
   });
 
@@ -20,7 +20,7 @@ export const useTransfers = () => {
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.event === "transfer_status") {
-        queryClient.invalidateQueries(["transfers"]);
+        queryClient.invalidateQueries({ queryKey: ["transfers"] as QueryKey });
       }
     };
     return () => ws.close();

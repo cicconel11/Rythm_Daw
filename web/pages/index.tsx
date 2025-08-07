@@ -1,7 +1,7 @@
-import { Dashboard } from '@ui-kit/components/Dashboard';
+import { Dashboard } from '@rythm/ui-kit';
 import { useDashboard } from '@shared/hooks/useDashboard';
 import { withAuth } from '@shared/hooks/withAuth';
-import { Skeleton } from '@ui-kit/components/ui/skeleton';
+import { Skeleton } from '@rythm/ui-kit';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -24,7 +24,13 @@ function DashboardPage() {
     <>
       <Toaster />
       <ErrorBoundary>
-        <Dashboard {...hook} />
+        <Dashboard
+          stats={hook.stats}
+          onNavigate={(path: string) => {
+            // Handle navigation if needed
+            console.log('Navigating to:', path);
+          }}
+        />
       </ErrorBoundary>
     </>
   );

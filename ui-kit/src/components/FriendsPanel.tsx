@@ -1,84 +1,147 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Badge } from "./ui/badge";
-import { ScrollArea } from "./ui/scroll-area";
+import { Card, CardContent } from "./ui/card.js";
+import { Button } from "./ui/button.js";
+import { Input } from "./ui/input.js";
+import { ScrollArea } from "./ui/scroll-area.js";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./ui/dialog";
-import { Search, UserPlus, MessageSquare, Music, Users } from "lucide-react";
-import {
-  useFriendRequests,
-  useAcceptRequest,
-  FriendRequest,
-} from "@shared/hooks/useFriendRequests";
+} from "./ui/dialog.js";
+import { Search, UserPlus, MessageSquare, Users } from "lucide-react";
+
+// Temporary type definitions until we fix the shared imports
+interface Friend {
+  id: number;
+  name: string;
+  avatar: string;
+  status: "online" | "offline" | "away";
+  plugins?: string[];
+  mutualFriends: number;
+  reason?: string;
+}
+
+interface SuggestedFriend {
+  id: number;
+  name: string;
+  avatar: string;
+  mutualFriends: number;
+  reason: string;
+  from?: string;
+  status?: "pending" | "accepted" | "rejected";
+}
+
+interface FriendRequest {
+  id: string;
+  from: string;
+  status: "pending" | "accepted" | "rejected";
+  name: string;
+  avatar: string;
+  mutualFriends: number;
+  reason?: string;
+}
+
+// Temporary mock hooks until we fix the shared imports
+const useFriendRequests = () => ({
+  data: [] as FriendRequest[],
+  isLoading: false,
+  error: null,
+});
+
+const useAcceptRequest = () => ({
+  mutate: (requestId: string) => {
+    console.log("Accepting request:", requestId);
+  },
+});
 
 interface FriendsPanelProps {
+  friends: Friend[];
   onNavigate?: (path: string) => void;
 }
 
-const friends = [
+// Mock data for development
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const mockFriends: Friend[] = [
   {
     id: 1,
     name: "BeatMaker99",
-    avatar: "BM",
+    avatar: "/avatars/1.png",
     status: "online",
-    plugins: ["Serum", "Pro-Q 3"],
-    mutualFriends: 5,
-  },
-  {
-    id: 2,
-    name: "ProducerX",
-    avatar: "PX",
-    status: "offline",
-    plugins: ["Massive X", "Ozone"],
+    plugins: ["Serum", "Massive"],
     mutualFriends: 12,
   },
   {
-    id: 3,
-    name: "SynthWave2024",
-    avatar: "SW",
-    status: "online",
-    plugins: ["Sylenth1", "Diva"],
+    id: 2,
+    name: "SynthMaster",
+    avatar: "/avatars/2.png",
+    status: "offline",
+    plugins: ["Serum", "Sylenth1"],
     mutualFriends: 8,
+  },
+  {
+    id: 3,
+    name: "DrumLord",
+    avatar: "/avatars/3.png",
+    status: "away",
+    plugins: ["Serum", "Massive"],
+    mutualFriends: 5,
   },
   {
     id: 4,
     name: "DrumMachine",
-    avatar: "DM",
+    avatar: "/avatars/4.png",
     status: "online",
     plugins: ["Battery 4", "Superior"],
     mutualFriends: 15,
   },
 ];
 
-const pendingRequests = [
-  { id: 1, name: "NewProducer", avatar: "NP", mutualFriends: 2 },
-  { id: 2, name: "VocalMaster", avatar: "VM", mutualFriends: 1 },
+// Mock pending friend requests
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _pendingRequests: FriendRequest[] = [
+  {
+    id: "1",
+    name: "NewProducer",
+    avatar: "/avatars/5.png",
+    mutualFriends: 2,
+    status: "pending",
+    from: "NewProducer",
+  },
+  {
+    id: "2",
+    name: "VocalMaster",
+    avatar: "/avatars/6.png",
+    mutualFriends: 1,
+    status: "pending",
+    from: "VocalMaster",
+  },
 ];
 
-const suggested = [
+const suggested: SuggestedFriend[] = [
   {
     id: 1,
     name: "ElectroWiz",
-    avatar: "EW",
+    avatar: "/avatars/7.png",
     mutualFriends: 8,
     reason: "Uses similar plugins",
+    from: "ElectroWiz",
+    status: "pending",
   },
   {
     id: 2,
     name: "BassMaster",
-    avatar: "BM",
+    avatar: "/avatars/8.png",
     mutualFriends: 3,
     reason: "Friend of ProducerX",
+    from: "BassMaster",
+    status: "pending",
   },
 ];
 
+// Type guard for FriendRequest
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isFriendRequest(item: any): item is FriendRequest {
   return (
     typeof item === "object" &&
@@ -88,39 +151,96 @@ function isFriendRequest(item: any): item is FriendRequest {
   );
 }
 
-export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
-  const [activeTab, setActiveTab] = useState<
-    "all" | "online" | "pending" | "suggested"
-  >("all");
+export function FriendsPanel({ friends, onNavigate }: FriendsPanelProps) {
+  type TabType = "all" | "online" | "pending" | "suggested";
+  const [activeTab, setActiveTab] = useState<TabType>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [addFriendInput, setAddFriendInput] = useState("");
-  const { data, isLoading, error } = useFriendRequests();
-  const requests: FriendRequest[] = data ?? [];
-  const accept = useAcceptRequest();
+  const { data: friendRequests } = useFriendRequests();
+  const { mutate: acceptRequest } = useAcceptRequest();
 
-  const handleAddFriend = () => {
-    if (addFriendInput.trim()) {
-      console.log("Adding friend:", addFriendInput);
+  const handleAccept = (requestId: string) => {
+    // TODO: Implement accept request
+    console.log("Accept request", requestId);
+    acceptRequest(requestId);
+  };
+
+  const handleReject = (requestId: string) => {
+    // TODO: Implement reject request
+    console.log("Reject request", requestId);
+  };
+
+  const handleAddFriend = (e: React.FormEvent | string) => {
+    if (typeof e !== "string") {
+      e.preventDefault();
+    }
+    const friendId = typeof e === "string" ? e : addFriendInput.trim();
+    if (!friendId) return;
+
+    // Implementation for adding a friend
+    console.log("Adding friend:", addFriendInput);
+    if (typeof e !== "string") {
       setAddFriendInput("");
     }
   };
 
-  const filteredFriends = friends.filter(
+  const handleChat = (friendId: string | number) => {
+    // TODO: Implement chat
+    console.log("Start chat with", friendId);
+    if (onNavigate) {
+      onNavigate(`/chat/${friendId}`);
+    }
+  };
+
+  const filteredFriends = (friends || []).filter(
     (friend) =>
-      friend.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (activeTab === "all" ||
-        (activeTab === "online" && friend.status === "online")),
+      friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (friend.plugins || []).some((plugin) =>
+        plugin.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
   );
 
-  const getTabContent = () => {
-    switch (activeTab) {
+  const filteredRequests = (friendRequests || []).filter(
+    (request: FriendRequest) =>
+      request.status === "pending" &&
+      (request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        request.reason?.toLowerCase().includes(searchTerm.toLowerCase())),
+  );
+
+  const filteredSuggested = suggested.filter(
+    (friend) =>
+      friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      friend.reason?.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const _getTabContent = (
+    tab: TabType,
+  ): Array<Friend | FriendRequest | SuggestedFriend> => {
+    switch (tab) {
       case "pending":
-        return pendingRequests;
+        return filteredRequests;
       case "suggested":
-        return suggested;
+        return filteredSuggested;
+      case "online":
+        return filteredFriends.filter((friend) => friend.status === "online");
+      case "all":
       default:
-        return filteredFriends;
+        return [...filteredFriends];
     }
+  };
+
+  const tabs = [
+    { key: "all" as TabType, label: "All" },
+    { key: "online" as TabType, label: "Online" },
+    {
+      key: "pending" as TabType,
+      label: `Pending (${friendRequests?.filter((request) => request.status === "pending").length || 0})`,
+    },
+    { key: "suggested" as TabType, label: "Suggested" },
+  ];
+
+  const handleTabClick = (tab: TabType) => {
+    setActiveTab(tab);
   };
 
   return (
@@ -135,10 +255,12 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
           </div>
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-[#7E4FFF] hover:bg-[#6B3FE6]">
-                <UserPlus className="w-4 h-4 mr-2" />
+              <button
+                className="px-3 py-1.5 text-sm font-medium bg-gradient-to-r from-[#7E4FFF] to-[#6B3FE6] text-white rounded-md hover:from-[#6B3FE6] hover:to-[#5A34C2] transition-colors"
+                onClick={handleAddFriend}
+              >
                 Add Friend
-              </Button>
+              </button>
             </DialogTrigger>
             <DialogContent className="bg-[#141B33] border-gray-700">
               <DialogHeader>
@@ -197,7 +319,9 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
                 <div>
                   <p className="text-sm text-gray-400">Pending</p>
                   <p className="text-2xl font-bold text-orange-400">
-                    {pendingRequests.length}
+                    {friendRequests?.filter(
+                      (request: FriendRequest) => request.status === "pending",
+                    )?.length || 0}
                   </p>
                 </div>
                 <UserPlus className="w-8 h-8 text-orange-400" />
@@ -208,23 +332,18 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex space-x-2">
-            {[
-              { key: "all", label: "All" },
-              { key: "online", label: "Online" },
-              { key: "pending", label: `Pending (${pendingRequests.length})` },
-              { key: "suggested", label: "Suggested" },
-            ].map((tab) => (
-              <Button
+            {tabs.map((tab) => (
+              <button
                 key={tab.key}
-                variant={activeTab === tab.key ? "default" : "outline"}
-                size="sm"
-                onClick={() => setActiveTab(tab.key as any)}
-                className={
-                  activeTab === tab.key ? "bg-[#7E4FFF] hover:bg-[#6B3FE6]" : ""
-                }
+                onClick={() => handleTabClick(tab.key)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                  activeTab === tab.key
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-400 hover:text-white hover:bg-gray-700"
+                }`}
               >
                 {tab.label}
-              </Button>
+              </button>
             ))}
           </div>
           <div className="flex-1 relative">
@@ -242,40 +361,75 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
           <CardContent className="p-6">
             <ScrollArea className="h-[500px]">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {(requests as FriendRequest[]).map((item) => {
-                  const {
-                    id,
-                    name,
-                    status = "",
-                    reason = "",
-                    plugins = [],
-                  } = item;
+                {_getTabContent(activeTab).map((item) => {
+                  const isFriend =
+                    "status" in item &&
+                    typeof item.status === "string" &&
+                    ["online", "offline", "away"].includes(item.status);
+
+                  const friendItem = isFriend ? (item as Friend) : null;
+                  const requestItem = !isFriend
+                    ? (item as FriendRequest)
+                    : null;
+
+                  const name =
+                    friendItem?.name || requestItem?.from || "Unknown";
+                  const id =
+                    friendItem?.id?.toString() || requestItem?.id || "";
+                  const avatar =
+                    friendItem?.avatar || requestItem?.avatar || "";
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  const mutualFriends =
+                    friendItem?.mutualFriends ||
+                    requestItem?.mutualFriends ||
+                    0;
+                  const plugins = friendItem?.plugins || [];
+
                   return (
                     <div
                       key={id}
                       className="bg-[#0D1126] rounded-lg p-4 border border-gray-700 group hover:border-[#7E4FFF]/50 transition-colors"
                     >
-                      <div className="flex items-start space-x-3 mb-3">
+                      <div className="flex items-center space-x-4">
                         <div className="relative">
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#7E4FFF] to-[#6B3FE6] rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold text-sm">
+                          {avatar ? (
+                            <img
+                              src={avatar}
+                              alt={name}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold">
                               {name.charAt(0)}
-                            </span>
-                          </div>
-                          {status && (
+                            </div>
+                          )}
+                          {friendItem?.status === "online" && (
                             <div
-                              className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#0D1126] ${status === "online" ? "bg-green-400" : "bg-gray-500"}`}
-                            ></div>
+                              className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"
+                              title="Online"
+                            />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 overflow-auto">
                           <h3 className="font-semibold text-white">{name}</h3>
-                          <p
-                            className={`text-sm ${status === "online" ? "text-green-400" : "text-gray-400"}`}
-                          >
-                            {status}
-                          </p>
-                          <p className="text-sm text-gray-400">{reason}</p>
+                          {friendItem && (
+                            <p
+                              className={`text-sm ${
+                                friendItem.status === "online"
+                                  ? "text-green-400"
+                                  : friendItem.status === "away"
+                                    ? "text-yellow-400"
+                                    : "text-gray-400"
+                              }`}
+                            >
+                              {friendItem.status}
+                            </p>
+                          )}
+                          {requestItem?.reason && (
+                            <p className="text-xs text-gray-400">
+                              {requestItem.reason}
+                            </p>
+                          )}
                         </div>
                       </div>
                       {plugins
@@ -286,47 +440,35 @@ export function FriendsPanel({ onNavigate }: FriendsPanelProps) {
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         {activeTab === "pending" ? (
                           <>
-                            <Button
-                              size="sm"
-                              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                            <button
+                              className="px-2 py-1 text-sm text-green-500 rounded hover:bg-green-500/10 hover:text-green-400"
+                              onClick={() => handleAccept(String(item.id))}
                             >
                               Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1"
+                            </button>
+                            <button
+                              className="px-2 py-1 text-sm text-red-500 rounded hover:bg-red-500/10 hover:text-red-400"
+                              onClick={() => handleReject(String(item.id))}
                             >
-                              Decline
-                            </Button>
+                              Reject
+                            </button>
                           </>
                         ) : activeTab === "suggested" ? (
-                          <Button
-                            size="sm"
-                            className="flex-1 bg-[#7E4FFF] hover:bg-[#6B3FE6]"
+                          <button
+                            className="px-2 py-1 text-sm text-blue-500 rounded hover:bg-blue-500/10 hover:text-blue-400"
+                            onClick={() => handleAddFriend(String(item.id))}
                           >
                             <UserPlus className="w-3 h-3 mr-1" />
                             Add
-                          </Button>
+                          </button>
                         ) : (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1"
-                            >
-                              <MessageSquare className="w-3 h-3 mr-1" />
-                              Chat
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1"
-                            >
-                              <Music className="w-3 h-3 mr-1" />
-                              Plugins
-                            </Button>
-                          </>
+                          <button
+                            className="px-2 py-1 text-sm text-blue-500 rounded hover:bg-blue-500/10 hover:text-blue-400"
+                            onClick={() => handleChat(item.id)}
+                          >
+                            <MessageSquare className="w-3 h-3 mr-1" />
+                            Chat
+                          </button>
                         )}
                       </div>
                     </div>

@@ -34,7 +34,7 @@ export default defineConfig({
 
   // Web server for development with Next.js
   webServer: {
-    command: 'pnpm dev --filter=web',
+    command: 'next dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,

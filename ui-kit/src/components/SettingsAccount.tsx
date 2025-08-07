@@ -1,20 +1,20 @@
 import React, { useState } from "react";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Switch } from "./ui/switch";
-import { Progress } from "./ui/progress";
-import { Badge } from "./ui/badge";
+import { Button } from "./ui/button.js";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.js";
+import { Input } from "./ui/input.js";
+import { Label } from "./ui/label.js";
+import { Textarea } from "./ui/textarea.js";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar.js";
+import { Switch } from "./ui/switch.js";
+import { Progress } from "./ui/progress.js";
+// import { Badge } from "./ui/badge.js";
 import {
   User,
   Upload,
   RefreshCw,
-  Settings as SettingsIcon,
+  // Settings as SettingsIcon,
 } from "lucide-react";
-import { PluginList } from "./pluginlist";
+import { PluginList } from "./pluginlist.js";
 
 interface SettingsAccountProps {
   onUpdateAccount: (data: {

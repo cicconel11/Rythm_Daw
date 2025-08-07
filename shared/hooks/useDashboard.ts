@@ -1,10 +1,23 @@
 import React from "react";
 
+interface DashboardStats {
+  totalFiles: number;
+  totalStorage: string;
+  recentActivity: any[];
+}
+
+interface UseDashboardReturn {
+  stats: DashboardStats;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+}
+
 /**
  * Mock implementation of useDashboard hook for testing purposes
  * In a real application, this would fetch dashboard data from an API
  */
-export const useDashboard = () => {
+export const useDashboard = (): UseDashboardReturn => {
   // Mock data for testing
   const dashboardData = {
     stats: {
@@ -13,6 +26,7 @@ export const useDashboard = () => {
       recentActivity: [],
     },
     isLoading: false,
+    isError: false,
     error: null,
   };
 

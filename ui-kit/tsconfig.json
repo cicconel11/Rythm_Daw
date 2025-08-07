@@ -4,14 +4,28 @@
         /* 👇 override the global “types” entry so the build ignores jest-dom */
         "types": [],
         "baseUrl": ".",
+        "moduleResolution": "node",
+        "module": "esnext",
+        "target": "es2020",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": false,
+        "jsx": "react-jsx",
         "paths": {
-            "@shared/*": [
-                "../shared/*"
-            ],
-            "@shared/lib/*": [
-                "../shared/lib/*"
-            ]
-        }
+            "@shared/*": ["../shared/*"],
+            "@shared/lib/*": ["../shared/lib/*"],
+            "../lib/*": ["./src/lib/*"],
+            "@radix-ui/*": ["./node_modules/@radix-ui/*/dist/index.d.ts"]
+        },
+        "typeRoots": [
+            "./node_modules/@types",
+            "./node_modules/@radix-ui"
+        ]
     },
     "include": [
         "src/**/*"

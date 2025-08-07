@@ -1,6 +1,6 @@
 import React from "react";
-import { Badge } from "./ui/badge";
-import { ScrollArea } from "./ui/scroll-area";
+import { Badge } from "./ui/badge.js";
+import { ScrollArea } from "./ui/scroll-area.js";
 import { CheckCircle, AlertTriangle, XCircle, Music } from "lucide-react";
 
 interface Plugin {

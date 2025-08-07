@@ -1,11 +1,16 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Skeleton } from "./ui/skeleton";
-import { ScrollArea } from "./ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.js";
+import { Badge } from "./ui/badge.js";
+import { Skeleton } from "./ui/skeleton.js";
+import { ScrollArea } from "./ui/scroll-area.js";
 import { Activity, Cpu, Users, Folder } from "lucide-react";
 
-interface DashboardProps {
+export interface DashboardProps {
+  stats: {
+    totalFiles: number;
+    totalStorage: string;
+    recentActivity: any[];
+  };
   onNavigate?: (path: string) => void;
 }
 
@@ -40,7 +45,7 @@ const activities = [
   },
 ];
 
-export function Dashboard({ onNavigate }: DashboardProps) {
+export function Dashboard({ onNavigate: _onNavigate }: DashboardProps) {
   return (
     <div className="min-h-screen bg-[#0D1126] bg-gradient-to-br from-[#0D1126] via-[#141B33] to-[#0D1126] p-6">
       <div className="max-w-7xl mx-auto space-y-6">

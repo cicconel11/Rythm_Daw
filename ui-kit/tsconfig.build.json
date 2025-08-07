@@ -4,26 +4,21 @@
         "composite": true,
         "declaration": true,
         "declarationMap": true,
-        "emitDeclarationOnly": true,
         "outDir": "dist",
-        "rootDir": "../",
+        "rootDir": "./src",
         "skipLibCheck": true,
+        "esModuleInterop": true,
         "baseUrl": ".",
-        "types": [
-            "node"
-        ],
-        "module": "Node16",
+        "types": ["node"],
+        "module": "esnext",
+        "moduleResolution": "node",
+        "jsx": "react-jsx",
         "paths": {
-            "@shared/*": [
-                "../shared/*"
-            ],
-            "@shared/lib/*": [
-                "../shared/lib/*"
-            ]
-        }
+            "@shared/*": ["../shared/*"],
+            "@shared/lib/*": ["../shared/lib/*"]
+        },
+        "allowSyntheticDefaultImports": true
     },
-    "include": [
-        "src/**/*",
-        "../shared/**/*"
-    ]
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist", "**/*.test.*", "**/*.stories.*", "../shared/**/*"]
 }

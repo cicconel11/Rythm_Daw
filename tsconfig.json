@@ -13,6 +13,15 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
+      "@rythm/ui-kit": [
+        "ui-kit/src/index.ts"
+      ],
+      "@rythm/ui-kit/*": [
+        "ui-kit/src/*"
+      ],
+      "@shared/*": [
+        "shared/*"
+      ],
       "@/components/*": [
         "website/src/components/*"
       ],

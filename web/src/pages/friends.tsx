@@ -1,11 +1,28 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
+import { 
+  FriendsPanel, 
+  Button, 
+  Input, 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  Badge 
+} from '@rythm/ui-kit';
 import { Search, UserPlus, MessageSquare, Music, Users } from 'lucide-react';
-import { useState } from 'react';
 
-const friends = [
+interface Friend {
+  id: number;
+  username: string;
+  status: 'online' | 'offline' | 'away';
+  avatar: string;
+  plugins: string[];
+  mutualFriends: number;
+  lastSeen: string;
+}
+
+const friends: Friend[] = [
   {
     id: 1,
     username: 'BeatMaker99',
@@ -21,48 +38,49 @@ const friends = [
     status: 'offline',
     avatar: 'PX',
     plugins: ['Massive X', 'Waves SSL', 'Ableton Live'],
-    mutualFriends: 12,
-    lastSeen: '2 hours ago',
+    mutualFriends: 3,
+    lastSeen: '2h ago',
   },
   {
     id: 3,
-    username: 'SynthWave2024',
-    status: 'online',
-    avatar: 'SW',
-    plugins: ['Sylenth1', 'Diva', 'FabFilter Pro-L'],
-    mutualFriends: 8,
-    lastSeen: 'online',
+    username: 'SynthMaster',
+    status: 'away',
+    avatar: 'SM',
+    plugins: ['Serum', 'Ableton Live', 'ValhallaDSP'],
+    mutualFriends: 7,
+    lastSeen: '30m ago',
   },
   {
     id: 4,
-    username: 'BasslineQueen',
-    status: 'offline',
-    avatar: 'BQ',
-    plugins: ['SubBass Doctor', 'Pro-Q 3', 'Serum'],
-    mutualFriends: 3,
-    lastSeen: '1 day ago',
-  },
-  {
-    id: 5,
-    username: 'DrumMachine',
+    username: 'BassHunter',
     status: 'online',
-    avatar: 'DM',
-    plugins: ['Battery 4', 'Superior Drummer', 'EZDrummer'],
-    mutualFriends: 15,
+    avatar: 'BH',
+    plugins: ['Sylenth1', 'FabFilter', 'iZotope'],
+    mutualFriends: 2,
     lastSeen: 'online',
   },
   {
-    id: 6,
-    username: 'MelodyMaster',
+    id: 5,
+    username: 'MelodyMaker',
     status: 'offline',
     avatar: 'MM',
-    plugins: ['Omnisphere', 'Kontakt', 'Nexus'],
-    mutualFriends: 7,
-    lastSeen: '3 hours ago',
+    plugins: ['Kontakt', 'Omnisphere', 'Native Instruments'],
+    mutualFriends: 4,
+    lastSeen: '5h ago',
+  },
+  {
+    id: 6,
+    username: 'DrumLord',
+    status: 'online',
+    avatar: 'DL',
+    plugins: ['Superior Drummer', 'EZdrummer', 'Addictive Drums'],
+    mutualFriends: 8,
+    lastSeen: 'online',
   },
 ];
 
 export default function Friends() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [newFriendInput, setNewFriendInput] = useState('');
@@ -73,6 +91,23 @@ export default function Friends() {
 
   const onlineFriends = filteredFriends.filter(friend => friend.status === 'online');
   const offlineFriends = filteredFriends.filter(friend => friend.status === 'offline');
+  const awayFriends = filteredFriends.filter(friend => friend.status === 'away');
+
+  // Transform friends data to match the expected format for FriendsPanel
+  const friendsForPanel = filteredFriends.map(friend => ({
+    id: friend.id,
+    name: friend.username,
+    avatar: friend.avatar,
+    status: friend.status,
+    plugins: friend.plugins,
+    mutualFriends: friend.mutualFriends,
+    lastSeen: friend.lastSeen,
+    reason: ''
+  }));
+
+  const handleNavigate = (path: string) => {
+    router.push(path);
+  };
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -90,7 +125,7 @@ export default function Friends() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="plugin-card">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -119,20 +154,16 @@ export default function Friends() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Mutual Friends</p>
-                <p className="text-2xl font-bold text-accent">
-                  {Math.round(
-                    friends.reduce((acc, friend) => acc + friend.mutualFriends, 0) / friends.length
-                  )}
-                </p>
+                <p className="text-sm text-muted-foreground">Away</p>
+                <p className="text-2xl font-bold text-yellow-500">{awayFriends.length}</p>
               </div>
-              <Music className="w-8 h-8 text-accent" />
+              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 mb-6">
         <div className="flex-1 relative">
           <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
           <Input
@@ -145,7 +176,7 @@ export default function Friends() {
       </div>
 
       {showAddFriend && (
-        <Card className="plugin-card border-primary/50">
+        <Card className="plugin-card border-primary/50 mb-6">
           <CardContent className="p-4">
             <div className="flex gap-3">
               <Input
@@ -160,127 +191,10 @@ export default function Friends() {
         </Card>
       )}
 
-      {onlineFriends.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              Online - {onlineFriends.length}
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {onlineFriends.map(friend => (
-                <div key={friend.id} className="plugin-card group">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-                        <span className="text-sm font-semibold text-white">{friend.avatar}</span>
-                      </div>
-                      <div className="status-online absolute -bottom-1 -right-1"></div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground">{friend.username}</h3>
-                      <p className="text-sm text-green-500">Online</p>
-                      <p className="text-xs text-muted-foreground">
-                        {friend.mutualFriends} mutual friends
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <p className="text-xs text-muted-foreground mb-2">Recent Plugins:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {friend.plugins.slice(0, 2).map((plugin, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {plugin}
-                        </Badge>
-                      ))}
-                      {friend.plugins.length > 2 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{friend.plugins.length - 2}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <MessageSquare className="w-3 h-3 mr-1" />
-                      Chat
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Music className="w-3 h-3 mr-1" />
-                      Plugins
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {offlineFriends.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
-              Offline - {offlineFriends.length}
-              <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {offlineFriends.map(friend => (
-                <div key={friend.id} className="plugin-card group opacity-75">
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="relative">
-                      <div className="w-12 h-12 bg-gradient-to-br from-gray-600 to-gray-800 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-semibold text-white">{friend.avatar}</span>
-                      </div>
-                      <div className="status-offline absolute -bottom-1 -right-1"></div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground">{friend.username}</h3>
-                      <p className="text-sm text-muted-foreground">{friend.lastSeen}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {friend.mutualFriends} mutual friends
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <p className="text-xs text-muted-foreground mb-2">Recent Plugins:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {friend.plugins.slice(0, 2).map((plugin, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {plugin}
-                        </Badge>
-                      ))}
-                      {friend.plugins.length > 2 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{friend.plugins.length - 2}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <MessageSquare className="w-3 h-3 mr-1" />
-                      Message
-                    </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Music className="w-3 h-3 mr-1" />
-                      Plugins
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <FriendsPanel 
+        friends={friendsForPanel} 
+        onNavigate={handleNavigate}
+      />
     </div>
   );
 }

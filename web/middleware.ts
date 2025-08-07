@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
     if (!token) {
       const nextParam = encodeURIComponent(pathname + (search || ''));
-      const nextUrl = `/landing?next=${nextParam}`;
+      const nextUrl = `/auth/login?next=${nextParam}`;
       return NextResponse.redirect(new URL(nextUrl, req.url));
     }
   }
@@ -41,5 +41,6 @@ export const config = {
     '/history/:path*',
     '/chat/:path*',
     '/settings/:path*',
+    '/dashboard/:path*',
   ],
 };

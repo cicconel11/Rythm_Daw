@@ -2,6 +2,7 @@
   "private": true,
   "workspaces": [
     "ui-kit",
+    "web",
     "website",
     "server",
     "lovable-src"
@@ -28,6 +29,8 @@
   "type": "module",
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 50",
+    "lint:web": "eslint --max-warnings 0 web/**/*.tsx ui-kit/**/*.tsx",
+    "typecheck:web": "tsc --noEmit -p web/tsconfig.json",
     "build": "tsc -b",
     "dev": "pnpm --parallel --workspace-concurrency=2 --filter=website dev & pnpm --filter=server start:dev",
     "test": "pnpm --filter=server test",
@@ -54,7 +57,8 @@
     "@types/jest": "^29.5.14",
     "@types/jest-axe": "^3.5.9",
     "@types/jsonwebtoken": "^9.0.2",
-    "@types/node": "^20.19.8",
+    "@types/next": "^9.0.0",
+    "@types/node": "^20.19.9",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^8.38.0",

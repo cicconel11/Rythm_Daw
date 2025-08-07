@@ -1,15 +1,17 @@
 # Rythm DAW – Website
 
-## Getting Started
+## Quick Start
 
 ```sh
 pnpm i
-cp .env.example .env           # Fill in secrets for NextAuth, Google OAuth, etc.
-pnpm dev                       # Start local dev server
+cp .env.example .env   # Fill in GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_SECRET, E2E_CREDENTIALS_EMAIL, E2E_CREDENTIALS_PASSWORD
+pnpm dev               # open http://localhost:3000/landing
 ```
 
-- Configure Google OAuth in `.env` with your `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
-- In non-production, a Credentials provider is available for E2E/admin testing via `E2E_CREDENTIALS_*`.
+- Google OAuth is required for production login. Set up credentials in your Google Cloud Console.
+- In development/CI, fallback Credentials login is enabled using `E2E_CREDENTIALS_EMAIL` and `E2E_CREDENTIALS_PASSWORD` from your `.env`.
+- The landing page (`/landing`) is public and links to the login flow.
+- All protected routes (including `/dashboard`) require authentication.
 
 ## Run E2E tests
 
@@ -17,11 +19,13 @@ pnpm dev                       # Start local dev server
 pnpm run ci:e2e  # spins up server, seeds auth, runs all tests
 ```
 
-- The first command seeds Playwright's storage state using the Credentials provider (or Google, if creds are not set).
-- All protected routes require authentication via NextAuth.
+- E2E tests use the Credentials provider if `NODE_ENV !== 'production'`.
+- Test user is defined in `tests/auth.setup.ts`.
+- The happy path test (`tests/landing-login.spec.ts`) verifies the full login funnel.
 
 ## OAuth & Auth Notes
 
 - NextAuth is configured for Google OAuth and (in non-production) fallback Credentials login for E2E.
-- Middleware protects `/files`, `/friends`, `/history`, `/chat`, `/settings` (redirects to `/landing?next=...`).
+- Middleware protects `/dashboard`, `/files`, `/friends`, `/history`, `/chat`, `/settings` (redirects to `/auth/login?next=...`).
+- `/landing`, `/auth/*`, `/api/auth/*` are always public.
 - Logout available via the sidebar.

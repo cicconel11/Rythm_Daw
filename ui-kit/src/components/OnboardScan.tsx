@@ -1,18 +1,16 @@
 import React from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Button } from "./ui/button.js";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.js";
 import { Download } from "lucide-react";
 
 interface OnboardScanProps {
   onSuccess: () => void;
+  onNavigate?: (path: string) => void;
 }
 
-export function OnboardScan({ onSuccess }: OnboardScanProps) {
-  const navigate = useNavigate();
-
+export function OnboardScan({ onSuccess, onNavigate }: OnboardScanProps) {
   const { mutate: downloadApp, isPending } = useMutation({
     mutationFn: async () => {
       const os = detectOS();
@@ -36,8 +34,12 @@ export function OnboardScan({ onSuccess }: OnboardScanProps) {
     },
     onSuccess: (os) => {
       toast.success(`Downloading RHYTHM for ${os}...`);
-      onSuccess();
-      navigate("/onboard/device");
+      // Call onNavigate if provided, otherwise call onSuccess
+      if (onNavigate) {
+        onNavigate("/connect-device");
+      } else {
+        onSuccess();
+      }
     },
     onError: () => {
       toast.error("Failed to start download. Please try again.");
@@ -45,8 +47,11 @@ export function OnboardScan({ onSuccess }: OnboardScanProps) {
   });
 
   const handleSkip = () => {
-    onSuccess();
-    navigate("/onboard/device");
+    if (onNavigate) {
+      onNavigate("/onboard/device");
+    } else {
+      onSuccess();
+    }
   };
   const detectOS = () => {
     const userAgent = navigator.userAgent;

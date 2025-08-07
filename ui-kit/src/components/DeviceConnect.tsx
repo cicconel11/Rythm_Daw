@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Progress } from "./ui/progress";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.js";
+import { Progress } from "./ui/progress.js";
 
 interface DeviceConnectProps {
   onSuccess: () => void;
+  onNavigate?: (path: string) => void;
 }
 
-export function DeviceConnect({ onSuccess }: DeviceConnectProps) {
-  const navigate = useNavigate();
+export function DeviceConnect({ onSuccess, onNavigate }: DeviceConnectProps) {
   const queryClient = useQueryClient();
   const [code, setCode] = useState("");
   const [progress, setProgress] = useState(0);
@@ -72,9 +71,12 @@ export function DeviceConnect({ onSuccess }: DeviceConnectProps) {
     },
     onSuccess: () => {
       setProgress(100);
-      onSuccess();
       queryClient.invalidateQueries({ queryKey: ["devices"] });
-      setTimeout(() => navigate("/dashboard"), 1000);
+      if (onNavigate) {
+        onNavigate("/dashboard");
+      } else {
+        onSuccess();
+      }
     },
     onError: (error) => {
       toast.error(error.message || "Failed to pair device");

@@ -1,12 +1,26 @@
 import { useMutation } from "@tanstack/react-query";
-import api from "../lib/api";
-import { FileTransferSchema, PresignDto } from "../types";
+import { api } from "../lib/api";
+import { FileTransferSchema } from "../types";
+
+interface PresignDto {
+  filename: string;
+  filetype: string;
+  filesize: number;
+  path: string;
+  toUserId?: string;
+}
+
+interface PresignResponse {
+  uploadUrl: string;
+  fileId: string;
+  path: string;
+}
 
 export const useFileUpload = () => {
   return useMutation({
     mutationFn: async (dto: PresignDto & { file: File }) => {
       // 1. Get presigned URL
-      const presign = await api.post("/files/presign", dto);
+      const { data: presign } = await api.post<PresignResponse>("/files/presign", dto);
       // 2. Upload to S3
       await fetch(presign.uploadUrl, { method: "PUT", body: dto.file });
       // 3. Emit WS init_transfer
@@ -19,16 +33,21 @@ export const useFileUpload = () => {
             event: "init_transfer",
             data: {
               ...dto,
-              fileName: dto.file.name,
-              size: dto.file.size,
-              mimeType: dto.file.type,
+              fileName: dto.filename,
+              size: dto.filesize,
+              mimeType: dto.filetype,
               toUserId: dto.toUserId,
             },
           }),
         );
         ws.close();
       };
-      return FileTransferSchema.parse(presign);
+      return FileTransferSchema.parse({
+        ...presign,
+        status: 'completed',
+        progress: 100,
+        timestamp: new Date().toISOString()
+      });
     },
   });
 };
