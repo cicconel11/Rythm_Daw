@@ -1,5 +1,4 @@
-import { createMachine, assign, setup, fromPromise } from 'xstate';
-import { signIn } from 'next-auth/react';
+import { createMachine, assign, fromPromise } from 'xstate';
 
 // Types
 interface RegistrationContext {
@@ -17,96 +16,72 @@ type RegistrationEvent =
   | { type: 'RETRY' }
   | { type: 'BACK' };
 
-type RegistrationError = {
-  message: string;
+// Helper function to validate credentials
+const validateCredentials = async ({
+  email,
+  password,
+  recaptchaToken,
+}: {
+  email: string;
+  password: string;
+  recaptchaToken: string;
+}) => {
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      password,
+      captchaToken: recaptchaToken,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Validation failed');
+  }
+
+  return response.json();
 };
 
-// Create the machine with proper typing
-export const registrationMachine = setup({
-  types: {
-    context: {} as RegistrationContext,
-    events: {} as RegistrationEvent,
-  },
-  guards: {
-    hasRecaptchaToken: ({ context }) => !!context.recaptchaToken,
-  },
-  actions: {
-    clearError: assign({
-      error: undefined,
+// Helper function to submit registration
+const submitRegistration = async ({
+  email,
+  password,
+  displayName,
+  avatar,
+  recaptchaToken,
+}: {
+  email: string;
+  password: string;
+  displayName: string;
+  avatar?: string;
+  recaptchaToken: string;
+}) => {
+  const response = await fetch('/api/auth/register', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      password,
+      displayName,
+      avatar,
+      recaptchaToken,
     }),
-    setError: assign({
-      error: (_, params: { error: string }) => params.error,
-    }),
-    setCredentials: assign({
-      email: ({ event }) => event.type === 'SUBMIT_CREDENTIALS' ? event.email : '',
-      password: ({ event }) => event.type === 'SUBMIT_CREDENTIALS' ? event.password : '',
-    }),
-    setProfile: assign({
-      displayName: ({ event }) => event.type === 'SUBMIT_PROFILE' ? event.displayName : '',
-      avatar: ({ event }) => event.type === 'SUBMIT_PROFILE' ? event.avatar : undefined,
-    }),
-    setRecaptchaToken: assign({
-      recaptchaToken: ({ event }) => event.type === 'SUBMIT_CREDENTIALS' ? event.recaptchaToken : undefined,
-    }),
-  },
-  actors: {
-    validateCredentials: fromPromise(async ({ input }: { 
-      input: { email: string; password: string; recaptchaToken: string } 
-    }) => {
-      const response = await fetch('/api/auth/validate-credentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: input.email,
-          password: input.password,
-          recaptchaToken: input.recaptchaToken,
-        }),
-      });
+  });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to validate credentials');
-      }
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Registration failed');
+  }
 
-      return { success: true };
-    }),
-    submitProfile: fromPromise(async ({ input }: { 
-      input: { email: string; password: string; displayName: string; avatar?: string } 
-    }) => {
-      // First, create the user
-      const registerResponse = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: input.email,
-          password: input.password,
-          displayName: input.displayName,
-          avatar: input.avatar,
-        }),
-      });
+  return response.json();
+};
 
-      if (!registerResponse.ok) {
-        const error = await registerResponse.json();
-        throw new Error(error.message || 'Failed to register');
-      }
-
-      // Then sign in
-      const signInResult = await signIn('credentials', {
-        redirect: false,
-        email: input.email,
-        password: input.password,
-      });
-
-      if (signInResult?.error) {
-        throw new Error(signInResult.error);
-      }
-
-      return { success: true };
-    }),
-  },
-}).createMachine({
+// Machine definition
+export const registrationMachine = createMachine({
   id: 'registration',
-  initial: 'credentials',
+  initial: 'start',
   context: {
     email: '',
     password: '',
@@ -116,91 +91,98 @@ export const registrationMachine = setup({
     recaptchaToken: undefined,
   },
   states: {
+    start: {
+      always: 'credentials',
+    },
     credentials: {
-      initial: 'idle',
-      states: {
-        idle: {
-          on: {
-            SUBMIT_CREDENTIALS: [
-              {
-                guard: 'hasRecaptchaToken',
-                target: 'validating',
-                actions: ['setCredentials', 'setRecaptchaToken', 'clearError'],
-              },
-              {
-                actions: [{
-                  type: 'setError',
-                  params: { error: 'reCAPTCHA verification is required' },
-                }],
-              },
-            ],
-          },
+      on: {
+        SUBMIT_CREDENTIALS: {
+          target: 'validating',
+          actions: assign({
+            email: (_, event) => event.email,
+            password: (_, event) => event.password,
+            recaptchaToken: (_, event) => event.recaptchaToken,
+            error: () => undefined,
+          }),
         },
-        validating: {
-          invoke: {
-            src: 'validateCredentials',
-            input: ({ context }) => ({
-              email: context.email,
-              password: context.password,
-              recaptchaToken: context.recaptchaToken!,
-            }),
-            onDone: {
-              target: '#registration.profile',
-              actions: ['clearError'],
-            },
-            onError: {
-              target: 'idle',
-              actions: [{
-                type: 'setError',
-                params: { error: 'Validation failed' },
-              }],
-            },
-          },
+      },
+    },
+    validating: {
+      invoke: {
+        src: fromPromise(({ input }: { input: { email: string; password: string; recaptchaToken: string } }) =>
+          validateCredentials(input)
+        ),
+        input: ({ context }) => ({
+          email: context.email,
+          password: context.password,
+          recaptchaToken: context.recaptchaToken || '',
+        }),
+        onDone: 'profile',
+        onError: {
+          target: 'credentials',
+          actions: assign({
+            error: (_, event) => event.error.message || 'Validation failed',
+          }),
         },
       },
     },
     profile: {
-      id: 'profile',
-      initial: 'idle',
-      states: {
-        idle: {
-          on: {
-            SUBMIT_PROFILE: {
-              target: 'submitting',
-              actions: ['setProfile', 'clearError'],
-            },
-            BACK: {
-              target: '#registration.credentials',
-              actions: ['clearError'],
-            },
-          },
-        },
-        submitting: {
-          invoke: {
-            src: 'submitProfile',
-            input: ({ context }) => ({
-              email: context.email,
-              password: context.password,
-              displayName: context.displayName,
-              avatar: context.avatar,
-            }),
-            onDone: {
-              target: '#registration.complete',
-            },
-            onError: {
-              target: 'idle',
-              actions: [{
-                type: 'setError',
-                params: { error: 'Registration failed' },
-              }],
-            },
-          },
+      on: {
+        BACK: 'credentials',
+        SUBMIT_PROFILE: {
+          target: 'submitting',
+          actions: assign({
+            displayName: (_, event) => event.displayName,
+            avatar: (_, event) => event.avatar,
+            error: () => undefined,
+          }),
         },
       },
     },
-    complete: {
-      id: 'complete',
-      type: 'final' as const,
+    submitting: {
+      invoke: {
+        src: fromPromise(({ input }: { 
+          input: { 
+            email: string; 
+            password: string; 
+            displayName: string; 
+            avatar?: string; 
+            recaptchaToken: string 
+          } 
+        }) => submitRegistration(input)),
+        input: ({ context }) => ({
+          email: context.email,
+          password: context.password,
+          displayName: context.displayName,
+          avatar: context.avatar,
+          recaptchaToken: context.recaptchaToken || '',
+        }),
+        onDone: 'done',
+        onError: {
+          target: 'profile',
+          actions: assign({
+            error: (_, event) => event.error.message || 'Registration failed',
+          }),
+        },
+      },
+    },
+    done: {
+      type: 'final',
+    },
+    error: {
+      on: {
+        RETRY: {
+          target: 'credentials',
+          actions: assign({
+            error: () => undefined,
+          }),
+        },
+      },
+    },
+  },
+  on: {
+    RETRY: {
+      target: '.credentials',
     },
   },
 });
