@@ -18,13 +18,11 @@ export const selectors = {
 
   // Registration
   register: {
-    emailInput: 'label:has-text("Email") input',
-    passwordInput: 'label:has-text("Password") input',
-    displayNameInput: 'label:has-text("Display Name") input',
-    bioInput: 'label:has-text("Bio") textarea',
-    nextBtn: 'button:has-text("Next")',
-    submitBtn: 'button:has-text("Submit")',
-    loginLink: 'a:has-text("Already have an account? Log in")',
+    emailInput: '#email',
+    passwordInput: '#password',
+    confirmPasswordInput: '#confirmPassword',
+    submitBtn: 'button[type="submit"]',
+    loginLink: 'a:has-text("sign in to your existing account")',
   },
 
   // Login

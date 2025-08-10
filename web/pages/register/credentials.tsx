@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export default function RegisterCredentialsPage() {
   const [formData, setFormData] = useState({
@@ -13,7 +13,6 @@ export default function RegisterCredentialsPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,20 +27,12 @@ export default function RegisterCredentialsPage() {
 
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match',
-        variant: 'destructive',
-      });
+      toast.error('Passwords do not match');
       return;
     }
 
     if (formData.password.length < 8) {
-      toast({
-        title: 'Error',
-        description: 'Password must be at least 8 characters long',
-        variant: 'destructive',
-      });
+      toast.error('Password must be at least 8 characters long');
       return;
     }
 
@@ -67,20 +58,13 @@ export default function RegisterCredentialsPage() {
 
       await response.json();
 
-      toast({
-        title: 'Success',
-        description: 'Account created successfully!',
-      });
+      toast.success('Account created successfully!');
 
       // Redirect to login or dashboard
       router.push('/auth/login');
     } catch (error) {
       console.error('Registration error:', error);
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create account',
-        variant: 'destructive',
-      });
+      toast.error(error instanceof Error ? error.message : 'Failed to create account');
     } finally {
       setIsLoading(false);
     }
