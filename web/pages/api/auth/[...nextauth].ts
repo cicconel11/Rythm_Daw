@@ -109,6 +109,10 @@ export const authOptions: NextAuthOptions = {
         // You can add custom logic here for Google OAuth users
       }
       
+      if (account?.provider === 'apple') {
+        // You can add custom logic here for Apple OAuth users
+      }
+      
       return token;
     },
     

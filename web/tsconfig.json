@@ -2,23 +2,41 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "jsx": "preserve",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "module": "esnext",
     "target": "es5",
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["../shared/*"],
-      "@rythm/ui-kit": ["../ui-kit/dist/index.js"],
-      "@rythm/ui-kit/*": ["../ui-kit/dist/*"],
+      "@shared/*": [
+        "../shared/*"
+      ],
+      "@rythm/ui-kit": [
+        "../ui-kit/dist/index.js"
+      ],
+      "@rythm/ui-kit/*": [
+        "../ui-kit/dist/*"
+      ],
       "@lib/*": [
         "./lib/*"
       ],
       "@/*": [
         "./src/*"
+      ],
+      "@/src/*": [
+        "./src/*"
       ]
     },
-    "typeRoots": ["types", "node_modules/@types"],
-    "types": ["node"],
+    "typeRoots": [
+      "types",
+      "node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -30,9 +48,20 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
-    "jsxImportSource": "@emotion/react"
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["pages/**/*.tsx", "src/**/*.tsx", "src/**/*.ts"],
+  "include": [
+    "pages/**/*.tsx",
+    "src/**/*.tsx",
+    "src/**/*.ts",
+    "app/**/*.tsx",
+    "app/**/*.ts",
+    ".next/types/**/*.ts"
+  ],
   "exclude": [
     "node_modules",
     "**/*.test.tsx",

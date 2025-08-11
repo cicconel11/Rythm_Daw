@@ -1,46 +1,48 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = [
-  '/landing',
-  '/auth',
-  '/api/auth',
-  '/_next',
-  '/static',
-  '/favicon.ico',
-  '/images',
-  '/fonts',
-  '/robots.txt',
-];
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-export async function middleware(req: NextRequest) {
-  const { pathname, search } = req.nextUrl;
-  // Exclude public and static paths
-  if (PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(path + '/'))) {
-    return NextResponse.next();
-  }
+  // Registration flow redirects
+  if (pathname.startsWith('/register')) {
+    // Check if registration is completed
+    const registrationData = request.cookies.get('registration_completed')
+    
+    if (registrationData?.value === 'true') {
+      // If registration is completed, redirect to dashboard
+      if (pathname !== '/dashboard') {
+        return NextResponse.redirect(new URL('/dashboard', request.url))
+      }
+    }
 
-  // Protect these routes
-  const protectedRoutes = ['/files', '/friends', '/history', '/chat', '/settings'];
-  if (protectedRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))) {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-    if (!token) {
-      const nextParam = encodeURIComponent(pathname + (search || ''));
-      const nextUrl = `/auth/login?next=${nextParam}`;
-      return NextResponse.redirect(new URL(nextUrl, req.url));
+    // Check if trying to access bio page without completing step 1
+    if (pathname === '/register/bio') {
+      // Check for step 1 completion by looking for registration context cookie
+      const step1Data = request.cookies.get('registration_step1')
+      
+      if (step1Data?.value !== 'true') {
+        // If step 1 is not completed, redirect to credentials
+        return NextResponse.redirect(new URL('/register/credentials', request.url))
+      }
     }
   }
-  return NextResponse.next();
+
+  // Dashboard protection - redirect to registration if not completed
+  if (pathname === '/dashboard') {
+    const registrationData = request.cookies.get('registration_completed')
+    
+    if (registrationData?.value !== 'true') {
+      return NextResponse.redirect(new URL('/register/credentials', request.url))
+    }
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    '/files/:path*',
-    '/friends/:path*',
-    '/history/:path*',
-    '/chat/:path*',
-    '/settings/:path*',
-    '/dashboard/:path*',
+    '/register/:path*',
+    '/dashboard',
   ],
-};
+}

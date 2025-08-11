@@ -8,8 +8,8 @@ const withTM = require('next-transpile-modules')([
 const nextConfig = {
   reactStrictMode: true,
   compiler: {
-    styledComponents: true,
-    emotion: true,
+    // styledComponents: true, // Disabled to fix server component issues
+    // emotion: true, // Disabled to fix server component issues
   },
 
   productionBrowserSourceMaps: true,

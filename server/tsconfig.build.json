@@ -1,32 +1,18 @@
 {
-  "baseUrl": ".",
-  "paths": {
-    "@shared/*": [
-      "../../shared/*"
-    ]
-  },
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "rootDir": "./src",
     "outDir": "./dist",
-    "rootDir": "..",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "target": "ES2021",
-    "sourceMap": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true
+    "declaration": false,
+    "sourceMap": true
   },
   "include": [
-    "src/**/*.ts",
-    "prisma/**/*.ts",
-    "../../shared/**/*"
+    "src/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "test",
+    "dist",
+    "**/*.spec.ts"
   ]
 }

@@ -177,7 +177,7 @@ export class AuthService {
       }
 
       // Generate new tokens
-      const tokens = await this.getTokens(user.id, user.email, user.name || undefined);
+      const tokens = await this.getTokens(user.id, user.email, user.name || '');
       
       // Update the refresh token in the database
       await this.prisma.user.update({

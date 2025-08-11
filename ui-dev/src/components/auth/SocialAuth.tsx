@@ -9,12 +9,8 @@ interface SocialAuthProps {
 const SocialAuth = ({ disabled = false }: SocialAuthProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleAppleLogin = () => {
-    setIsLoading(true);
-    window.location.href = "/api/auth/apple";
-  };
-
   const handleGoogleLogin = () => {
+    setIsLoading(true);
     window.location.href = "/api/auth/google";
   };
 
@@ -28,30 +24,20 @@ const SocialAuth = ({ disabled = false }: SocialAuthProps) => {
           Or continue with
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-4 mt-6">
+      <div className="flex justify-center mt-6">
         <Button
           variant="outline"
           type="button"
           onClick={handleGoogleLogin}
-          disabled={disabled}
-          className="flex items-center justify-center gap-2"
-        >
-          <Icons.google className="h-4 w-4" />
-          Google
-        </Button>
-        <Button
-          variant="outline"
-          type="button"
-          onClick={handleAppleLogin}
           disabled={disabled || isLoading}
-          className={`flex items-center justify-center gap-2 ${disabled || isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+          className="flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <Icons.spinner className="h-4 w-4 animate-spin" />
           ) : (
-            <Icons.apple className="h-4 w-4" />
+            <Icons.google className="h-4 w-4" />
           )}
-          Apple
+          Google
         </Button>
       </div>
     </div>

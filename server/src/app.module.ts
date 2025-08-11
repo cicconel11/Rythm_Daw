@@ -12,7 +12,7 @@ import { SecurityModule } from './common/security.module';
 import { Redis } from 'ioredis';
 import { PingController } from './common/ping.controller';
 import { AuthLoginController } from './common/auth-login.controller';
-import { FilesUploadController } from './common/files-upload.controller';
+// import { FilesUploadController } from './common/files-upload.controller';
 import { PluginsModule } from './modules/plugins/plugins.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
@@ -37,13 +37,13 @@ import { join } from 'path';
     // AuthModule,
     // FilesModule,
     // RtcModule,
-    PluginsModule,
+    // PluginsModule,
   ],
   controllers: [
     RootController,
     PingController,
     AuthLoginController,
-    FilesUploadController,
+    // FilesUploadController,
   ],
   providers: [
     {

@@ -9,7 +9,6 @@ import { Theme } from '@radix-ui/themes';
 import '@radix-ui/themes/styles.css';
 import type { AppProps } from 'next/app';
 import { SessionProvider } from 'next-auth/react';
-import { ClientOnly } from '../components/ClientOnly';
 
 // Import global styles
 import '../styles/globals.css';
@@ -60,15 +59,12 @@ export default function App({ Component, pageProps }: AppProps) {
           enableSystem
           disableTransitionOnChange
         >
-          {/* Wrap Radix UI components with ClientOnly to prevent SSR issues */}
-          <ClientOnly>
-            <Theme>
-              <TooltipProvider>
-                <Component {...pageProps} />
-                <Toaster position="top-center" richColors closeButton />
-              </TooltipProvider>
-            </Theme>
-          </ClientOnly>
+          <Theme>
+            <TooltipProvider>
+              <Component {...pageProps} />
+              <Toaster position="top-center" richColors closeButton />
+            </TooltipProvider>
+          </Theme>
         </ThemeProvider>
         {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
       </QueryClientProvider>

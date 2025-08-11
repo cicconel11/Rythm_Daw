@@ -1,170 +1,67 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from './[...nextauth]';
-import { hash } from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+import { addPendingRegistration, users } from './register/storage';
 
-// Types
-interface RegisterRequest {
-  email: string;
-  password: string;
-  displayName: string;
-  avatar?: string;
-  captchaToken: string;
-}
-
-// In-memory store for development - replace with your database
-const users: any[] = [];
-
-/**
- * Verify reCAPTCHA token with Google's API
- */
-async function verifyRecaptcha(token: string): Promise<boolean> {
-  if (process.env.NODE_ENV === 'development') return true;
-  
-  try {
-    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        secret: process.env.RECAPTCHA_SECRET_KEY!,
-        response: token,
-      }),
-    });
-    
-    const data = await response.json();
-    return data.success === true && data.score > 0.5;
-  } catch (error) {
-    console.error('reCAPTCHA verification failed:', error);
-    return false;
-  }
-}
-
-/**
- * Validate user input
- */
-function validateInput(data: RegisterRequest): { valid: boolean; message?: string } {
-  if (!data.email || !data.password || !data.displayName || !data.captchaToken) {
-    return { valid: false, message: 'All fields are required' };
-  }
-
-  // Email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(data.email)) {
-    return { valid: false, message: 'Invalid email format' };
-  }
-
-  // Password validation
-  if (data.password.length < 8) {
-    return { valid: false, message: 'Password must be at least 8 characters long' };
-  }
-
-  return { valid: true };
-}
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      success: false,
-      message: 'Method not allowed' 
-    });
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-    // Check if user is already authenticated
-    const session = await getServerSession(req, res, authOptions);
-    if (session) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'Already authenticated' 
-      });
+    const { email, password, displayName, captchaToken } = req.body;
+
+    // Basic validation
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const data = req.body as RegisterRequest;
-
-    // Validate input
-    const validation = validateInput(data);
-    if (!validation.valid) {
-      return res.status(400).json({ 
-        success: false,
-        message: validation.message 
-      });
+    if (password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
     }
 
-    // Verify reCAPTCHA
-    const isHuman = await verifyRecaptcha(data.captchaToken);
-    if (!isHuman) {
-      return res.status(400).json({ 
-        success: false,
-        message: 'reCAPTCHA verification failed' 
-      });
+    // Check if email already exists
+    const existingUser = users.find(user => user.email === email);
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already in use' });
     }
 
-    // Check if user already exists
-    const userExists = users.some(user => user.email === data.email);
-    if (userExists) {
-      return res.status(409).json({ 
-        success: false,
-        message: 'Email already in use' 
-      });
+    // Check if there's already a pending registration for this email
+    const { pendingRegistrations } = await import('./register/storage');
+    const existingPending = Array.from(pendingRegistrations.values()).find(
+      (reg: any) => reg.email === email
+    );
+    if (existingPending) {
+      return res.status(409).json({ message: 'Email already in use' });
     }
 
-    // Hash password
-    const hashedPassword = await hash(data.password, 12);
+    // Generate unique identifiers
+    const requestId = uuidv4();
+    const tempToken = uuidv4();
 
-    // Create user (in-memory for this example)
-    const user = {
-      id: `user_${Date.now()}`,
-      email: data.email,
-      password: hashedPassword,
-      name: data.displayName,
-      image: data.avatar,
-      emailVerified: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date()
+    // Store pending registration
+    const pendingRegistration = {
+      email,
+      password,
+      displayName: displayName || email.split('@')[0],
+      requestId,
+      tempToken,
+      completed: false,
+      createdAt: new Date().toISOString(),
     };
 
-    // In a real app, save to database:
-    // const user = await prisma.user.create({
-    //   data: {
-    //     email: data.email,
-    //     password: hashedPassword,
-    //     name: data.displayName,
-    //     image: data.avatar,
-    //     emailVerified: new Date(),
-    //   },
-    // });
-    
-    // For demo purposes, add to in-memory array
-    users.push(user);
+    addPendingRegistration(pendingRegistration);
 
-    // Return success response without sensitive data
-    const { password, ...userWithoutPassword } = user;
-    
-    return res.status(201).json({ 
+    console.log('Created pending registration:', { requestId, email, tempToken });
+
+    // Return success with requestId and token
+    return res.status(200).json({
       success: true,
-      message: 'Registration successful',
-      user: userWithoutPassword
+      message: 'Registration initiated successfully',
+      requestId,
+      token: tempToken,
     });
-
-  } catch (error: any) {
+  } catch (error) {
     console.error('Registration error:', error);
-    
-    // Handle specific error types
-    if (error.code === 'P2002') { // Prisma unique constraint violation
-      return res.status(409).json({ 
-        success: false,
-        message: 'Email already in use' 
-      });
-    }
-    
-    // Generic error response
-    return res.status(500).json({ 
-      success: false,
-      message: 'An error occurred during registration',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    return res.status(500).json({ message: 'Internal server error' });
   }
 }

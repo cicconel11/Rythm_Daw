@@ -73,6 +73,11 @@ export type Tag = $Result.DefaultSelection<Prisma.$TagPayload>
  * 
  */
 export type EntityTag = $Result.DefaultSelection<Prisma.$EntityTagPayload>
+/**
+ * Model FileTransfer
+ * 
+ */
+export type FileTransfer = $Result.DefaultSelection<Prisma.$FileTransferPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -90,7 +95,7 @@ export type EntityTag = $Result.DefaultSelection<Prisma.$EntityTagPayload>
  */
 export class PrismaClient<
   ClientOptions extends Prisma.PrismaClientOptions = Prisma.PrismaClientOptions,
-  U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
+  const U = 'log' extends keyof ClientOptions ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition> ? Prisma.GetEvents<ClientOptions['log']> : never : never,
   ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs
 > {
   [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
@@ -318,6 +323,16 @@ export class PrismaClient<
     * ```
     */
   get entityTag(): Prisma.EntityTagDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.fileTransfer`: Exposes CRUD operations for the **FileTransfer** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more FileTransfers
+    * const fileTransfers = await prisma.fileTransfer.findMany()
+    * ```
+    */
+  get fileTransfer(): Prisma.FileTransferDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -376,8 +391,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.11.1
-   * Query Engine version: f40f79ec31188888a2e33acda0ecc8fd10a853a9
+   * Prisma Client JS version: 6.13.0
+   * Query Engine version: 605197351a3c8bdd595af2d2a9bc3025bca48ea2
    */
   export type PrismaVersion = {
     client: string
@@ -554,7 +569,7 @@ export namespace Prisma {
   ? False
   : T extends Uint8Array
   ? False
-  : T extends bigint
+  : T extends BigInt
   ? False
   : T extends object
   ? True
@@ -583,7 +598,7 @@ export namespace Prisma {
   type _Either<
     O extends object,
     K extends Key,
-    strict extends boolean
+    strict extends Boolean
   > = {
     1: EitherStrict<O, K>
     0: EitherLoose<O, K>
@@ -592,7 +607,7 @@ export namespace Prisma {
   type Either<
     O extends object,
     K extends Key,
-    strict extends boolean = 1
+    strict extends Boolean = 1
   > = O extends unknown ? _Either<O, K, strict> : never
 
   export type Union = any
@@ -620,7 +635,7 @@ export namespace Prisma {
   type AtBasic<O extends object, K extends Key> = K extends keyof O ? O[K] : never;
   type AtStrict<O extends object, K extends Key> = O[K & keyof O];
   type AtLoose<O extends object, K extends Key> = O extends unknown ? AtStrict<O, K> : never;
-  export type At<O extends object, K extends Key, strict extends boolean = 1> = {
+  export type At<O extends object, K extends Key, strict extends Boolean = 1> = {
       1: AtStrict<O, K>;
       0: AtLoose<O, K>;
   }[strict];
@@ -669,7 +684,7 @@ export namespace Prisma {
   */
   export type False = 0
 
-  export type Not<B extends boolean> = {
+  export type Not<B extends Boolean> = {
     0: 1
     1: 0
   }[B]
@@ -684,7 +699,7 @@ export namespace Prisma {
     Extends<Exclude<U1, U>, U1>
   >
 
-  export type Or<B1 extends boolean, B2 extends boolean> = {
+  export type Or<B1 extends Boolean, B2 extends Boolean> = {
     0: {
       0: 0
       1: 1
@@ -769,7 +784,8 @@ export namespace Prisma {
     Project: 'Project',
     Snapshot: 'Snapshot',
     Tag: 'Tag',
-    EntityTag: 'EntityTag'
+    EntityTag: 'EntityTag',
+    FileTransfer: 'FileTransfer'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -788,7 +804,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "plugin" | "device" | "userPlugin" | "userPresence" | "activityLog" | "crashReport" | "webRtcMetric" | "project" | "snapshot" | "tag" | "entityTag"
+      modelProps: "user" | "plugin" | "device" | "userPlugin" | "userPresence" | "activityLog" | "crashReport" | "webRtcMetric" | "project" | "snapshot" | "tag" | "entityTag" | "fileTransfer"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -843,10 +859,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.UserUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.UserUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
           }
           upsert: {
             args: Prisma.UserUpsertArgs<ExtArgs>
@@ -918,10 +930,6 @@ export namespace Prisma {
             args: Prisma.PluginUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          updateManyAndReturn: {
-            args: Prisma.PluginUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PluginPayload>[]
-          }
           upsert: {
             args: Prisma.PluginUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$PluginPayload>
@@ -991,10 +999,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.DeviceUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.DeviceUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$DevicePayload>[]
           }
           upsert: {
             args: Prisma.DeviceUpsertArgs<ExtArgs>
@@ -1066,10 +1070,6 @@ export namespace Prisma {
             args: Prisma.UserPluginUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          updateManyAndReturn: {
-            args: Prisma.UserPluginUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPluginPayload>[]
-          }
           upsert: {
             args: Prisma.UserPluginUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$UserPluginPayload>
@@ -1139,10 +1139,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.UserPresenceUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.UserPresenceUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPresencePayload>[]
           }
           upsert: {
             args: Prisma.UserPresenceUpsertArgs<ExtArgs>
@@ -1214,10 +1210,6 @@ export namespace Prisma {
             args: Prisma.ActivityLogUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          updateManyAndReturn: {
-            args: Prisma.ActivityLogUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>[]
-          }
           upsert: {
             args: Prisma.ActivityLogUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$ActivityLogPayload>
@@ -1287,10 +1279,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.CrashReportUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.CrashReportUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$CrashReportPayload>[]
           }
           upsert: {
             args: Prisma.CrashReportUpsertArgs<ExtArgs>
@@ -1362,10 +1350,6 @@ export namespace Prisma {
             args: Prisma.WebRtcMetricUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          updateManyAndReturn: {
-            args: Prisma.WebRtcMetricUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$WebRtcMetricPayload>[]
-          }
           upsert: {
             args: Prisma.WebRtcMetricUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$WebRtcMetricPayload>
@@ -1435,10 +1419,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.ProjectUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.ProjectUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ProjectPayload>[]
           }
           upsert: {
             args: Prisma.ProjectUpsertArgs<ExtArgs>
@@ -1510,10 +1490,6 @@ export namespace Prisma {
             args: Prisma.SnapshotUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          updateManyAndReturn: {
-            args: Prisma.SnapshotUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$SnapshotPayload>[]
-          }
           upsert: {
             args: Prisma.SnapshotUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$SnapshotPayload>
@@ -1583,10 +1559,6 @@ export namespace Prisma {
           updateMany: {
             args: Prisma.TagUpdateManyArgs<ExtArgs>
             result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.TagUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$TagPayload>[]
           }
           upsert: {
             args: Prisma.TagUpsertArgs<ExtArgs>
@@ -1658,10 +1630,6 @@ export namespace Prisma {
             args: Prisma.EntityTagUpdateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          updateManyAndReturn: {
-            args: Prisma.EntityTagUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EntityTagPayload>[]
-          }
           upsert: {
             args: Prisma.EntityTagUpsertArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$EntityTagPayload>
@@ -1677,6 +1645,76 @@ export namespace Prisma {
           count: {
             args: Prisma.EntityTagCountArgs<ExtArgs>
             result: $Utils.Optional<EntityTagCountAggregateOutputType> | number
+          }
+        }
+      }
+      FileTransfer: {
+        payload: Prisma.$FileTransferPayload<ExtArgs>
+        fields: Prisma.FileTransferFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.FileTransferFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.FileTransferFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload>
+          }
+          findFirst: {
+            args: Prisma.FileTransferFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.FileTransferFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload>
+          }
+          findMany: {
+            args: Prisma.FileTransferFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload>[]
+          }
+          create: {
+            args: Prisma.FileTransferCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload>
+          }
+          createMany: {
+            args: Prisma.FileTransferCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.FileTransferCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload>[]
+          }
+          delete: {
+            args: Prisma.FileTransferDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload>
+          }
+          update: {
+            args: Prisma.FileTransferUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload>
+          }
+          deleteMany: {
+            args: Prisma.FileTransferDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.FileTransferUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.FileTransferUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FileTransferPayload>
+          }
+          aggregate: {
+            args: Prisma.FileTransferAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateFileTransfer>
+          }
+          groupBy: {
+            args: Prisma.FileTransferGroupByArgs<ExtArgs>
+            result: $Utils.Optional<FileTransferGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.FileTransferCountArgs<ExtArgs>
+            result: $Utils.Optional<FileTransferCountAggregateOutputType> | number
           }
         }
       }
@@ -1723,16 +1761,24 @@ export namespace Prisma {
     /**
      * @example
      * ```
-     * // Defaults to stdout
+     * // Shorthand for `emit: 'stdout'`
      * log: ['query', 'info', 'warn', 'error']
      * 
-     * // Emit as events
+     * // Emit as events only
      * log: [
-     *   { emit: 'stdout', level: 'query' },
-     *   { emit: 'stdout', level: 'info' },
-     *   { emit: 'stdout', level: 'warn' }
-     *   { emit: 'stdout', level: 'error' }
+     *   { emit: 'event', level: 'query' },
+     *   { emit: 'event', level: 'info' },
+     *   { emit: 'event', level: 'warn' }
+     *   { emit: 'event', level: 'error' }
      * ]
+     * 
+     * / Emit as events and log to stdout
+     * og: [
+     *  { emit: 'stdout', level: 'query' },
+     *  { emit: 'stdout', level: 'info' },
+     *  { emit: 'stdout', level: 'warn' }
+     *  { emit: 'stdout', level: 'error' }
+     * 
      * ```
      * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/logging#the-log-option).
      */
@@ -1776,6 +1822,7 @@ export namespace Prisma {
     snapshot?: SnapshotOmit
     tag?: TagOmit
     entityTag?: EntityTagOmit
+    fileTransfer?: FileTransferOmit
   }
 
   /* Types for Logging */
@@ -1785,10 +1832,15 @@ export namespace Prisma {
     emit: 'stdout' | 'event'
   }
 
-  export type GetLogType<T extends LogLevel | LogDefinition> = T extends LogDefinition ? T['emit'] extends 'event' ? T['level'] : never : never
-  export type GetEvents<T extends any> = T extends Array<LogLevel | LogDefinition> ?
-    GetLogType<T[0]> | GetLogType<T[1]> | GetLogType<T[2]> | GetLogType<T[3]>
-    : never
+  export type CheckIsLogLevel<T> = T extends LogLevel ? T : never;
+
+  export type GetLogType<T> = CheckIsLogLevel<
+    T extends LogDefinition ? T['level'] : T
+  >;
+
+  export type GetEvents<T extends any[]> = T extends Array<LogLevel | LogDefinition>
+    ? GetLogType<T[number]>
+    : never;
 
   export type QueryEvent = {
     timestamp: Date
@@ -1876,6 +1928,8 @@ export namespace Prisma {
     crashReports: number
     webRtcMetrics: number
     devices: number
+    fromTransfers: number
+    toTransfers: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1885,6 +1939,8 @@ export namespace Prisma {
     crashReports?: boolean | UserCountOutputTypeCountCrashReportsArgs
     webRtcMetrics?: boolean | UserCountOutputTypeCountWebRtcMetricsArgs
     devices?: boolean | UserCountOutputTypeCountDevicesArgs
+    fromTransfers?: boolean | UserCountOutputTypeCountFromTransfersArgs
+    toTransfers?: boolean | UserCountOutputTypeCountToTransfersArgs
   }
 
   // Custom InputTypes
@@ -1938,6 +1994,20 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountDevicesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DeviceWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountFromTransfersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FileTransferWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountToTransfersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FileTransferWhereInput
   }
 
 
@@ -2328,6 +2398,8 @@ export namespace Prisma {
     crashReports?: boolean | User$crashReportsArgs<ExtArgs>
     webRtcMetrics?: boolean | User$webRtcMetricsArgs<ExtArgs>
     devices?: boolean | User$devicesArgs<ExtArgs>
+    fromTransfers?: boolean | User$fromTransfersArgs<ExtArgs>
+    toTransfers?: boolean | User$toTransfersArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2349,23 +2421,6 @@ export namespace Prisma {
     deletedAt?: boolean
   }, ExtArgs["result"]["user"]>
 
-  export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    email?: boolean
-    name?: boolean
-    displayName?: boolean
-    bio?: boolean
-    avatarUrl?: boolean
-    password?: boolean
-    refreshToken?: boolean
-    isApproved?: boolean
-    inventoryHash?: boolean
-    lastLoginAt?: boolean
-    lastInventorySync?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    deletedAt?: boolean
-  }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
     id?: boolean
@@ -2393,10 +2448,11 @@ export namespace Prisma {
     crashReports?: boolean | User$crashReportsArgs<ExtArgs>
     webRtcMetrics?: boolean | User$webRtcMetricsArgs<ExtArgs>
     devices?: boolean | User$devicesArgs<ExtArgs>
+    fromTransfers?: boolean | User$fromTransfersArgs<ExtArgs>
+    toTransfers?: boolean | User$toTransfersArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
@@ -2407,6 +2463,8 @@ export namespace Prisma {
       crashReports: Prisma.$CrashReportPayload<ExtArgs>[]
       webRtcMetrics: Prisma.$WebRtcMetricPayload<ExtArgs>[]
       devices: Prisma.$DevicePayload<ExtArgs>[]
+      fromTransfers: Prisma.$FileTransferPayload<ExtArgs>[]
+      toTransfers: Prisma.$FileTransferPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2630,36 +2688,6 @@ export namespace Prisma {
     updateMany<T extends UserUpdateManyArgs>(args: SelectSubset<T, UserUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Update zero or more Users and returns the data updated in the database.
-     * @param {UserUpdateManyAndReturnArgs} args - Arguments to update many Users.
-     * @example
-     * // Update many Users
-     * const user = await prisma.user.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Users and only return the `id`
-     * const userWithIdOnly = await prisma.user.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends UserUpdateManyAndReturnArgs>(args: SelectSubset<T, UserUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
      * Create or update one User.
      * @param {UserUpsertArgs} args - Arguments to update or create a User.
      * @example
@@ -2824,6 +2852,8 @@ export namespace Prisma {
     crashReports<T extends User$crashReportsArgs<ExtArgs> = {}>(args?: Subset<T, User$crashReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrashReportPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     webRtcMetrics<T extends User$webRtcMetricsArgs<ExtArgs> = {}>(args?: Subset<T, User$webRtcMetricsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WebRtcMetricPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     devices<T extends User$devicesArgs<ExtArgs> = {}>(args?: Subset<T, User$devicesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    fromTransfers<T extends User$fromTransfersArgs<ExtArgs> = {}>(args?: Subset<T, User$fromTransfersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    toTransfers<T extends User$toTransfersArgs<ExtArgs> = {}>(args?: Subset<T, User$toTransfersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3157,36 +3187,6 @@ export namespace Prisma {
      * Filter which Users to update
      */
     where?: UserWhereInput
-    /**
-     * Limit how many Users to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * User updateManyAndReturn
-   */
-  export type UserUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the User
-     */
-    omit?: UserOmit<ExtArgs> | null
-    /**
-     * The data used to update Users.
-     */
-    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyInput>
-    /**
-     * Filter which Users to update
-     */
-    where?: UserWhereInput
-    /**
-     * Limit how many Users to update.
-     */
-    limit?: number
   }
 
   /**
@@ -3249,10 +3249,6 @@ export namespace Prisma {
      * Filter which Users to delete
      */
     where?: UserWhereInput
-    /**
-     * Limit how many Users to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -3397,6 +3393,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: DeviceScalarFieldEnum | DeviceScalarFieldEnum[]
+  }
+
+  /**
+   * User.fromTransfers
+   */
+  export type User$fromTransfersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    where?: FileTransferWhereInput
+    orderBy?: FileTransferOrderByWithRelationInput | FileTransferOrderByWithRelationInput[]
+    cursor?: FileTransferWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FileTransferScalarFieldEnum | FileTransferScalarFieldEnum[]
+  }
+
+  /**
+   * User.toTransfers
+   */
+  export type User$toTransfersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    where?: FileTransferWhereInput
+    orderBy?: FileTransferOrderByWithRelationInput | FileTransferOrderByWithRelationInput[]
+    cursor?: FileTransferWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FileTransferScalarFieldEnum | FileTransferScalarFieldEnum[]
   }
 
   /**
@@ -3612,15 +3656,6 @@ export namespace Prisma {
     deletedAt?: boolean
   }, ExtArgs["result"]["plugin"]>
 
-  export type PluginSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    description?: boolean
-    version?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    deletedAt?: boolean
-  }, ExtArgs["result"]["plugin"]>
 
   export type PluginSelectScalar = {
     id?: boolean
@@ -3638,7 +3673,6 @@ export namespace Prisma {
     _count?: boolean | PluginCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PluginIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type PluginIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $PluginPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Plugin"
@@ -3857,36 +3891,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends PluginUpdateManyArgs>(args: SelectSubset<T, PluginUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Plugins and returns the data updated in the database.
-     * @param {PluginUpdateManyAndReturnArgs} args - Arguments to update many Plugins.
-     * @example
-     * // Update many Plugins
-     * const plugin = await prisma.plugin.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Plugins and only return the `id`
-     * const pluginWithIdOnly = await prisma.plugin.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends PluginUpdateManyAndReturnArgs>(args: SelectSubset<T, PluginUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PluginPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one Plugin.
@@ -4373,36 +4377,6 @@ export namespace Prisma {
      * Filter which Plugins to update
      */
     where?: PluginWhereInput
-    /**
-     * Limit how many Plugins to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * Plugin updateManyAndReturn
-   */
-  export type PluginUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Plugin
-     */
-    select?: PluginSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Plugin
-     */
-    omit?: PluginOmit<ExtArgs> | null
-    /**
-     * The data used to update Plugins.
-     */
-    data: XOR<PluginUpdateManyMutationInput, PluginUncheckedUpdateManyInput>
-    /**
-     * Filter which Plugins to update
-     */
-    where?: PluginWhereInput
-    /**
-     * Limit how many Plugins to update.
-     */
-    limit?: number
   }
 
   /**
@@ -4465,10 +4439,6 @@ export namespace Prisma {
      * Filter which Plugins to delete
      */
     where?: PluginWhereInput
-    /**
-     * Limit how many Plugins to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -4726,18 +4696,6 @@ export namespace Prisma {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["device"]>
 
-  export type DeviceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    name?: boolean
-    type?: boolean
-    info?: boolean
-    lastActiveAt?: boolean
-    isActive?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["device"]>
 
   export type DeviceSelectScalar = {
     id?: boolean
@@ -4756,9 +4714,6 @@ export namespace Prisma {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type DeviceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
-  export type DeviceIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
@@ -4981,36 +4936,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends DeviceUpdateManyArgs>(args: SelectSubset<T, DeviceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Devices and returns the data updated in the database.
-     * @param {DeviceUpdateManyAndReturnArgs} args - Arguments to update many Devices.
-     * @example
-     * // Update many Devices
-     * const device = await prisma.device.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Devices and only return the `id`
-     * const deviceWithIdOnly = await prisma.device.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends DeviceUpdateManyAndReturnArgs>(args: SelectSubset<T, DeviceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one Device.
@@ -5503,40 +5428,6 @@ export namespace Prisma {
      * Filter which Devices to update
      */
     where?: DeviceWhereInput
-    /**
-     * Limit how many Devices to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * Device updateManyAndReturn
-   */
-  export type DeviceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Device
-     */
-    select?: DeviceSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Device
-     */
-    omit?: DeviceOmit<ExtArgs> | null
-    /**
-     * The data used to update Devices.
-     */
-    data: XOR<DeviceUpdateManyMutationInput, DeviceUncheckedUpdateManyInput>
-    /**
-     * Filter which Devices to update
-     */
-    where?: DeviceWhereInput
-    /**
-     * Limit how many Devices to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: DeviceIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -5599,10 +5490,6 @@ export namespace Prisma {
      * Filter which Devices to delete
      */
     where?: DeviceWhereInput
-    /**
-     * Limit how many Devices to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -5811,16 +5698,6 @@ export namespace Prisma {
     plugin?: boolean | PluginDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userPlugin"]>
 
-  export type UserPluginSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    pluginId?: boolean
-    isActive?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    plugin?: boolean | PluginDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["userPlugin"]>
 
   export type UserPluginSelectScalar = {
     id?: boolean
@@ -5837,10 +5714,6 @@ export namespace Prisma {
     plugin?: boolean | PluginDefaultArgs<ExtArgs>
   }
   export type UserPluginIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    plugin?: boolean | PluginDefaultArgs<ExtArgs>
-  }
-  export type UserPluginIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     plugin?: boolean | PluginDefaultArgs<ExtArgs>
   }
@@ -6062,36 +5935,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends UserPluginUpdateManyArgs>(args: SelectSubset<T, UserPluginUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more UserPlugins and returns the data updated in the database.
-     * @param {UserPluginUpdateManyAndReturnArgs} args - Arguments to update many UserPlugins.
-     * @example
-     * // Update many UserPlugins
-     * const userPlugin = await prisma.userPlugin.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more UserPlugins and only return the `id`
-     * const userPluginWithIdOnly = await prisma.userPlugin.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends UserPluginUpdateManyAndReturnArgs>(args: SelectSubset<T, UserPluginUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPluginPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one UserPlugin.
@@ -6582,40 +6425,6 @@ export namespace Prisma {
      * Filter which UserPlugins to update
      */
     where?: UserPluginWhereInput
-    /**
-     * Limit how many UserPlugins to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * UserPlugin updateManyAndReturn
-   */
-  export type UserPluginUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the UserPlugin
-     */
-    select?: UserPluginSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the UserPlugin
-     */
-    omit?: UserPluginOmit<ExtArgs> | null
-    /**
-     * The data used to update UserPlugins.
-     */
-    data: XOR<UserPluginUpdateManyMutationInput, UserPluginUncheckedUpdateManyInput>
-    /**
-     * Filter which UserPlugins to update
-     */
-    where?: UserPluginWhereInput
-    /**
-     * Limit how many UserPlugins to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserPluginIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -6678,10 +6487,6 @@ export namespace Prisma {
      * Filter which UserPlugins to delete
      */
     where?: UserPluginWhereInput
-    /**
-     * Limit how many UserPlugins to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -6906,17 +6711,6 @@ export namespace Prisma {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["userPresence"]>
 
-  export type UserPresenceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    projectId?: boolean
-    status?: boolean
-    expiresAt?: boolean
-    lastSeen?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["userPresence"]>
 
   export type UserPresenceSelectScalar = {
     id?: boolean
@@ -6934,9 +6728,6 @@ export namespace Prisma {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type UserPresenceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
-  export type UserPresenceIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
@@ -7158,36 +6949,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends UserPresenceUpdateManyArgs>(args: SelectSubset<T, UserPresenceUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more UserPresences and returns the data updated in the database.
-     * @param {UserPresenceUpdateManyAndReturnArgs} args - Arguments to update many UserPresences.
-     * @example
-     * // Update many UserPresences
-     * const userPresence = await prisma.userPresence.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more UserPresences and only return the `id`
-     * const userPresenceWithIdOnly = await prisma.userPresence.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends UserPresenceUpdateManyAndReturnArgs>(args: SelectSubset<T, UserPresenceUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPresencePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one UserPresence.
@@ -7679,40 +7440,6 @@ export namespace Prisma {
      * Filter which UserPresences to update
      */
     where?: UserPresenceWhereInput
-    /**
-     * Limit how many UserPresences to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * UserPresence updateManyAndReturn
-   */
-  export type UserPresenceUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the UserPresence
-     */
-    select?: UserPresenceSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the UserPresence
-     */
-    omit?: UserPresenceOmit<ExtArgs> | null
-    /**
-     * The data used to update UserPresences.
-     */
-    data: XOR<UserPresenceUpdateManyMutationInput, UserPresenceUncheckedUpdateManyInput>
-    /**
-     * Filter which UserPresences to update
-     */
-    where?: UserPresenceWhereInput
-    /**
-     * Limit how many UserPresences to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: UserPresenceIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -7775,10 +7502,6 @@ export namespace Prisma {
      * Filter which UserPresences to delete
      */
     where?: UserPresenceWhereInput
-    /**
-     * Limit how many UserPresences to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -8023,20 +7746,6 @@ export namespace Prisma {
     project?: boolean | ActivityLog$projectArgs<ExtArgs>
   }, ExtArgs["result"]["activityLog"]>
 
-  export type ActivityLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    action?: boolean
-    entityType?: boolean
-    entityId?: boolean
-    projectId?: boolean
-    metadata?: boolean
-    ipAddress?: boolean
-    userAgent?: boolean
-    createdAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    project?: boolean | ActivityLog$projectArgs<ExtArgs>
-  }, ExtArgs["result"]["activityLog"]>
 
   export type ActivityLogSelectScalar = {
     id?: boolean
@@ -8057,10 +7766,6 @@ export namespace Prisma {
     project?: boolean | ActivityLog$projectArgs<ExtArgs>
   }
   export type ActivityLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-    project?: boolean | ActivityLog$projectArgs<ExtArgs>
-  }
-  export type ActivityLogIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     project?: boolean | ActivityLog$projectArgs<ExtArgs>
   }
@@ -8286,36 +7991,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends ActivityLogUpdateManyArgs>(args: SelectSubset<T, ActivityLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more ActivityLogs and returns the data updated in the database.
-     * @param {ActivityLogUpdateManyAndReturnArgs} args - Arguments to update many ActivityLogs.
-     * @example
-     * // Update many ActivityLogs
-     * const activityLog = await prisma.activityLog.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more ActivityLogs and only return the `id`
-     * const activityLogWithIdOnly = await prisma.activityLog.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends ActivityLogUpdateManyAndReturnArgs>(args: SelectSubset<T, ActivityLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ActivityLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one ActivityLog.
@@ -8810,40 +8485,6 @@ export namespace Prisma {
      * Filter which ActivityLogs to update
      */
     where?: ActivityLogWhereInput
-    /**
-     * Limit how many ActivityLogs to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * ActivityLog updateManyAndReturn
-   */
-  export type ActivityLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ActivityLog
-     */
-    select?: ActivityLogSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the ActivityLog
-     */
-    omit?: ActivityLogOmit<ExtArgs> | null
-    /**
-     * The data used to update ActivityLogs.
-     */
-    data: XOR<ActivityLogUpdateManyMutationInput, ActivityLogUncheckedUpdateManyInput>
-    /**
-     * Filter which ActivityLogs to update
-     */
-    where?: ActivityLogWhereInput
-    /**
-     * Limit how many ActivityLogs to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ActivityLogIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -8906,10 +8547,6 @@ export namespace Prisma {
      * Filter which ActivityLogs to delete
      */
     where?: ActivityLogWhereInput
-    /**
-     * Limit how many ActivityLogs to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -9171,19 +8808,6 @@ export namespace Prisma {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["crashReport"]>
 
-  export type CrashReportSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    error?: boolean
-    stackTrace?: boolean
-    stack?: boolean
-    breadcrumbs?: boolean
-    context?: boolean
-    projectId?: boolean
-    metadata?: boolean
-    createdAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["crashReport"]>
 
   export type CrashReportSelectScalar = {
     id?: boolean
@@ -9203,9 +8827,6 @@ export namespace Prisma {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type CrashReportIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
-  export type CrashReportIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
@@ -9429,36 +9050,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends CrashReportUpdateManyArgs>(args: SelectSubset<T, CrashReportUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more CrashReports and returns the data updated in the database.
-     * @param {CrashReportUpdateManyAndReturnArgs} args - Arguments to update many CrashReports.
-     * @example
-     * // Update many CrashReports
-     * const crashReport = await prisma.crashReport.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more CrashReports and only return the `id`
-     * const crashReportWithIdOnly = await prisma.crashReport.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends CrashReportUpdateManyAndReturnArgs>(args: SelectSubset<T, CrashReportUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrashReportPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one CrashReport.
@@ -9952,40 +9543,6 @@ export namespace Prisma {
      * Filter which CrashReports to update
      */
     where?: CrashReportWhereInput
-    /**
-     * Limit how many CrashReports to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * CrashReport updateManyAndReturn
-   */
-  export type CrashReportUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the CrashReport
-     */
-    select?: CrashReportSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the CrashReport
-     */
-    omit?: CrashReportOmit<ExtArgs> | null
-    /**
-     * The data used to update CrashReports.
-     */
-    data: XOR<CrashReportUpdateManyMutationInput, CrashReportUncheckedUpdateManyInput>
-    /**
-     * Filter which CrashReports to update
-     */
-    where?: CrashReportWhereInput
-    /**
-     * Limit how many CrashReports to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: CrashReportIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -10048,10 +9605,6 @@ export namespace Prisma {
      * Filter which CrashReports to delete
      */
     where?: CrashReportWhereInput
-    /**
-     * Limit how many CrashReports to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -10416,27 +9969,6 @@ export namespace Prisma {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["webRtcMetric"]>
 
-  export type WebRtcMetricSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    userId?: boolean
-    projectId?: boolean
-    metricType?: boolean
-    value?: boolean
-    peerConnectionId?: boolean
-    rttMs?: boolean
-    jitterMs?: boolean
-    packetLoss?: boolean
-    networkType?: boolean
-    effectiveType?: boolean
-    downlinkMbps?: boolean
-    iceCandidatePairId?: boolean
-    localCandidateId?: boolean
-    remoteCandidateId?: boolean
-    timestamp?: boolean
-    metadata?: boolean
-    createdAt?: boolean
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["webRtcMetric"]>
 
   export type WebRtcMetricSelectScalar = {
     id?: boolean
@@ -10464,9 +9996,6 @@ export namespace Prisma {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
   export type WebRtcMetricIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    user?: boolean | UserDefaultArgs<ExtArgs>
-  }
-  export type WebRtcMetricIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
 
@@ -10698,36 +10227,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends WebRtcMetricUpdateManyArgs>(args: SelectSubset<T, WebRtcMetricUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more WebRtcMetrics and returns the data updated in the database.
-     * @param {WebRtcMetricUpdateManyAndReturnArgs} args - Arguments to update many WebRtcMetrics.
-     * @example
-     * // Update many WebRtcMetrics
-     * const webRtcMetric = await prisma.webRtcMetric.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more WebRtcMetrics and only return the `id`
-     * const webRtcMetricWithIdOnly = await prisma.webRtcMetric.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends WebRtcMetricUpdateManyAndReturnArgs>(args: SelectSubset<T, WebRtcMetricUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WebRtcMetricPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one WebRtcMetric.
@@ -11229,40 +10728,6 @@ export namespace Prisma {
      * Filter which WebRtcMetrics to update
      */
     where?: WebRtcMetricWhereInput
-    /**
-     * Limit how many WebRtcMetrics to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * WebRtcMetric updateManyAndReturn
-   */
-  export type WebRtcMetricUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the WebRtcMetric
-     */
-    select?: WebRtcMetricSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the WebRtcMetric
-     */
-    omit?: WebRtcMetricOmit<ExtArgs> | null
-    /**
-     * The data used to update WebRtcMetrics.
-     */
-    data: XOR<WebRtcMetricUpdateManyMutationInput, WebRtcMetricUncheckedUpdateManyInput>
-    /**
-     * Filter which WebRtcMetrics to update
-     */
-    where?: WebRtcMetricWhereInput
-    /**
-     * Limit how many WebRtcMetrics to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: WebRtcMetricIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -11325,10 +10790,6 @@ export namespace Prisma {
      * Filter which WebRtcMetrics to delete
      */
     where?: WebRtcMetricWhereInput
-    /**
-     * Limit how many WebRtcMetrics to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -11545,15 +11006,6 @@ export namespace Prisma {
     deletedAt?: boolean
   }, ExtArgs["result"]["project"]>
 
-  export type ProjectSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    description?: boolean
-    isPublic?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    deletedAt?: boolean
-  }, ExtArgs["result"]["project"]>
 
   export type ProjectSelectScalar = {
     id?: boolean
@@ -11572,7 +11024,6 @@ export namespace Prisma {
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProjectIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type ProjectIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $ProjectPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Project"
@@ -11792,36 +11243,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends ProjectUpdateManyArgs>(args: SelectSubset<T, ProjectUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Projects and returns the data updated in the database.
-     * @param {ProjectUpdateManyAndReturnArgs} args - Arguments to update many Projects.
-     * @example
-     * // Update many Projects
-     * const project = await prisma.project.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Projects and only return the `id`
-     * const projectWithIdOnly = await prisma.project.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends ProjectUpdateManyAndReturnArgs>(args: SelectSubset<T, ProjectUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one Project.
@@ -12309,36 +11730,6 @@ export namespace Prisma {
      * Filter which Projects to update
      */
     where?: ProjectWhereInput
-    /**
-     * Limit how many Projects to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * Project updateManyAndReturn
-   */
-  export type ProjectUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Project
-     */
-    select?: ProjectSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Project
-     */
-    omit?: ProjectOmit<ExtArgs> | null
-    /**
-     * The data used to update Projects.
-     */
-    data: XOR<ProjectUpdateManyMutationInput, ProjectUncheckedUpdateManyInput>
-    /**
-     * Filter which Projects to update
-     */
-    where?: ProjectWhereInput
-    /**
-     * Limit how many Projects to update.
-     */
-    limit?: number
   }
 
   /**
@@ -12401,10 +11792,6 @@ export namespace Prisma {
      * Filter which Projects to delete
      */
     where?: ProjectWhereInput
-    /**
-     * Limit how many Projects to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -12670,16 +12057,6 @@ export namespace Prisma {
     project?: boolean | ProjectDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["snapshot"]>
 
-  export type SnapshotSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    projectId?: boolean
-    name?: boolean
-    description?: boolean
-    data?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    project?: boolean | ProjectDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["snapshot"]>
 
   export type SnapshotSelectScalar = {
     id?: boolean
@@ -12698,9 +12075,6 @@ export namespace Prisma {
     _count?: boolean | SnapshotCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type SnapshotIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    project?: boolean | ProjectDefaultArgs<ExtArgs>
-  }
-  export type SnapshotIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     project?: boolean | ProjectDefaultArgs<ExtArgs>
   }
 
@@ -12922,36 +12296,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends SnapshotUpdateManyArgs>(args: SelectSubset<T, SnapshotUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Snapshots and returns the data updated in the database.
-     * @param {SnapshotUpdateManyAndReturnArgs} args - Arguments to update many Snapshots.
-     * @example
-     * // Update many Snapshots
-     * const snapshot = await prisma.snapshot.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Snapshots and only return the `id`
-     * const snapshotWithIdOnly = await prisma.snapshot.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends SnapshotUpdateManyAndReturnArgs>(args: SelectSubset<T, SnapshotUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SnapshotPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one Snapshot.
@@ -13443,40 +12787,6 @@ export namespace Prisma {
      * Filter which Snapshots to update
      */
     where?: SnapshotWhereInput
-    /**
-     * Limit how many Snapshots to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * Snapshot updateManyAndReturn
-   */
-  export type SnapshotUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Snapshot
-     */
-    select?: SnapshotSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Snapshot
-     */
-    omit?: SnapshotOmit<ExtArgs> | null
-    /**
-     * The data used to update Snapshots.
-     */
-    data: XOR<SnapshotUpdateManyMutationInput, SnapshotUncheckedUpdateManyInput>
-    /**
-     * Filter which Snapshots to update
-     */
-    where?: SnapshotWhereInput
-    /**
-     * Limit how many Snapshots to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: SnapshotIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -13539,10 +12849,6 @@ export namespace Prisma {
      * Filter which Snapshots to delete
      */
     where?: SnapshotWhereInput
-    /**
-     * Limit how many Snapshots to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -13773,14 +13079,6 @@ export namespace Prisma {
     updatedAt?: boolean
   }, ExtArgs["result"]["tag"]>
 
-  export type TagSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    name?: boolean
-    description?: boolean
-    color?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-  }, ExtArgs["result"]["tag"]>
 
   export type TagSelectScalar = {
     id?: boolean
@@ -13797,7 +13095,6 @@ export namespace Prisma {
     _count?: boolean | TagCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type TagIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type TagIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $TagPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Tag"
@@ -14015,36 +13312,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends TagUpdateManyArgs>(args: SelectSubset<T, TagUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more Tags and returns the data updated in the database.
-     * @param {TagUpdateManyAndReturnArgs} args - Arguments to update many Tags.
-     * @example
-     * // Update many Tags
-     * const tag = await prisma.tag.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more Tags and only return the `id`
-     * const tagWithIdOnly = await prisma.tag.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends TagUpdateManyAndReturnArgs>(args: SelectSubset<T, TagUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TagPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one Tag.
@@ -14530,36 +13797,6 @@ export namespace Prisma {
      * Filter which Tags to update
      */
     where?: TagWhereInput
-    /**
-     * Limit how many Tags to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * Tag updateManyAndReturn
-   */
-  export type TagUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Tag
-     */
-    select?: TagSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the Tag
-     */
-    omit?: TagOmit<ExtArgs> | null
-    /**
-     * The data used to update Tags.
-     */
-    data: XOR<TagUpdateManyMutationInput, TagUncheckedUpdateManyInput>
-    /**
-     * Filter which Tags to update
-     */
-    where?: TagWhereInput
-    /**
-     * Limit how many Tags to update.
-     */
-    limit?: number
   }
 
   /**
@@ -14622,10 +13859,6 @@ export namespace Prisma {
      * Filter which Tags to delete
      */
     where?: TagWhereInput
-    /**
-     * Limit how many Tags to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -14858,16 +14091,6 @@ export namespace Prisma {
     snapshot?: boolean | EntityTag$snapshotArgs<ExtArgs>
   }, ExtArgs["result"]["entityTag"]>
 
-  export type EntityTagSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    entityType?: boolean
-    entityId?: boolean
-    tagId?: boolean
-    snapshotId?: boolean
-    createdAt?: boolean
-    tag?: boolean | TagDefaultArgs<ExtArgs>
-    snapshot?: boolean | EntityTag$snapshotArgs<ExtArgs>
-  }, ExtArgs["result"]["entityTag"]>
 
   export type EntityTagSelectScalar = {
     id?: boolean
@@ -14884,10 +14107,6 @@ export namespace Prisma {
     snapshot?: boolean | EntityTag$snapshotArgs<ExtArgs>
   }
   export type EntityTagIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    tag?: boolean | TagDefaultArgs<ExtArgs>
-    snapshot?: boolean | EntityTag$snapshotArgs<ExtArgs>
-  }
-  export type EntityTagIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     tag?: boolean | TagDefaultArgs<ExtArgs>
     snapshot?: boolean | EntityTag$snapshotArgs<ExtArgs>
   }
@@ -15109,36 +14328,6 @@ export namespace Prisma {
      * 
      */
     updateMany<T extends EntityTagUpdateManyArgs>(args: SelectSubset<T, EntityTagUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more EntityTags and returns the data updated in the database.
-     * @param {EntityTagUpdateManyAndReturnArgs} args - Arguments to update many EntityTags.
-     * @example
-     * // Update many EntityTags
-     * const entityTag = await prisma.entityTag.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more EntityTags and only return the `id`
-     * const entityTagWithIdOnly = await prisma.entityTag.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends EntityTagUpdateManyAndReturnArgs>(args: SelectSubset<T, EntityTagUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EntityTagPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
 
     /**
      * Create or update one EntityTag.
@@ -15629,40 +14818,6 @@ export namespace Prisma {
      * Filter which EntityTags to update
      */
     where?: EntityTagWhereInput
-    /**
-     * Limit how many EntityTags to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * EntityTag updateManyAndReturn
-   */
-  export type EntityTagUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the EntityTag
-     */
-    select?: EntityTagSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the EntityTag
-     */
-    omit?: EntityTagOmit<ExtArgs> | null
-    /**
-     * The data used to update EntityTags.
-     */
-    data: XOR<EntityTagUpdateManyMutationInput, EntityTagUncheckedUpdateManyInput>
-    /**
-     * Filter which EntityTags to update
-     */
-    where?: EntityTagWhereInput
-    /**
-     * Limit how many EntityTags to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: EntityTagIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -15725,10 +14880,6 @@ export namespace Prisma {
      * Filter which EntityTags to delete
      */
     where?: EntityTagWhereInput
-    /**
-     * Limit how many EntityTags to delete.
-     */
-    limit?: number
   }
 
   /**
@@ -15766,6 +14917,1101 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: EntityTagInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model FileTransfer
+   */
+
+  export type AggregateFileTransfer = {
+    _count: FileTransferCountAggregateOutputType | null
+    _avg: FileTransferAvgAggregateOutputType | null
+    _sum: FileTransferSumAggregateOutputType | null
+    _min: FileTransferMinAggregateOutputType | null
+    _max: FileTransferMaxAggregateOutputType | null
+  }
+
+  export type FileTransferAvgAggregateOutputType = {
+    size: number | null
+    progress: number | null
+  }
+
+  export type FileTransferSumAggregateOutputType = {
+    size: number | null
+    progress: number | null
+  }
+
+  export type FileTransferMinAggregateOutputType = {
+    id: string | null
+    fileName: string | null
+    size: number | null
+    mimeType: string | null
+    fromUserId: string | null
+    toUserId: string | null
+    status: string | null
+    progress: number | null
+    fileKey: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type FileTransferMaxAggregateOutputType = {
+    id: string | null
+    fileName: string | null
+    size: number | null
+    mimeType: string | null
+    fromUserId: string | null
+    toUserId: string | null
+    status: string | null
+    progress: number | null
+    fileKey: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type FileTransferCountAggregateOutputType = {
+    id: number
+    fileName: number
+    size: number
+    mimeType: number
+    fromUserId: number
+    toUserId: number
+    status: number
+    progress: number
+    fileKey: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type FileTransferAvgAggregateInputType = {
+    size?: true
+    progress?: true
+  }
+
+  export type FileTransferSumAggregateInputType = {
+    size?: true
+    progress?: true
+  }
+
+  export type FileTransferMinAggregateInputType = {
+    id?: true
+    fileName?: true
+    size?: true
+    mimeType?: true
+    fromUserId?: true
+    toUserId?: true
+    status?: true
+    progress?: true
+    fileKey?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type FileTransferMaxAggregateInputType = {
+    id?: true
+    fileName?: true
+    size?: true
+    mimeType?: true
+    fromUserId?: true
+    toUserId?: true
+    status?: true
+    progress?: true
+    fileKey?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type FileTransferCountAggregateInputType = {
+    id?: true
+    fileName?: true
+    size?: true
+    mimeType?: true
+    fromUserId?: true
+    toUserId?: true
+    status?: true
+    progress?: true
+    fileKey?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type FileTransferAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FileTransfer to aggregate.
+     */
+    where?: FileTransferWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FileTransfers to fetch.
+     */
+    orderBy?: FileTransferOrderByWithRelationInput | FileTransferOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: FileTransferWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FileTransfers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FileTransfers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned FileTransfers
+    **/
+    _count?: true | FileTransferCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: FileTransferAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: FileTransferSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: FileTransferMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: FileTransferMaxAggregateInputType
+  }
+
+  export type GetFileTransferAggregateType<T extends FileTransferAggregateArgs> = {
+        [P in keyof T & keyof AggregateFileTransfer]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateFileTransfer[P]>
+      : GetScalarType<T[P], AggregateFileTransfer[P]>
+  }
+
+
+
+
+  export type FileTransferGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FileTransferWhereInput
+    orderBy?: FileTransferOrderByWithAggregationInput | FileTransferOrderByWithAggregationInput[]
+    by: FileTransferScalarFieldEnum[] | FileTransferScalarFieldEnum
+    having?: FileTransferScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: FileTransferCountAggregateInputType | true
+    _avg?: FileTransferAvgAggregateInputType
+    _sum?: FileTransferSumAggregateInputType
+    _min?: FileTransferMinAggregateInputType
+    _max?: FileTransferMaxAggregateInputType
+  }
+
+  export type FileTransferGroupByOutputType = {
+    id: string
+    fileName: string
+    size: number
+    mimeType: string
+    fromUserId: string
+    toUserId: string
+    status: string
+    progress: number
+    fileKey: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: FileTransferCountAggregateOutputType | null
+    _avg: FileTransferAvgAggregateOutputType | null
+    _sum: FileTransferSumAggregateOutputType | null
+    _min: FileTransferMinAggregateOutputType | null
+    _max: FileTransferMaxAggregateOutputType | null
+  }
+
+  type GetFileTransferGroupByPayload<T extends FileTransferGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<FileTransferGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof FileTransferGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], FileTransferGroupByOutputType[P]>
+            : GetScalarType<T[P], FileTransferGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type FileTransferSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fileName?: boolean
+    size?: boolean
+    mimeType?: boolean
+    fromUserId?: boolean
+    toUserId?: boolean
+    status?: boolean
+    progress?: boolean
+    fileKey?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    fromUser?: boolean | UserDefaultArgs<ExtArgs>
+    toUser?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["fileTransfer"]>
+
+  export type FileTransferSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fileName?: boolean
+    size?: boolean
+    mimeType?: boolean
+    fromUserId?: boolean
+    toUserId?: boolean
+    status?: boolean
+    progress?: boolean
+    fileKey?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    fromUser?: boolean | UserDefaultArgs<ExtArgs>
+    toUser?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["fileTransfer"]>
+
+
+  export type FileTransferSelectScalar = {
+    id?: boolean
+    fileName?: boolean
+    size?: boolean
+    mimeType?: boolean
+    fromUserId?: boolean
+    toUserId?: boolean
+    status?: boolean
+    progress?: boolean
+    fileKey?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type FileTransferOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fileName" | "size" | "mimeType" | "fromUserId" | "toUserId" | "status" | "progress" | "fileKey" | "createdAt" | "updatedAt", ExtArgs["result"]["fileTransfer"]>
+  export type FileTransferInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    fromUser?: boolean | UserDefaultArgs<ExtArgs>
+    toUser?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type FileTransferIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    fromUser?: boolean | UserDefaultArgs<ExtArgs>
+    toUser?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $FileTransferPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "FileTransfer"
+    objects: {
+      fromUser: Prisma.$UserPayload<ExtArgs>
+      toUser: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      fileName: string
+      size: number
+      mimeType: string
+      fromUserId: string
+      toUserId: string
+      status: string
+      progress: number
+      fileKey: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["fileTransfer"]>
+    composites: {}
+  }
+
+  type FileTransferGetPayload<S extends boolean | null | undefined | FileTransferDefaultArgs> = $Result.GetResult<Prisma.$FileTransferPayload, S>
+
+  type FileTransferCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<FileTransferFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: FileTransferCountAggregateInputType | true
+    }
+
+  export interface FileTransferDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FileTransfer'], meta: { name: 'FileTransfer' } }
+    /**
+     * Find zero or one FileTransfer that matches the filter.
+     * @param {FileTransferFindUniqueArgs} args - Arguments to find a FileTransfer
+     * @example
+     * // Get one FileTransfer
+     * const fileTransfer = await prisma.fileTransfer.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends FileTransferFindUniqueArgs>(args: SelectSubset<T, FileTransferFindUniqueArgs<ExtArgs>>): Prisma__FileTransferClient<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one FileTransfer that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {FileTransferFindUniqueOrThrowArgs} args - Arguments to find a FileTransfer
+     * @example
+     * // Get one FileTransfer
+     * const fileTransfer = await prisma.fileTransfer.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends FileTransferFindUniqueOrThrowArgs>(args: SelectSubset<T, FileTransferFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FileTransferClient<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first FileTransfer that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FileTransferFindFirstArgs} args - Arguments to find a FileTransfer
+     * @example
+     * // Get one FileTransfer
+     * const fileTransfer = await prisma.fileTransfer.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends FileTransferFindFirstArgs>(args?: SelectSubset<T, FileTransferFindFirstArgs<ExtArgs>>): Prisma__FileTransferClient<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first FileTransfer that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FileTransferFindFirstOrThrowArgs} args - Arguments to find a FileTransfer
+     * @example
+     * // Get one FileTransfer
+     * const fileTransfer = await prisma.fileTransfer.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends FileTransferFindFirstOrThrowArgs>(args?: SelectSubset<T, FileTransferFindFirstOrThrowArgs<ExtArgs>>): Prisma__FileTransferClient<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more FileTransfers that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FileTransferFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all FileTransfers
+     * const fileTransfers = await prisma.fileTransfer.findMany()
+     * 
+     * // Get first 10 FileTransfers
+     * const fileTransfers = await prisma.fileTransfer.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const fileTransferWithIdOnly = await prisma.fileTransfer.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends FileTransferFindManyArgs>(args?: SelectSubset<T, FileTransferFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a FileTransfer.
+     * @param {FileTransferCreateArgs} args - Arguments to create a FileTransfer.
+     * @example
+     * // Create one FileTransfer
+     * const FileTransfer = await prisma.fileTransfer.create({
+     *   data: {
+     *     // ... data to create a FileTransfer
+     *   }
+     * })
+     * 
+     */
+    create<T extends FileTransferCreateArgs>(args: SelectSubset<T, FileTransferCreateArgs<ExtArgs>>): Prisma__FileTransferClient<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many FileTransfers.
+     * @param {FileTransferCreateManyArgs} args - Arguments to create many FileTransfers.
+     * @example
+     * // Create many FileTransfers
+     * const fileTransfer = await prisma.fileTransfer.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends FileTransferCreateManyArgs>(args?: SelectSubset<T, FileTransferCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many FileTransfers and returns the data saved in the database.
+     * @param {FileTransferCreateManyAndReturnArgs} args - Arguments to create many FileTransfers.
+     * @example
+     * // Create many FileTransfers
+     * const fileTransfer = await prisma.fileTransfer.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many FileTransfers and only return the `id`
+     * const fileTransferWithIdOnly = await prisma.fileTransfer.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends FileTransferCreateManyAndReturnArgs>(args?: SelectSubset<T, FileTransferCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a FileTransfer.
+     * @param {FileTransferDeleteArgs} args - Arguments to delete one FileTransfer.
+     * @example
+     * // Delete one FileTransfer
+     * const FileTransfer = await prisma.fileTransfer.delete({
+     *   where: {
+     *     // ... filter to delete one FileTransfer
+     *   }
+     * })
+     * 
+     */
+    delete<T extends FileTransferDeleteArgs>(args: SelectSubset<T, FileTransferDeleteArgs<ExtArgs>>): Prisma__FileTransferClient<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one FileTransfer.
+     * @param {FileTransferUpdateArgs} args - Arguments to update one FileTransfer.
+     * @example
+     * // Update one FileTransfer
+     * const fileTransfer = await prisma.fileTransfer.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends FileTransferUpdateArgs>(args: SelectSubset<T, FileTransferUpdateArgs<ExtArgs>>): Prisma__FileTransferClient<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more FileTransfers.
+     * @param {FileTransferDeleteManyArgs} args - Arguments to filter FileTransfers to delete.
+     * @example
+     * // Delete a few FileTransfers
+     * const { count } = await prisma.fileTransfer.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends FileTransferDeleteManyArgs>(args?: SelectSubset<T, FileTransferDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more FileTransfers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FileTransferUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many FileTransfers
+     * const fileTransfer = await prisma.fileTransfer.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends FileTransferUpdateManyArgs>(args: SelectSubset<T, FileTransferUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one FileTransfer.
+     * @param {FileTransferUpsertArgs} args - Arguments to update or create a FileTransfer.
+     * @example
+     * // Update or create a FileTransfer
+     * const fileTransfer = await prisma.fileTransfer.upsert({
+     *   create: {
+     *     // ... data to create a FileTransfer
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the FileTransfer we want to update
+     *   }
+     * })
+     */
+    upsert<T extends FileTransferUpsertArgs>(args: SelectSubset<T, FileTransferUpsertArgs<ExtArgs>>): Prisma__FileTransferClient<$Result.GetResult<Prisma.$FileTransferPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of FileTransfers.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FileTransferCountArgs} args - Arguments to filter FileTransfers to count.
+     * @example
+     * // Count the number of FileTransfers
+     * const count = await prisma.fileTransfer.count({
+     *   where: {
+     *     // ... the filter for the FileTransfers we want to count
+     *   }
+     * })
+    **/
+    count<T extends FileTransferCountArgs>(
+      args?: Subset<T, FileTransferCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], FileTransferCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a FileTransfer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FileTransferAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends FileTransferAggregateArgs>(args: Subset<T, FileTransferAggregateArgs>): Prisma.PrismaPromise<GetFileTransferAggregateType<T>>
+
+    /**
+     * Group by FileTransfer.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FileTransferGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends FileTransferGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: FileTransferGroupByArgs['orderBy'] }
+        : { orderBy?: FileTransferGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, FileTransferGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFileTransferGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the FileTransfer model
+   */
+  readonly fields: FileTransferFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for FileTransfer.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__FileTransferClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    fromUser<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    toUser<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the FileTransfer model
+   */
+  interface FileTransferFieldRefs {
+    readonly id: FieldRef<"FileTransfer", 'String'>
+    readonly fileName: FieldRef<"FileTransfer", 'String'>
+    readonly size: FieldRef<"FileTransfer", 'Int'>
+    readonly mimeType: FieldRef<"FileTransfer", 'String'>
+    readonly fromUserId: FieldRef<"FileTransfer", 'String'>
+    readonly toUserId: FieldRef<"FileTransfer", 'String'>
+    readonly status: FieldRef<"FileTransfer", 'String'>
+    readonly progress: FieldRef<"FileTransfer", 'Int'>
+    readonly fileKey: FieldRef<"FileTransfer", 'String'>
+    readonly createdAt: FieldRef<"FileTransfer", 'DateTime'>
+    readonly updatedAt: FieldRef<"FileTransfer", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * FileTransfer findUnique
+   */
+  export type FileTransferFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * Filter, which FileTransfer to fetch.
+     */
+    where: FileTransferWhereUniqueInput
+  }
+
+  /**
+   * FileTransfer findUniqueOrThrow
+   */
+  export type FileTransferFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * Filter, which FileTransfer to fetch.
+     */
+    where: FileTransferWhereUniqueInput
+  }
+
+  /**
+   * FileTransfer findFirst
+   */
+  export type FileTransferFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * Filter, which FileTransfer to fetch.
+     */
+    where?: FileTransferWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FileTransfers to fetch.
+     */
+    orderBy?: FileTransferOrderByWithRelationInput | FileTransferOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FileTransfers.
+     */
+    cursor?: FileTransferWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FileTransfers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FileTransfers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FileTransfers.
+     */
+    distinct?: FileTransferScalarFieldEnum | FileTransferScalarFieldEnum[]
+  }
+
+  /**
+   * FileTransfer findFirstOrThrow
+   */
+  export type FileTransferFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * Filter, which FileTransfer to fetch.
+     */
+    where?: FileTransferWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FileTransfers to fetch.
+     */
+    orderBy?: FileTransferOrderByWithRelationInput | FileTransferOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FileTransfers.
+     */
+    cursor?: FileTransferWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FileTransfers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FileTransfers.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FileTransfers.
+     */
+    distinct?: FileTransferScalarFieldEnum | FileTransferScalarFieldEnum[]
+  }
+
+  /**
+   * FileTransfer findMany
+   */
+  export type FileTransferFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * Filter, which FileTransfers to fetch.
+     */
+    where?: FileTransferWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FileTransfers to fetch.
+     */
+    orderBy?: FileTransferOrderByWithRelationInput | FileTransferOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing FileTransfers.
+     */
+    cursor?: FileTransferWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FileTransfers from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FileTransfers.
+     */
+    skip?: number
+    distinct?: FileTransferScalarFieldEnum | FileTransferScalarFieldEnum[]
+  }
+
+  /**
+   * FileTransfer create
+   */
+  export type FileTransferCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * The data needed to create a FileTransfer.
+     */
+    data: XOR<FileTransferCreateInput, FileTransferUncheckedCreateInput>
+  }
+
+  /**
+   * FileTransfer createMany
+   */
+  export type FileTransferCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many FileTransfers.
+     */
+    data: FileTransferCreateManyInput | FileTransferCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * FileTransfer createManyAndReturn
+   */
+  export type FileTransferCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * The data used to create many FileTransfers.
+     */
+    data: FileTransferCreateManyInput | FileTransferCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * FileTransfer update
+   */
+  export type FileTransferUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * The data needed to update a FileTransfer.
+     */
+    data: XOR<FileTransferUpdateInput, FileTransferUncheckedUpdateInput>
+    /**
+     * Choose, which FileTransfer to update.
+     */
+    where: FileTransferWhereUniqueInput
+  }
+
+  /**
+   * FileTransfer updateMany
+   */
+  export type FileTransferUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update FileTransfers.
+     */
+    data: XOR<FileTransferUpdateManyMutationInput, FileTransferUncheckedUpdateManyInput>
+    /**
+     * Filter which FileTransfers to update
+     */
+    where?: FileTransferWhereInput
+  }
+
+  /**
+   * FileTransfer upsert
+   */
+  export type FileTransferUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * The filter to search for the FileTransfer to update in case it exists.
+     */
+    where: FileTransferWhereUniqueInput
+    /**
+     * In case the FileTransfer found by the `where` argument doesn't exist, create a new FileTransfer with this data.
+     */
+    create: XOR<FileTransferCreateInput, FileTransferUncheckedCreateInput>
+    /**
+     * In case the FileTransfer was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<FileTransferUpdateInput, FileTransferUncheckedUpdateInput>
+  }
+
+  /**
+   * FileTransfer delete
+   */
+  export type FileTransferDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
+    /**
+     * Filter which FileTransfer to delete.
+     */
+    where: FileTransferWhereUniqueInput
+  }
+
+  /**
+   * FileTransfer deleteMany
+   */
+  export type FileTransferDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FileTransfers to delete
+     */
+    where?: FileTransferWhereInput
+  }
+
+  /**
+   * FileTransfer without action
+   */
+  export type FileTransferDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FileTransfer
+     */
+    select?: FileTransferSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the FileTransfer
+     */
+    omit?: FileTransferOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FileTransferInclude<ExtArgs> | null
   }
 
 
@@ -15964,6 +16210,23 @@ export namespace Prisma {
   export type EntityTagScalarFieldEnum = (typeof EntityTagScalarFieldEnum)[keyof typeof EntityTagScalarFieldEnum]
 
 
+  export const FileTransferScalarFieldEnum: {
+    id: 'id',
+    fileName: 'fileName',
+    size: 'size',
+    mimeType: 'mimeType',
+    fromUserId: 'fromUserId',
+    toUserId: 'toUserId',
+    status: 'status',
+    progress: 'progress',
+    fileKey: 'fileKey',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type FileTransferScalarFieldEnum = (typeof FileTransferScalarFieldEnum)[keyof typeof FileTransferScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -16131,6 +16394,19 @@ export namespace Prisma {
   export type EntityTagOrderByRelevanceFieldEnum = (typeof EntityTagOrderByRelevanceFieldEnum)[keyof typeof EntityTagOrderByRelevanceFieldEnum]
 
 
+  export const FileTransferOrderByRelevanceFieldEnum: {
+    id: 'id',
+    fileName: 'fileName',
+    mimeType: 'mimeType',
+    fromUserId: 'fromUserId',
+    toUserId: 'toUserId',
+    status: 'status',
+    fileKey: 'fileKey'
+  };
+
+  export type FileTransferOrderByRelevanceFieldEnum = (typeof FileTransferOrderByRelevanceFieldEnum)[keyof typeof FileTransferOrderByRelevanceFieldEnum]
+
+
   /**
    * Field references
    */
@@ -16227,6 +16503,8 @@ export namespace Prisma {
     crashReports?: CrashReportListRelationFilter
     webRtcMetrics?: WebRtcMetricListRelationFilter
     devices?: DeviceListRelationFilter
+    fromTransfers?: FileTransferListRelationFilter
+    toTransfers?: FileTransferListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -16251,6 +16529,8 @@ export namespace Prisma {
     crashReports?: CrashReportOrderByRelationAggregateInput
     webRtcMetrics?: WebRtcMetricOrderByRelationAggregateInput
     devices?: DeviceOrderByRelationAggregateInput
+    fromTransfers?: FileTransferOrderByRelationAggregateInput
+    toTransfers?: FileTransferOrderByRelationAggregateInput
     _relevance?: UserOrderByRelevanceInput
   }
 
@@ -16279,6 +16559,8 @@ export namespace Prisma {
     crashReports?: CrashReportListRelationFilter
     webRtcMetrics?: WebRtcMetricListRelationFilter
     devices?: DeviceListRelationFilter
+    fromTransfers?: FileTransferListRelationFilter
+    toTransfers?: FileTransferListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -16402,7 +16684,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"Device"> | boolean
     createdAt?: DateTimeFilter<"Device"> | Date | string
     updatedAt?: DateTimeFilter<"Device"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }
 
   export type DeviceOrderByWithRelationInput = {
@@ -16432,7 +16714,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"Device"> | boolean
     createdAt?: DateTimeFilter<"Device"> | Date | string
     updatedAt?: DateTimeFilter<"Device"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }, "id">
 
   export type DeviceOrderByWithAggregationInput = {
@@ -16475,8 +16757,8 @@ export namespace Prisma {
     isActive?: BoolFilter<"UserPlugin"> | boolean
     createdAt?: DateTimeFilter<"UserPlugin"> | Date | string
     updatedAt?: DateTimeFilter<"UserPlugin"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    plugin?: XOR<PluginScalarRelationFilter, PluginWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    plugin?: XOR<PluginRelationFilter, PluginWhereInput>
   }
 
   export type UserPluginOrderByWithRelationInput = {
@@ -16502,8 +16784,8 @@ export namespace Prisma {
     isActive?: BoolFilter<"UserPlugin"> | boolean
     createdAt?: DateTimeFilter<"UserPlugin"> | Date | string
     updatedAt?: DateTimeFilter<"UserPlugin"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    plugin?: XOR<PluginScalarRelationFilter, PluginWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    plugin?: XOR<PluginRelationFilter, PluginWhereInput>
   }, "id" | "userId_pluginId">
 
   export type UserPluginOrderByWithAggregationInput = {
@@ -16542,7 +16824,7 @@ export namespace Prisma {
     lastSeen?: DateTimeFilter<"UserPresence"> | Date | string
     createdAt?: DateTimeFilter<"UserPresence"> | Date | string
     updatedAt?: DateTimeFilter<"UserPresence"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }
 
   export type UserPresenceOrderByWithRelationInput = {
@@ -16571,7 +16853,7 @@ export namespace Prisma {
     lastSeen?: DateTimeFilter<"UserPresence"> | Date | string
     createdAt?: DateTimeFilter<"UserPresence"> | Date | string
     updatedAt?: DateTimeFilter<"UserPresence"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }, "id" | "userId_projectId">
 
   export type UserPresenceOrderByWithAggregationInput = {
@@ -16616,8 +16898,8 @@ export namespace Prisma {
     ipAddress?: StringNullableFilter<"ActivityLog"> | string | null
     userAgent?: StringNullableFilter<"ActivityLog"> | string | null
     createdAt?: DateTimeFilter<"ActivityLog"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    project?: XOR<ProjectNullableScalarRelationFilter, ProjectWhereInput> | null
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    project?: XOR<ProjectNullableRelationFilter, ProjectWhereInput> | null
   }
 
   export type ActivityLogOrderByWithRelationInput = {
@@ -16650,8 +16932,8 @@ export namespace Prisma {
     ipAddress?: StringNullableFilter<"ActivityLog"> | string | null
     userAgent?: StringNullableFilter<"ActivityLog"> | string | null
     createdAt?: DateTimeFilter<"ActivityLog"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    project?: XOR<ProjectNullableScalarRelationFilter, ProjectWhereInput> | null
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    project?: XOR<ProjectNullableRelationFilter, ProjectWhereInput> | null
   }, "id">
 
   export type ActivityLogOrderByWithAggregationInput = {
@@ -16700,7 +16982,7 @@ export namespace Prisma {
     projectId?: StringNullableFilter<"CrashReport"> | string | null
     metadata?: StringNullableFilter<"CrashReport"> | string | null
     createdAt?: DateTimeFilter<"CrashReport"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }
 
   export type CrashReportOrderByWithRelationInput = {
@@ -16732,7 +17014,7 @@ export namespace Prisma {
     projectId?: StringNullableFilter<"CrashReport"> | string | null
     metadata?: StringNullableFilter<"CrashReport"> | string | null
     createdAt?: DateTimeFilter<"CrashReport"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }, "id">
 
   export type CrashReportOrderByWithAggregationInput = {
@@ -16789,7 +17071,7 @@ export namespace Prisma {
     timestamp?: DateTimeFilter<"WebRtcMetric"> | Date | string
     metadata?: StringNullableFilter<"WebRtcMetric"> | string | null
     createdAt?: DateTimeFilter<"WebRtcMetric"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }
 
   export type WebRtcMetricOrderByWithRelationInput = {
@@ -16837,7 +17119,7 @@ export namespace Prisma {
     timestamp?: DateTimeFilter<"WebRtcMetric"> | Date | string
     metadata?: StringNullableFilter<"WebRtcMetric"> | string | null
     createdAt?: DateTimeFilter<"WebRtcMetric"> | Date | string
-    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    user?: XOR<UserRelationFilter, UserWhereInput>
   }, "id">
 
   export type WebRtcMetricOrderByWithAggregationInput = {
@@ -16970,7 +17252,7 @@ export namespace Prisma {
     data?: StringFilter<"Snapshot"> | string
     createdAt?: DateTimeFilter<"Snapshot"> | Date | string
     updatedAt?: DateTimeFilter<"Snapshot"> | Date | string
-    project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
+    project?: XOR<ProjectRelationFilter, ProjectWhereInput>
     tags?: EntityTagListRelationFilter
   }
 
@@ -16998,7 +17280,7 @@ export namespace Prisma {
     data?: StringFilter<"Snapshot"> | string
     createdAt?: DateTimeFilter<"Snapshot"> | Date | string
     updatedAt?: DateTimeFilter<"Snapshot"> | Date | string
-    project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
+    project?: XOR<ProjectRelationFilter, ProjectWhereInput>
     tags?: EntityTagListRelationFilter
   }, "id">
 
@@ -17099,8 +17381,8 @@ export namespace Prisma {
     tagId?: StringFilter<"EntityTag"> | string
     snapshotId?: StringNullableFilter<"EntityTag"> | string | null
     createdAt?: DateTimeFilter<"EntityTag"> | Date | string
-    tag?: XOR<TagScalarRelationFilter, TagWhereInput>
-    snapshot?: XOR<SnapshotNullableScalarRelationFilter, SnapshotWhereInput> | null
+    tag?: XOR<TagRelationFilter, TagWhereInput>
+    snapshot?: XOR<SnapshotNullableRelationFilter, SnapshotWhereInput> | null
   }
 
   export type EntityTagOrderByWithRelationInput = {
@@ -17126,8 +17408,8 @@ export namespace Prisma {
     tagId?: StringFilter<"EntityTag"> | string
     snapshotId?: StringNullableFilter<"EntityTag"> | string | null
     createdAt?: DateTimeFilter<"EntityTag"> | Date | string
-    tag?: XOR<TagScalarRelationFilter, TagWhereInput>
-    snapshot?: XOR<SnapshotNullableScalarRelationFilter, SnapshotWhereInput> | null
+    tag?: XOR<TagRelationFilter, TagWhereInput>
+    snapshot?: XOR<SnapshotNullableRelationFilter, SnapshotWhereInput> | null
   }, "id" | "entityType_entityId_tagId">
 
   export type EntityTagOrderByWithAggregationInput = {
@@ -17154,6 +17436,97 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"EntityTag"> | Date | string
   }
 
+  export type FileTransferWhereInput = {
+    AND?: FileTransferWhereInput | FileTransferWhereInput[]
+    OR?: FileTransferWhereInput[]
+    NOT?: FileTransferWhereInput | FileTransferWhereInput[]
+    id?: StringFilter<"FileTransfer"> | string
+    fileName?: StringFilter<"FileTransfer"> | string
+    size?: IntFilter<"FileTransfer"> | number
+    mimeType?: StringFilter<"FileTransfer"> | string
+    fromUserId?: StringFilter<"FileTransfer"> | string
+    toUserId?: StringFilter<"FileTransfer"> | string
+    status?: StringFilter<"FileTransfer"> | string
+    progress?: IntFilter<"FileTransfer"> | number
+    fileKey?: StringNullableFilter<"FileTransfer"> | string | null
+    createdAt?: DateTimeFilter<"FileTransfer"> | Date | string
+    updatedAt?: DateTimeFilter<"FileTransfer"> | Date | string
+    fromUser?: XOR<UserRelationFilter, UserWhereInput>
+    toUser?: XOR<UserRelationFilter, UserWhereInput>
+  }
+
+  export type FileTransferOrderByWithRelationInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    size?: SortOrder
+    mimeType?: SortOrder
+    fromUserId?: SortOrder
+    toUserId?: SortOrder
+    status?: SortOrder
+    progress?: SortOrder
+    fileKey?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    fromUser?: UserOrderByWithRelationInput
+    toUser?: UserOrderByWithRelationInput
+    _relevance?: FileTransferOrderByRelevanceInput
+  }
+
+  export type FileTransferWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: FileTransferWhereInput | FileTransferWhereInput[]
+    OR?: FileTransferWhereInput[]
+    NOT?: FileTransferWhereInput | FileTransferWhereInput[]
+    fileName?: StringFilter<"FileTransfer"> | string
+    size?: IntFilter<"FileTransfer"> | number
+    mimeType?: StringFilter<"FileTransfer"> | string
+    fromUserId?: StringFilter<"FileTransfer"> | string
+    toUserId?: StringFilter<"FileTransfer"> | string
+    status?: StringFilter<"FileTransfer"> | string
+    progress?: IntFilter<"FileTransfer"> | number
+    fileKey?: StringNullableFilter<"FileTransfer"> | string | null
+    createdAt?: DateTimeFilter<"FileTransfer"> | Date | string
+    updatedAt?: DateTimeFilter<"FileTransfer"> | Date | string
+    fromUser?: XOR<UserRelationFilter, UserWhereInput>
+    toUser?: XOR<UserRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type FileTransferOrderByWithAggregationInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    size?: SortOrder
+    mimeType?: SortOrder
+    fromUserId?: SortOrder
+    toUserId?: SortOrder
+    status?: SortOrder
+    progress?: SortOrder
+    fileKey?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: FileTransferCountOrderByAggregateInput
+    _avg?: FileTransferAvgOrderByAggregateInput
+    _max?: FileTransferMaxOrderByAggregateInput
+    _min?: FileTransferMinOrderByAggregateInput
+    _sum?: FileTransferSumOrderByAggregateInput
+  }
+
+  export type FileTransferScalarWhereWithAggregatesInput = {
+    AND?: FileTransferScalarWhereWithAggregatesInput | FileTransferScalarWhereWithAggregatesInput[]
+    OR?: FileTransferScalarWhereWithAggregatesInput[]
+    NOT?: FileTransferScalarWhereWithAggregatesInput | FileTransferScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"FileTransfer"> | string
+    fileName?: StringWithAggregatesFilter<"FileTransfer"> | string
+    size?: IntWithAggregatesFilter<"FileTransfer"> | number
+    mimeType?: StringWithAggregatesFilter<"FileTransfer"> | string
+    fromUserId?: StringWithAggregatesFilter<"FileTransfer"> | string
+    toUserId?: StringWithAggregatesFilter<"FileTransfer"> | string
+    status?: StringWithAggregatesFilter<"FileTransfer"> | string
+    progress?: IntWithAggregatesFilter<"FileTransfer"> | number
+    fileKey?: StringNullableWithAggregatesFilter<"FileTransfer"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"FileTransfer"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"FileTransfer"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -17176,6 +17549,8 @@ export namespace Prisma {
     crashReports?: CrashReportCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferCreateNestedManyWithoutToUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -17200,6 +17575,8 @@ export namespace Prisma {
     crashReports?: CrashReportUncheckedCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferUncheckedCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferUncheckedCreateNestedManyWithoutToUserInput
   }
 
   export type UserUpdateInput = {
@@ -17224,6 +17601,8 @@ export namespace Prisma {
     crashReports?: CrashReportUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUpdateManyWithoutToUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -17248,6 +17627,8 @@ export namespace Prisma {
     crashReports?: CrashReportUncheckedUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUncheckedUpdateManyWithoutToUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -18202,6 +18583,102 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type FileTransferCreateInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    fromUser: UserCreateNestedOneWithoutFromTransfersInput
+    toUser: UserCreateNestedOneWithoutToTransfersInput
+  }
+
+  export type FileTransferUncheckedCreateInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    fromUserId: string
+    toUserId: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FileTransferUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    fromUser?: UserUpdateOneRequiredWithoutFromTransfersNestedInput
+    toUser?: UserUpdateOneRequiredWithoutToTransfersNestedInput
+  }
+
+  export type FileTransferUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    fromUserId?: StringFieldUpdateOperationsInput | string
+    toUserId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FileTransferCreateManyInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    fromUserId: string
+    toUserId: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FileTransferUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FileTransferUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    fromUserId?: StringFieldUpdateOperationsInput | string
+    toUserId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -18297,6 +18774,12 @@ export namespace Prisma {
     none?: DeviceWhereInput
   }
 
+  export type FileTransferListRelationFilter = {
+    every?: FileTransferWhereInput
+    some?: FileTransferWhereInput
+    none?: FileTransferWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -18323,6 +18806,10 @@ export namespace Prisma {
   }
 
   export type DeviceOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type FileTransferOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -18496,7 +18983,7 @@ export namespace Prisma {
     deletedAt?: SortOrder
   }
 
-  export type UserScalarRelationFilter = {
+  export type UserRelationFilter = {
     is?: UserWhereInput
     isNot?: UserWhereInput
   }
@@ -18543,7 +19030,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type PluginScalarRelationFilter = {
+  export type PluginRelationFilter = {
     is?: PluginWhereInput
     isNot?: PluginWhereInput
   }
@@ -18630,7 +19117,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type ProjectNullableScalarRelationFilter = {
+  export type ProjectNullableRelationFilter = {
     is?: ProjectWhereInput | null
     isNot?: ProjectWhereInput | null
   }
@@ -18910,7 +19397,7 @@ export namespace Prisma {
     deletedAt?: SortOrder
   }
 
-  export type ProjectScalarRelationFilter = {
+  export type ProjectRelationFilter = {
     is?: ProjectWhereInput
     isNot?: ProjectWhereInput
   }
@@ -18994,12 +19481,12 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
-  export type TagScalarRelationFilter = {
+  export type TagRelationFilter = {
     is?: TagWhereInput
     isNot?: TagWhereInput
   }
 
-  export type SnapshotNullableScalarRelationFilter = {
+  export type SnapshotNullableRelationFilter = {
     is?: SnapshotWhereInput | null
     isNot?: SnapshotWhereInput | null
   }
@@ -19041,6 +19528,91 @@ export namespace Prisma {
     tagId?: SortOrder
     snapshotId?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type FileTransferOrderByRelevanceInput = {
+    fields: FileTransferOrderByRelevanceFieldEnum | FileTransferOrderByRelevanceFieldEnum[]
+    sort: SortOrder
+    search: string
+  }
+
+  export type FileTransferCountOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    size?: SortOrder
+    mimeType?: SortOrder
+    fromUserId?: SortOrder
+    toUserId?: SortOrder
+    status?: SortOrder
+    progress?: SortOrder
+    fileKey?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FileTransferAvgOrderByAggregateInput = {
+    size?: SortOrder
+    progress?: SortOrder
+  }
+
+  export type FileTransferMaxOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    size?: SortOrder
+    mimeType?: SortOrder
+    fromUserId?: SortOrder
+    toUserId?: SortOrder
+    status?: SortOrder
+    progress?: SortOrder
+    fileKey?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FileTransferMinOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    size?: SortOrder
+    mimeType?: SortOrder
+    fromUserId?: SortOrder
+    toUserId?: SortOrder
+    status?: SortOrder
+    progress?: SortOrder
+    fileKey?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type FileTransferSumOrderByAggregateInput = {
+    size?: SortOrder
+    progress?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type UserPluginCreateNestedManyWithoutUserInput = {
@@ -19085,6 +19657,20 @@ export namespace Prisma {
     connect?: DeviceWhereUniqueInput | DeviceWhereUniqueInput[]
   }
 
+  export type FileTransferCreateNestedManyWithoutFromUserInput = {
+    create?: XOR<FileTransferCreateWithoutFromUserInput, FileTransferUncheckedCreateWithoutFromUserInput> | FileTransferCreateWithoutFromUserInput[] | FileTransferUncheckedCreateWithoutFromUserInput[]
+    connectOrCreate?: FileTransferCreateOrConnectWithoutFromUserInput | FileTransferCreateOrConnectWithoutFromUserInput[]
+    createMany?: FileTransferCreateManyFromUserInputEnvelope
+    connect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+  }
+
+  export type FileTransferCreateNestedManyWithoutToUserInput = {
+    create?: XOR<FileTransferCreateWithoutToUserInput, FileTransferUncheckedCreateWithoutToUserInput> | FileTransferCreateWithoutToUserInput[] | FileTransferUncheckedCreateWithoutToUserInput[]
+    connectOrCreate?: FileTransferCreateOrConnectWithoutToUserInput | FileTransferCreateOrConnectWithoutToUserInput[]
+    createMany?: FileTransferCreateManyToUserInputEnvelope
+    connect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+  }
+
   export type UserPluginUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<UserPluginCreateWithoutUserInput, UserPluginUncheckedCreateWithoutUserInput> | UserPluginCreateWithoutUserInput[] | UserPluginUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserPluginCreateOrConnectWithoutUserInput | UserPluginCreateOrConnectWithoutUserInput[]
@@ -19125,6 +19711,20 @@ export namespace Prisma {
     connectOrCreate?: DeviceCreateOrConnectWithoutUserInput | DeviceCreateOrConnectWithoutUserInput[]
     createMany?: DeviceCreateManyUserInputEnvelope
     connect?: DeviceWhereUniqueInput | DeviceWhereUniqueInput[]
+  }
+
+  export type FileTransferUncheckedCreateNestedManyWithoutFromUserInput = {
+    create?: XOR<FileTransferCreateWithoutFromUserInput, FileTransferUncheckedCreateWithoutFromUserInput> | FileTransferCreateWithoutFromUserInput[] | FileTransferUncheckedCreateWithoutFromUserInput[]
+    connectOrCreate?: FileTransferCreateOrConnectWithoutFromUserInput | FileTransferCreateOrConnectWithoutFromUserInput[]
+    createMany?: FileTransferCreateManyFromUserInputEnvelope
+    connect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+  }
+
+  export type FileTransferUncheckedCreateNestedManyWithoutToUserInput = {
+    create?: XOR<FileTransferCreateWithoutToUserInput, FileTransferUncheckedCreateWithoutToUserInput> | FileTransferCreateWithoutToUserInput[] | FileTransferUncheckedCreateWithoutToUserInput[]
+    connectOrCreate?: FileTransferCreateOrConnectWithoutToUserInput | FileTransferCreateOrConnectWithoutToUserInput[]
+    createMany?: FileTransferCreateManyToUserInputEnvelope
+    connect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -19231,6 +19831,34 @@ export namespace Prisma {
     deleteMany?: DeviceScalarWhereInput | DeviceScalarWhereInput[]
   }
 
+  export type FileTransferUpdateManyWithoutFromUserNestedInput = {
+    create?: XOR<FileTransferCreateWithoutFromUserInput, FileTransferUncheckedCreateWithoutFromUserInput> | FileTransferCreateWithoutFromUserInput[] | FileTransferUncheckedCreateWithoutFromUserInput[]
+    connectOrCreate?: FileTransferCreateOrConnectWithoutFromUserInput | FileTransferCreateOrConnectWithoutFromUserInput[]
+    upsert?: FileTransferUpsertWithWhereUniqueWithoutFromUserInput | FileTransferUpsertWithWhereUniqueWithoutFromUserInput[]
+    createMany?: FileTransferCreateManyFromUserInputEnvelope
+    set?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    disconnect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    delete?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    connect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    update?: FileTransferUpdateWithWhereUniqueWithoutFromUserInput | FileTransferUpdateWithWhereUniqueWithoutFromUserInput[]
+    updateMany?: FileTransferUpdateManyWithWhereWithoutFromUserInput | FileTransferUpdateManyWithWhereWithoutFromUserInput[]
+    deleteMany?: FileTransferScalarWhereInput | FileTransferScalarWhereInput[]
+  }
+
+  export type FileTransferUpdateManyWithoutToUserNestedInput = {
+    create?: XOR<FileTransferCreateWithoutToUserInput, FileTransferUncheckedCreateWithoutToUserInput> | FileTransferCreateWithoutToUserInput[] | FileTransferUncheckedCreateWithoutToUserInput[]
+    connectOrCreate?: FileTransferCreateOrConnectWithoutToUserInput | FileTransferCreateOrConnectWithoutToUserInput[]
+    upsert?: FileTransferUpsertWithWhereUniqueWithoutToUserInput | FileTransferUpsertWithWhereUniqueWithoutToUserInput[]
+    createMany?: FileTransferCreateManyToUserInputEnvelope
+    set?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    disconnect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    delete?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    connect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    update?: FileTransferUpdateWithWhereUniqueWithoutToUserInput | FileTransferUpdateWithWhereUniqueWithoutToUserInput[]
+    updateMany?: FileTransferUpdateManyWithWhereWithoutToUserInput | FileTransferUpdateManyWithWhereWithoutToUserInput[]
+    deleteMany?: FileTransferScalarWhereInput | FileTransferScalarWhereInput[]
+  }
+
   export type UserPluginUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<UserPluginCreateWithoutUserInput, UserPluginUncheckedCreateWithoutUserInput> | UserPluginCreateWithoutUserInput[] | UserPluginUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserPluginCreateOrConnectWithoutUserInput | UserPluginCreateOrConnectWithoutUserInput[]
@@ -19313,6 +19941,34 @@ export namespace Prisma {
     update?: DeviceUpdateWithWhereUniqueWithoutUserInput | DeviceUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: DeviceUpdateManyWithWhereWithoutUserInput | DeviceUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: DeviceScalarWhereInput | DeviceScalarWhereInput[]
+  }
+
+  export type FileTransferUncheckedUpdateManyWithoutFromUserNestedInput = {
+    create?: XOR<FileTransferCreateWithoutFromUserInput, FileTransferUncheckedCreateWithoutFromUserInput> | FileTransferCreateWithoutFromUserInput[] | FileTransferUncheckedCreateWithoutFromUserInput[]
+    connectOrCreate?: FileTransferCreateOrConnectWithoutFromUserInput | FileTransferCreateOrConnectWithoutFromUserInput[]
+    upsert?: FileTransferUpsertWithWhereUniqueWithoutFromUserInput | FileTransferUpsertWithWhereUniqueWithoutFromUserInput[]
+    createMany?: FileTransferCreateManyFromUserInputEnvelope
+    set?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    disconnect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    delete?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    connect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    update?: FileTransferUpdateWithWhereUniqueWithoutFromUserInput | FileTransferUpdateWithWhereUniqueWithoutFromUserInput[]
+    updateMany?: FileTransferUpdateManyWithWhereWithoutFromUserInput | FileTransferUpdateManyWithWhereWithoutFromUserInput[]
+    deleteMany?: FileTransferScalarWhereInput | FileTransferScalarWhereInput[]
+  }
+
+  export type FileTransferUncheckedUpdateManyWithoutToUserNestedInput = {
+    create?: XOR<FileTransferCreateWithoutToUserInput, FileTransferUncheckedCreateWithoutToUserInput> | FileTransferCreateWithoutToUserInput[] | FileTransferUncheckedCreateWithoutToUserInput[]
+    connectOrCreate?: FileTransferCreateOrConnectWithoutToUserInput | FileTransferCreateOrConnectWithoutToUserInput[]
+    upsert?: FileTransferUpsertWithWhereUniqueWithoutToUserInput | FileTransferUpsertWithWhereUniqueWithoutToUserInput[]
+    createMany?: FileTransferCreateManyToUserInputEnvelope
+    set?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    disconnect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    delete?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    connect?: FileTransferWhereUniqueInput | FileTransferWhereUniqueInput[]
+    update?: FileTransferUpdateWithWhereUniqueWithoutToUserInput | FileTransferUpdateWithWhereUniqueWithoutToUserInput[]
+    updateMany?: FileTransferUpdateManyWithWhereWithoutToUserInput | FileTransferUpdateManyWithWhereWithoutToUserInput[]
+    deleteMany?: FileTransferScalarWhereInput | FileTransferScalarWhereInput[]
   }
 
   export type UserPluginCreateNestedManyWithoutPluginInput = {
@@ -19699,6 +20355,42 @@ export namespace Prisma {
     update?: XOR<XOR<SnapshotUpdateToOneWithWhereWithoutTagsInput, SnapshotUpdateWithoutTagsInput>, SnapshotUncheckedUpdateWithoutTagsInput>
   }
 
+  export type UserCreateNestedOneWithoutFromTransfersInput = {
+    create?: XOR<UserCreateWithoutFromTransfersInput, UserUncheckedCreateWithoutFromTransfersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFromTransfersInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutToTransfersInput = {
+    create?: XOR<UserCreateWithoutToTransfersInput, UserUncheckedCreateWithoutToTransfersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutToTransfersInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type UserUpdateOneRequiredWithoutFromTransfersNestedInput = {
+    create?: XOR<UserCreateWithoutFromTransfersInput, UserUncheckedCreateWithoutFromTransfersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFromTransfersInput
+    upsert?: UserUpsertWithoutFromTransfersInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutFromTransfersInput, UserUpdateWithoutFromTransfersInput>, UserUncheckedUpdateWithoutFromTransfersInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutToTransfersNestedInput = {
+    create?: XOR<UserCreateWithoutToTransfersInput, UserUncheckedCreateWithoutToTransfersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutToTransfersInput
+    upsert?: UserUpsertWithoutToTransfersInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutToTransfersInput, UserUpdateWithoutToTransfersInput>, UserUncheckedUpdateWithoutToTransfersInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -19902,6 +20594,22 @@ export namespace Prisma {
     _sum?: NestedFloatNullableFilter<$PrismaModel>
     _min?: NestedFloatNullableFilter<$PrismaModel>
     _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
   }
 
   export type UserPluginCreateWithoutUserInput = {
@@ -20110,6 +20818,78 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type FileTransferCreateWithoutFromUserInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    toUser: UserCreateNestedOneWithoutToTransfersInput
+  }
+
+  export type FileTransferUncheckedCreateWithoutFromUserInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    toUserId: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FileTransferCreateOrConnectWithoutFromUserInput = {
+    where: FileTransferWhereUniqueInput
+    create: XOR<FileTransferCreateWithoutFromUserInput, FileTransferUncheckedCreateWithoutFromUserInput>
+  }
+
+  export type FileTransferCreateManyFromUserInputEnvelope = {
+    data: FileTransferCreateManyFromUserInput | FileTransferCreateManyFromUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type FileTransferCreateWithoutToUserInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    fromUser: UserCreateNestedOneWithoutFromTransfersInput
+  }
+
+  export type FileTransferUncheckedCreateWithoutToUserInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    fromUserId: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FileTransferCreateOrConnectWithoutToUserInput = {
+    where: FileTransferWhereUniqueInput
+    create: XOR<FileTransferCreateWithoutToUserInput, FileTransferUncheckedCreateWithoutToUserInput>
+  }
+
+  export type FileTransferCreateManyToUserInputEnvelope = {
+    data: FileTransferCreateManyToUserInput | FileTransferCreateManyToUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserPluginUpsertWithWhereUniqueWithoutUserInput = {
     where: UserPluginWhereUniqueInput
     update: XOR<UserPluginUpdateWithoutUserInput, UserPluginUncheckedUpdateWithoutUserInput>
@@ -20303,6 +21083,55 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Device"> | Date | string
   }
 
+  export type FileTransferUpsertWithWhereUniqueWithoutFromUserInput = {
+    where: FileTransferWhereUniqueInput
+    update: XOR<FileTransferUpdateWithoutFromUserInput, FileTransferUncheckedUpdateWithoutFromUserInput>
+    create: XOR<FileTransferCreateWithoutFromUserInput, FileTransferUncheckedCreateWithoutFromUserInput>
+  }
+
+  export type FileTransferUpdateWithWhereUniqueWithoutFromUserInput = {
+    where: FileTransferWhereUniqueInput
+    data: XOR<FileTransferUpdateWithoutFromUserInput, FileTransferUncheckedUpdateWithoutFromUserInput>
+  }
+
+  export type FileTransferUpdateManyWithWhereWithoutFromUserInput = {
+    where: FileTransferScalarWhereInput
+    data: XOR<FileTransferUpdateManyMutationInput, FileTransferUncheckedUpdateManyWithoutFromUserInput>
+  }
+
+  export type FileTransferScalarWhereInput = {
+    AND?: FileTransferScalarWhereInput | FileTransferScalarWhereInput[]
+    OR?: FileTransferScalarWhereInput[]
+    NOT?: FileTransferScalarWhereInput | FileTransferScalarWhereInput[]
+    id?: StringFilter<"FileTransfer"> | string
+    fileName?: StringFilter<"FileTransfer"> | string
+    size?: IntFilter<"FileTransfer"> | number
+    mimeType?: StringFilter<"FileTransfer"> | string
+    fromUserId?: StringFilter<"FileTransfer"> | string
+    toUserId?: StringFilter<"FileTransfer"> | string
+    status?: StringFilter<"FileTransfer"> | string
+    progress?: IntFilter<"FileTransfer"> | number
+    fileKey?: StringNullableFilter<"FileTransfer"> | string | null
+    createdAt?: DateTimeFilter<"FileTransfer"> | Date | string
+    updatedAt?: DateTimeFilter<"FileTransfer"> | Date | string
+  }
+
+  export type FileTransferUpsertWithWhereUniqueWithoutToUserInput = {
+    where: FileTransferWhereUniqueInput
+    update: XOR<FileTransferUpdateWithoutToUserInput, FileTransferUncheckedUpdateWithoutToUserInput>
+    create: XOR<FileTransferCreateWithoutToUserInput, FileTransferUncheckedCreateWithoutToUserInput>
+  }
+
+  export type FileTransferUpdateWithWhereUniqueWithoutToUserInput = {
+    where: FileTransferWhereUniqueInput
+    data: XOR<FileTransferUpdateWithoutToUserInput, FileTransferUncheckedUpdateWithoutToUserInput>
+  }
+
+  export type FileTransferUpdateManyWithWhereWithoutToUserInput = {
+    where: FileTransferScalarWhereInput
+    data: XOR<FileTransferUpdateManyMutationInput, FileTransferUncheckedUpdateManyWithoutToUserInput>
+  }
+
   export type UserPluginCreateWithoutPluginInput = {
     id?: string
     isActive?: boolean
@@ -20366,6 +21195,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogCreateNestedManyWithoutUserInput
     crashReports?: CrashReportCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferCreateNestedManyWithoutToUserInput
   }
 
   export type UserUncheckedCreateWithoutDevicesInput = {
@@ -20389,6 +21220,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     crashReports?: CrashReportUncheckedCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricUncheckedCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferUncheckedCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferUncheckedCreateNestedManyWithoutToUserInput
   }
 
   export type UserCreateOrConnectWithoutDevicesInput = {
@@ -20428,6 +21261,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUpdateManyWithoutUserNestedInput
     crashReports?: CrashReportUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUpdateManyWithoutToUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDevicesInput = {
@@ -20451,6 +21286,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     crashReports?: CrashReportUncheckedUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUncheckedUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUncheckedUpdateManyWithoutToUserNestedInput
   }
 
   export type UserCreateWithoutUserPluginsInput = {
@@ -20474,6 +21311,8 @@ export namespace Prisma {
     crashReports?: CrashReportCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferCreateNestedManyWithoutToUserInput
   }
 
   export type UserUncheckedCreateWithoutUserPluginsInput = {
@@ -20497,6 +21336,8 @@ export namespace Prisma {
     crashReports?: CrashReportUncheckedCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferUncheckedCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferUncheckedCreateNestedManyWithoutToUserInput
   }
 
   export type UserCreateOrConnectWithoutUserPluginsInput = {
@@ -20561,6 +21402,8 @@ export namespace Prisma {
     crashReports?: CrashReportUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUpdateManyWithoutToUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutUserPluginsInput = {
@@ -20584,6 +21427,8 @@ export namespace Prisma {
     crashReports?: CrashReportUncheckedUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUncheckedUpdateManyWithoutToUserNestedInput
   }
 
   export type PluginUpsertWithoutUserPluginsInput = {
@@ -20638,6 +21483,8 @@ export namespace Prisma {
     crashReports?: CrashReportCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferCreateNestedManyWithoutToUserInput
   }
 
   export type UserUncheckedCreateWithoutPresenceInput = {
@@ -20661,6 +21508,8 @@ export namespace Prisma {
     crashReports?: CrashReportUncheckedCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferUncheckedCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferUncheckedCreateNestedManyWithoutToUserInput
   }
 
   export type UserCreateOrConnectWithoutPresenceInput = {
@@ -20700,6 +21549,8 @@ export namespace Prisma {
     crashReports?: CrashReportUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUpdateManyWithoutToUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPresenceInput = {
@@ -20723,6 +21574,8 @@ export namespace Prisma {
     crashReports?: CrashReportUncheckedUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUncheckedUpdateManyWithoutToUserNestedInput
   }
 
   export type UserCreateWithoutActivityLogsInput = {
@@ -20746,6 +21599,8 @@ export namespace Prisma {
     crashReports?: CrashReportCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferCreateNestedManyWithoutToUserInput
   }
 
   export type UserUncheckedCreateWithoutActivityLogsInput = {
@@ -20769,6 +21624,8 @@ export namespace Prisma {
     crashReports?: CrashReportUncheckedCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferUncheckedCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferUncheckedCreateNestedManyWithoutToUserInput
   }
 
   export type UserCreateOrConnectWithoutActivityLogsInput = {
@@ -20835,6 +21692,8 @@ export namespace Prisma {
     crashReports?: CrashReportUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUpdateManyWithoutToUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutActivityLogsInput = {
@@ -20858,6 +21717,8 @@ export namespace Prisma {
     crashReports?: CrashReportUncheckedUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUncheckedUpdateManyWithoutToUserNestedInput
   }
 
   export type ProjectUpsertWithoutActivityLogsInput = {
@@ -20914,6 +21775,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferCreateNestedManyWithoutToUserInput
   }
 
   export type UserUncheckedCreateWithoutCrashReportsInput = {
@@ -20937,6 +21800,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     webRtcMetrics?: WebRtcMetricUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferUncheckedCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferUncheckedCreateNestedManyWithoutToUserInput
   }
 
   export type UserCreateOrConnectWithoutCrashReportsInput = {
@@ -20976,6 +21841,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUpdateManyWithoutToUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCrashReportsInput = {
@@ -20999,6 +21866,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     webRtcMetrics?: WebRtcMetricUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUncheckedUpdateManyWithoutToUserNestedInput
   }
 
   export type UserCreateWithoutWebRtcMetricsInput = {
@@ -21022,6 +21891,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogCreateNestedManyWithoutUserInput
     crashReports?: CrashReportCreateNestedManyWithoutUserInput
     devices?: DeviceCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferCreateNestedManyWithoutToUserInput
   }
 
   export type UserUncheckedCreateWithoutWebRtcMetricsInput = {
@@ -21045,6 +21916,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
     crashReports?: CrashReportUncheckedCreateNestedManyWithoutUserInput
     devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferUncheckedCreateNestedManyWithoutFromUserInput
+    toTransfers?: FileTransferUncheckedCreateNestedManyWithoutToUserInput
   }
 
   export type UserCreateOrConnectWithoutWebRtcMetricsInput = {
@@ -21084,6 +21957,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUpdateManyWithoutUserNestedInput
     crashReports?: CrashReportUpdateManyWithoutUserNestedInput
     devices?: DeviceUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUpdateManyWithoutToUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutWebRtcMetricsInput = {
@@ -21107,6 +21982,8 @@ export namespace Prisma {
     activityLogs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
     crashReports?: CrashReportUncheckedUpdateManyWithoutUserNestedInput
     devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUncheckedUpdateManyWithoutFromUserNestedInput
+    toTransfers?: FileTransferUncheckedUpdateManyWithoutToUserNestedInput
   }
 
   export type SnapshotCreateWithoutProjectInput = {
@@ -21482,6 +22359,238 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type UserCreateWithoutFromTransfersInput = {
+    id?: string
+    email: string
+    name?: string | null
+    displayName?: string | null
+    bio?: string | null
+    avatarUrl?: string | null
+    password: string
+    refreshToken?: string | null
+    isApproved?: boolean
+    inventoryHash?: string | null
+    lastLoginAt?: Date | string | null
+    lastInventorySync?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    userPlugins?: UserPluginCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedManyWithoutUserInput
+    activityLogs?: ActivityLogCreateNestedManyWithoutUserInput
+    crashReports?: CrashReportCreateNestedManyWithoutUserInput
+    webRtcMetrics?: WebRtcMetricCreateNestedManyWithoutUserInput
+    devices?: DeviceCreateNestedManyWithoutUserInput
+    toTransfers?: FileTransferCreateNestedManyWithoutToUserInput
+  }
+
+  export type UserUncheckedCreateWithoutFromTransfersInput = {
+    id?: string
+    email: string
+    name?: string | null
+    displayName?: string | null
+    bio?: string | null
+    avatarUrl?: string | null
+    password: string
+    refreshToken?: string | null
+    isApproved?: boolean
+    inventoryHash?: string | null
+    lastLoginAt?: Date | string | null
+    lastInventorySync?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    userPlugins?: UserPluginUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedManyWithoutUserInput
+    activityLogs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
+    crashReports?: CrashReportUncheckedCreateNestedManyWithoutUserInput
+    webRtcMetrics?: WebRtcMetricUncheckedCreateNestedManyWithoutUserInput
+    devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    toTransfers?: FileTransferUncheckedCreateNestedManyWithoutToUserInput
+  }
+
+  export type UserCreateOrConnectWithoutFromTransfersInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutFromTransfersInput, UserUncheckedCreateWithoutFromTransfersInput>
+  }
+
+  export type UserCreateWithoutToTransfersInput = {
+    id?: string
+    email: string
+    name?: string | null
+    displayName?: string | null
+    bio?: string | null
+    avatarUrl?: string | null
+    password: string
+    refreshToken?: string | null
+    isApproved?: boolean
+    inventoryHash?: string | null
+    lastLoginAt?: Date | string | null
+    lastInventorySync?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    userPlugins?: UserPluginCreateNestedManyWithoutUserInput
+    presence?: UserPresenceCreateNestedManyWithoutUserInput
+    activityLogs?: ActivityLogCreateNestedManyWithoutUserInput
+    crashReports?: CrashReportCreateNestedManyWithoutUserInput
+    webRtcMetrics?: WebRtcMetricCreateNestedManyWithoutUserInput
+    devices?: DeviceCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferCreateNestedManyWithoutFromUserInput
+  }
+
+  export type UserUncheckedCreateWithoutToTransfersInput = {
+    id?: string
+    email: string
+    name?: string | null
+    displayName?: string | null
+    bio?: string | null
+    avatarUrl?: string | null
+    password: string
+    refreshToken?: string | null
+    isApproved?: boolean
+    inventoryHash?: string | null
+    lastLoginAt?: Date | string | null
+    lastInventorySync?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    deletedAt?: Date | string | null
+    userPlugins?: UserPluginUncheckedCreateNestedManyWithoutUserInput
+    presence?: UserPresenceUncheckedCreateNestedManyWithoutUserInput
+    activityLogs?: ActivityLogUncheckedCreateNestedManyWithoutUserInput
+    crashReports?: CrashReportUncheckedCreateNestedManyWithoutUserInput
+    webRtcMetrics?: WebRtcMetricUncheckedCreateNestedManyWithoutUserInput
+    devices?: DeviceUncheckedCreateNestedManyWithoutUserInput
+    fromTransfers?: FileTransferUncheckedCreateNestedManyWithoutFromUserInput
+  }
+
+  export type UserCreateOrConnectWithoutToTransfersInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutToTransfersInput, UserUncheckedCreateWithoutToTransfersInput>
+  }
+
+  export type UserUpsertWithoutFromTransfersInput = {
+    update: XOR<UserUpdateWithoutFromTransfersInput, UserUncheckedUpdateWithoutFromTransfersInput>
+    create: XOR<UserCreateWithoutFromTransfersInput, UserUncheckedCreateWithoutFromTransfersInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutFromTransfersInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutFromTransfersInput, UserUncheckedUpdateWithoutFromTransfersInput>
+  }
+
+  export type UserUpdateWithoutFromTransfersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    isApproved?: BoolFieldUpdateOperationsInput | boolean
+    inventoryHash?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInventorySync?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    userPlugins?: UserPluginUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateManyWithoutUserNestedInput
+    activityLogs?: ActivityLogUpdateManyWithoutUserNestedInput
+    crashReports?: CrashReportUpdateManyWithoutUserNestedInput
+    webRtcMetrics?: WebRtcMetricUpdateManyWithoutUserNestedInput
+    devices?: DeviceUpdateManyWithoutUserNestedInput
+    toTransfers?: FileTransferUpdateManyWithoutToUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutFromTransfersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    isApproved?: BoolFieldUpdateOperationsInput | boolean
+    inventoryHash?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInventorySync?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    userPlugins?: UserPluginUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateManyWithoutUserNestedInput
+    activityLogs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+    crashReports?: CrashReportUncheckedUpdateManyWithoutUserNestedInput
+    webRtcMetrics?: WebRtcMetricUncheckedUpdateManyWithoutUserNestedInput
+    devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    toTransfers?: FileTransferUncheckedUpdateManyWithoutToUserNestedInput
+  }
+
+  export type UserUpsertWithoutToTransfersInput = {
+    update: XOR<UserUpdateWithoutToTransfersInput, UserUncheckedUpdateWithoutToTransfersInput>
+    create: XOR<UserCreateWithoutToTransfersInput, UserUncheckedCreateWithoutToTransfersInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutToTransfersInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutToTransfersInput, UserUncheckedUpdateWithoutToTransfersInput>
+  }
+
+  export type UserUpdateWithoutToTransfersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    isApproved?: BoolFieldUpdateOperationsInput | boolean
+    inventoryHash?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInventorySync?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    userPlugins?: UserPluginUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUpdateManyWithoutUserNestedInput
+    activityLogs?: ActivityLogUpdateManyWithoutUserNestedInput
+    crashReports?: CrashReportUpdateManyWithoutUserNestedInput
+    webRtcMetrics?: WebRtcMetricUpdateManyWithoutUserNestedInput
+    devices?: DeviceUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUpdateManyWithoutFromUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutToTransfersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    displayName?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    password?: StringFieldUpdateOperationsInput | string
+    refreshToken?: NullableStringFieldUpdateOperationsInput | string | null
+    isApproved?: BoolFieldUpdateOperationsInput | boolean
+    inventoryHash?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInventorySync?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    userPlugins?: UserPluginUncheckedUpdateManyWithoutUserNestedInput
+    presence?: UserPresenceUncheckedUpdateManyWithoutUserNestedInput
+    activityLogs?: ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+    crashReports?: CrashReportUncheckedUpdateManyWithoutUserNestedInput
+    webRtcMetrics?: WebRtcMetricUncheckedUpdateManyWithoutUserNestedInput
+    devices?: DeviceUncheckedUpdateManyWithoutUserNestedInput
+    fromTransfers?: FileTransferUncheckedUpdateManyWithoutFromUserNestedInput
+  }
+
   export type UserPluginCreateManyUserInput = {
     id?: string
     pluginId: string
@@ -21551,6 +22660,32 @@ export namespace Prisma {
     info?: string | null
     lastActiveAt: Date | string
     isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FileTransferCreateManyFromUserInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    toUserId: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type FileTransferCreateManyToUserInput = {
+    id?: string
+    fileName: string
+    size: number
+    mimeType: string
+    fromUserId: string
+    status?: string
+    progress?: number
+    fileKey?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -21770,6 +22905,84 @@ export namespace Prisma {
     info?: NullableStringFieldUpdateOperationsInput | string | null
     lastActiveAt?: DateTimeFieldUpdateOperationsInput | Date | string
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FileTransferUpdateWithoutFromUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    toUser?: UserUpdateOneRequiredWithoutToTransfersNestedInput
+  }
+
+  export type FileTransferUncheckedUpdateWithoutFromUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    toUserId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FileTransferUncheckedUpdateManyWithoutFromUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    toUserId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FileTransferUpdateWithoutToUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    fromUser?: UserUpdateOneRequiredWithoutFromTransfersNestedInput
+  }
+
+  export type FileTransferUncheckedUpdateWithoutToUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    fromUserId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FileTransferUncheckedUpdateManyWithoutToUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    size?: IntFieldUpdateOperationsInput | number
+    mimeType?: StringFieldUpdateOperationsInput | string
+    fromUserId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progress?: IntFieldUpdateOperationsInput | number
+    fileKey?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

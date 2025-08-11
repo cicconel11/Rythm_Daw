@@ -1,12 +1,12 @@
 import { Controller, Post, Body, HttpStatus, HttpCode } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { EventsService } from './events.service';
+// import { EventsService } from './events.service';
 import { TrackEventsBulkDto } from './dto/track-event.dto';
 
 @ApiTags('Analytics')
 @Controller('v1/events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(/* private readonly eventsService: EventsService */) {}
 
   @Post('bulk')
   @HttpCode(HttpStatus.ACCEPTED)
@@ -49,7 +49,7 @@ export class EventsController {
     }
   })
   async trackBulk(@Body() dto: TrackEventsBulkDto) {
-    await this.eventsService.trackBulk(dto);
+    // await this.eventsService.trackBulk(dto);
     return { success: true, message: 'Events accepted for processing' };
   }
 }

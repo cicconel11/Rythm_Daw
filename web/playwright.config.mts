@@ -33,19 +33,7 @@ export default defineConfig({
   reporter: process.env.CI ? [['list']] : [['html', { open: 'on-failure' }], ['list']],
 
   // Web server for development with Next.js
-  webServer: {
-    command: 'next dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    stderr: 'pipe',
-    stdout: 'pipe',
-    env: {
-      NODE_ENV: 'test',
-      PORT: '3000',
-      // Add any other environment variables needed for testing
-    },
-  },
+  webServer: [{ command: 'pnpm --filter web dev', url: 'http://localhost:3000', reuseExistingServer: !process.env.CI }],
 
   // Shared settings for all tests
   use: {

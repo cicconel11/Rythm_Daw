@@ -20,12 +20,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 6.11.1
- * Query Engine version: f40f79ec31188888a2e33acda0ecc8fd10a853a9
+ * Prisma Client JS version: 6.13.0
+ * Query Engine version: 605197351a3c8bdd595af2d2a9bc3025bca48ea2
  */
 Prisma.prismaVersion = {
-  client: "6.11.1",
-  engine: "f40f79ec31188888a2e33acda0ecc8fd10a853a9"
+  client: "6.13.0",
+  engine: "605197351a3c8bdd595af2d2a9bc3025bca48ea2"
 }
 
 Prisma.PrismaClientKnownRequestError = () => {
@@ -265,6 +265,20 @@ exports.Prisma.EntityTagScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.FileTransferScalarFieldEnum = {
+  id: 'id',
+  fileName: 'fileName',
+  size: 'size',
+  mimeType: 'mimeType',
+  fromUserId: 'fromUserId',
+  toUserId: 'toUserId',
+  status: 'status',
+  progress: 'progress',
+  fileKey: 'fileKey',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -387,6 +401,16 @@ exports.Prisma.EntityTagOrderByRelevanceFieldEnum = {
   snapshotId: 'snapshotId'
 };
 
+exports.Prisma.FileTransferOrderByRelevanceFieldEnum = {
+  id: 'id',
+  fileName: 'fileName',
+  mimeType: 'mimeType',
+  fromUserId: 'fromUserId',
+  toUserId: 'toUserId',
+  status: 'status',
+  fileKey: 'fileKey'
+};
+
 
 exports.Prisma.ModelName = {
   User: 'User',
@@ -400,7 +424,8 @@ exports.Prisma.ModelName = {
   Project: 'Project',
   Snapshot: 'Snapshot',
   Tag: 'Tag',
-  EntityTag: 'EntityTag'
+  EntityTag: 'EntityTag',
+  FileTransfer: 'FileTransfer'
 };
 
 /**

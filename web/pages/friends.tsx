@@ -1,4 +1,4 @@
-import { FriendsPanel } from '@ui-kit/components/friendspanel';
+import { FriendsPanel } from '@ui-kit/components';
 import { useFriends } from '@shared/hooks/useFriends';
 import { useRouter } from 'next/router';
 

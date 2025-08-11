@@ -1,311 +1,231 @@
-import { createMachine, assign, DoneInvokeEvent } from 'xstate';
+import { createMachine, fromPromise } from "xstate";
 
-// Types
-interface RegistrationContext {
-  email: string | null;
-  requestId: string | null;
-  code: string | null;
-  token: string | null;
-  displayName: string | null;
-  password: string | null;
-  avatarUrl: string | null;
-  error: string | null;
-}
-
-type RegistrationEvent =
-  | { type: 'START' }
-  | { type: 'SUBMIT_EMAIL'; email: string }
-  | { type: 'SUBMIT_CODE'; code: string }
-  | { type: 'SUBMIT_PROFILE'; displayName: string; password: string; avatarUrl?: string }
-  | { type: 'RESET' }
-  | { type: 'ERROR'; error: string };
-
-// API Response Types
-interface InitRegistrationResponse {
-  requestId: string;
-}
-
-interface VerifyCodeResponse {
-  token: string;
-}
-
-interface CompleteRegistrationResponse {
-  success: boolean;
-  userId: string;
-}
-
-// API Calls
-const initRegistration = async (email: string): Promise<InitRegistrationResponse> => {
-  const response = await fetch('/api/auth/register/init', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to initiate registration');
-  }
-  return response.json();
+export type RegistrationContext = {
+  email?: string;
+  password?: string;
+  requestId?: string;
+  token?: string;
+  displayName?: string;
+  bio?: string;
+  avatarUrl?: string;
+  error?: string;
+  completed?: boolean;
 };
 
-const verifyCode = async (
-  email: string, 
-  requestId: string, 
-  code: string
-): Promise<VerifyCodeResponse> => {
-  const response = await fetch('/api/auth/register/verify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, requestId, code }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Invalid verification code');
+type SubmitCredentials = { type: "SUBMIT_CREDENTIALS"; email: string; password: string };
+type SubmitBio = { type: "SUBMIT_BIO"; displayName: string; bio: string; avatarUrl?: string };
+type Reset = { type: "RESET" };
+type SetError = { type: "SET_ERROR"; error: string };
+
+export type RegistrationEvent = SubmitCredentials | SubmitBio | Reset | SetError;
+
+const STORAGE_KEY = "registration_ctx_v1";
+
+const persist = (ctx: RegistrationContext) => {
+  if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ctx));
+    } catch (error) {
+      console.warn('Failed to persist registration context:', error);
+    }
   }
-  return response.json();
 };
 
-const completeRegistration = async (
-  token: string,
-  displayName: string,
-  password: string,
-  avatarUrl?: string
-): Promise<CompleteRegistrationResponse> => {
-  const response = await fetch('/api/auth/register/complete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, displayName, password, avatarUrl }),
-  });
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to complete registration');
+const hydrate = (): RegistrationContext => {
+  if (typeof window === "undefined" || typeof sessionStorage === "undefined") return {};
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as RegistrationContext) : {};
+  } catch {
+    return {};
   }
-  return response.json();
 };
 
-// State Machine
-type RegistrationMachine = typeof registrationMachine;
-
-export const registrationMachine = createMachine({
-  tsTypes: {} as import('./registrationMachine.typegen').Typegen0,
-  schema: {
+export const registrationMachine = createMachine(
+  {
+    id: "registration",
     context: {} as RegistrationContext,
-    events: {} as RegistrationEvent,
-  },
-  id: 'registration',
-  initial: 'idle',
-  context: {
-    email: null,
-    requestId: null,
-    code: null,
-    token: null,
-    displayName: null,
-    password: null,
-    avatarUrl: null,
-    error: null,
-  },
-  context: {
-    email: null,
-    requestId: null,
-    code: null,
-    token: null,
-    displayName: null,
-    password: null,
-    avatarUrl: null,
-    error: null,
-  },
-  states: {
-    idle: {
-      on: { START: 'emailEntry' },
-      entry: [
-        assign((context: RegistrationContext) => {
-          if (typeof window === 'undefined') return context;
-          
-          const saved = sessionStorage.getItem('registrationState');
-          if (!saved) return context;
-          
+    initial: "boot",
+    on: {
+      RESET: {
+        target: ".credentials",
+        actions: ({ context }) => {
+          if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+            try {
+              sessionStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+              console.warn('Failed to clear registration context:', error);
+            }
+          }
+          Object.assign(context, {});
+        },
+      },
+      SET_ERROR: {
+        actions: ({ context, event }) => {
+          context.error = (event as SetError).error;
+        },
+      },
+      // internal navigation events used by pages
+      "goto.credentials": { target: ".credentials" },
+      "goto.bio": { target: ".bio" },
+      "goto.complete": { target: ".complete" },
+    },
+    states: {
+      boot: {
+        entry: ({ context, self }) => {
+          // Try to hydrate from sessionStorage
           try {
-            const parsed = JSON.parse(saved);
-            return {
-              ...context,
-              email: parsed.email ?? context.email,
-              requestId: parsed.requestId ?? context.requestId,
-              token: parsed.token ?? context.token,
-              error: null,
-            };
-          } catch (e) {
-            console.error('Failed to parse saved state', e);
-            return { ...context, error: 'Failed to load saved session' };
+            const data = hydrate();
+            Object.assign(context, data);
+            
+            // If we have complete data, go to bio
+            if (data.completed) {
+              self.send({ type: "goto.complete" } as any);
+            } else if (data.email && data.requestId && data.token) {
+              self.send({ type: "goto.bio" } as any);
+            } else {
+              // Default to credentials
+              self.send({ type: "goto.credentials" } as any);
+            }
+          } catch (error) {
+            console.warn('Failed to hydrate state:', error);
+            // Default to credentials on error
+            self.send({ type: "goto.credentials" } as any);
           }
-        }),
-      ],
-    },
-    emailEntry: {
-      on: {
-        SUBMIT_EMAIL: {
-          target: 'verifyingEmail',
-          actions: [
-            assign({
-              email: (_, event: Extract<RegistrationEvent, { type: 'SUBMIT_EMAIL' }>) => event.email,
-              error: () => null,
-            }),
-          ],
         },
-        ERROR: {
-          target: 'emailEntry',
-          actions: assign({
-            error: (_, event: Extract<RegistrationEvent, { type: 'ERROR' }>) => event.error,
-          }),
+        on: {
+          "goto.credentials": { target: ".credentials" },
+          "goto.bio": { target: ".bio" },
+          "goto.complete": { target: ".complete" },
         },
       },
-    },
-    verifyingEmail: {
-      invoke: {
-        src: async (context: RegistrationContext) => {
-          if (!context.email) throw new Error('Email is required');
-          return initRegistration(context.email);
+
+      credentials: {
+        description: "Step 1: Credentials",
+        on: {
+          SUBMIT_CREDENTIALS: { target: "submittingCredentials" },
         },
-        onDone: {
-          target: 'codeEntry',
-          actions: [
-            assign({
-              requestId: (_, event: DoneInvokeEvent<InitRegistrationResponse>) => event.data.requestId,
-            }),
-            (context: RegistrationContext) => {
-              if (typeof window === 'undefined') return;
-              const state = {
-                email: context.email,
-                requestId: context.requestId,
-                token: context.token,
-              };
-              sessionStorage.setItem('registrationState', JSON.stringify(state));
+      },
+
+      submittingCredentials: {
+        invoke: {
+          src: fromPromise(async ({ input }) => {
+            const { email, password } = (input as SubmitCredentials);
+            const res = await fetch("/api/auth/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password }),
+            });
+            if (!res.ok) {
+              const error = await res.json().catch(() => ({}));
+              throw new Error(error.error || "Registration failed");
+            }
+            const data = await res.json();
+            return { email, requestId: data.requestId as string, token: data.token as string };
+          }),
+          input: ({ event }) => event,
+          onDone: {
+            target: "bio",
+            actions: ({ context, event }) => {
+              const { email, requestId, token } = event.output as { email: string; requestId: string; token: string };
+              Object.assign(context, { email, requestId, token, error: undefined });
+              persist(context);
             },
-          ],
-        },
-        onError: {
-          target: 'emailEntry',
-          actions: assign({
-            error: (_, event: any) => event.data?.message || 'Failed to send verification code',
-          }),
-        },
-      },
-    },
-    codeEntry: {
-      on: {
-        SUBMIT_CODE: {
-          target: 'verifyingCode',
-          actions: [
-            assign({
-              code: (_, event: Extract<RegistrationEvent, { type: 'SUBMIT_CODE' }>) => event.code,
-              error: () => null,
-            }),
-          ],
-        },
-        ERROR: {
-          target: 'codeEntry',
-          actions: assign({
-            error: (_, event: Extract<RegistrationEvent, { type: 'ERROR' }>) => event.error,
-          }),
+          },
+          onError: {
+            target: "credentials",
+            actions: ({ context, event }) => {
+              context.error = (event.error as Error)?.message || "Registration failed";
+            },
+          },
         },
       },
-    },
-    verifyingCode: {
-      invoke: {
-        src: async (context: RegistrationContext) => {
-          if (!context.email || !context.requestId || !context.code) {
-            throw new Error('Missing required verification data');
+
+      bio: {
+        description: "Step 2: Bio",
+        entry: ({ context }) => {
+          // guard: cannot be here without step1
+          if (!(context.email && context.requestId && context.token)) {
+            throw Object.assign(new Error("invalid_state"), { redirectTo: "/register/credentials" });
           }
-          return verifyCode(context.email, context.requestId, context.code);
         },
-        onDone: {
-          target: 'profileEntry',
-          actions: [
-            assign({
-              token: (_, event: DoneInvokeEvent<VerifyCodeResponse>) => event.data.token,
-            }),
-            (context: RegistrationContext) => {
-              if (typeof window === 'undefined') return;
-              const state = {
-                email: context.email,
-                requestId: context.requestId,
-                token: context.token,
-              };
-              sessionStorage.setItem('registrationState', JSON.stringify(state));
+        on: { 
+          SUBMIT_BIO: { 
+            target: "submittingBio",
+            actions: ({ context, event }) => {
+              // Pass context data to the promise
+              (event as any).requestId = context.requestId;
+              (event as any).token = context.token;
+            }
+          } 
+        },
+      },
+
+      submittingBio: {
+        invoke: {
+          src: fromPromise(async ({ input }) => {
+            const { displayName, bio, avatarUrl, requestId, token } = (input as SubmitBio & { requestId: string; token: string });
+            const res = await fetch("/api/register/bio", {
+              method: "PUT",
+              headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                requestId,
+                bio,
+                avatarUrl,
+              }),
+            });
+            if (!res.ok) {
+              const error = await res.json().catch(() => ({}));
+              throw new Error(error.error || "Bio submission failed");
+            }
+            return { displayName, bio, avatarUrl };
+          }),
+          onDone: {
+            target: "complete",
+            actions: ({ context, event }) => {
+              Object.assign(context, { ...(event.output as any), completed: true, error: undefined });
+              persist(context);
             },
-          ],
-        },
-        onError: {
-          target: 'codeEntry',
-          actions: assign({
-            error: (_, event: any) => event.data?.message || 'Verification failed',
-          }),
-        },
-      },
-    },
-    profileEntry: {
-      on: {
-        SUBMIT_PROFILE: {
-          target: 'completingRegistration',
-          actions: [
-            assign({
-              displayName: (_, event: Extract<RegistrationEvent, { type: 'SUBMIT_PROFILE' }>) => event.displayName,
-              password: (_, event: Extract<RegistrationEvent, { type: 'SUBMIT_PROFILE' }>) => event.password,
-              avatarUrl: (_, event: Extract<RegistrationEvent, { type: 'SUBMIT_PROFILE' }>) => event.avatarUrl || null,
-              error: () => null,
-            }),
-          ],
-        },
-        ERROR: {
-          target: 'profileEntry',
-          actions: assign({
-            error: (_, event: Extract<RegistrationEvent, { type: 'ERROR' }>) => event.error,
-          }),
+          },
+          onError: {
+            target: "bio",
+            actions: ({ context, event }) => {
+              context.error = (event.error as Error)?.message || "Bio submission failed";
+            },
+          },
         },
       },
-    },
-    completingRegistration: {
-      invoke: {
-        src: async (context: RegistrationContext) => {
-          if (!context.token || !context.displayName || !context.password) {
-            throw new Error('Missing required profile data');
+
+      complete: {
+        description: "Registration completed",
+        entry: ({ context }) => {
+          // Clear session storage after successful completion
+          if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+            try {
+              sessionStorage.removeItem(STORAGE_KEY);
+              // Set a cookie to indicate registration is completed
+              document.cookie = "registration_completed=true; path=/; max-age=86400"; // 24 hours
+            } catch (error) {
+              console.warn('Failed to clear registration context:', error);
+            }
           }
-          return completeRegistration(
-            context.token,
-            context.displayName,
-            context.password,
-            context.avatarUrl || undefined
-          );
         },
-        onDone: {
-          target: 'success',
-          actions: [
-            () => {
-              if (typeof window !== 'undefined') {
-                sessionStorage.removeItem('registrationState');
-              }
-            },
-          ],
-        },
-        onError: {
-          target: 'profileEntry',
-          actions: assign({
-            error: (_, event: any) => event.data?.message || 'Registration failed',
-          }),
-        },
-      },
-    },
-    success: {
-      entry: () => {
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login?registered=true';
-        }
-      },
-      type: 'final' as const,
-    },
-    error: {
-      on: {
-        RESET: 'idle',
       },
     },
   },
-});
+  {
+    guards: {},
+  }
+);
+
+// Helper functions for checking registration state
+export const hasCompletedCredentials = (context: RegistrationContext): boolean => {
+  return !!(context.email && context.requestId && context.token);
+};
+
+export const hasCompletedRegistration = (context: RegistrationContext): boolean => {
+  return !!context.completed;
+};

@@ -1,126 +1,43 @@
-"use client";
+'use client';
 
-import { useMachine } from '@xstate/react';
-import { registrationMachine } from '../src/machines/registrationMachine';
-import { useRouter } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { useSession } from 'next-auth/react';
 
-// Types
-type RegistrationEvent = 
-  | { type: 'SUBMIT_CREDENTIALS' }
-  | { type: 'SUBMIT_PROFILE'; displayName: string; avatar?: string };
-
-type RegistrationContext = {
-  email: string;
-  password: string;
-  displayName: string;
-  avatar?: string;
-  recaptchaToken?: string;
-};
-
-// Dynamically import ReCAPTCHA with no SSR
-const ReCAPTCHA = dynamic(
-  () => import('react-google-recaptcha').then(mod => mod.default),
-  { ssr: false }
-);
-
-export default function SignupPage() {
-  const router = useRouter();
-  const { data: session, status } = useSession();
-  const recaptchaRef = useRef<{ executeAsync: () => Promise<string> } | null>(null);
-  
-  const [state, send] = useMachine(registrationMachine, {
-    actions: {
-      onCredentialsValid: () => {
-        // No-op - handled by UI kit component
-      },
-      onRegistrationComplete: () => {
-        // No-op - handled by UI kit component
-      },
-      onError: (_, event: any) => {
-        console.error('Registration error:', event.error);
-      },
-    },
-    services: {
-      validateCredentials: async () => {
-        if (!recaptchaRef.current) {
-          throw new Error('reCAPTCHA not loaded');
-        }
-        
-        const token = await recaptchaRef.current.executeAsync();
-        if (!token) {
-          throw new Error('reCAPTCHA verification failed');
-        }
-        
-        return { recaptchaToken: token };
-      },
-      submitProfile: async () => {
-        // No-op - handled by UI kit component
-        return Promise.resolve();
-      },
-    },
-  });
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (status === 'authenticated') {
-      router.push('/dashboard');
-    }
-  }, [status, router]);
-
-  const handleCredentialsSubmit = () => {
-    send({ type: 'SUBMIT_CREDENTIALS' } as const);
-  };
-
-  const handleProfileComplete = () => {
-    // Get the form data from session storage
-    const formData = JSON.parse(sessionStorage.getItem('rtm_reg_creds') || '{}');
-    send({
-      type: 'SUBMIT_PROFILE',
-      displayName: formData.displayName || '',
-      avatar: formData.avatar
-    } as const);
-  };
-
-  if (status === 'loading' || status === 'authenticated') {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
-  // Dynamically import UI kit components with SSR disabled
-  const DynamicRegisterCredentials = dynamic(
-    () => import('@rythm/ui-kit').then(mod => mod.RegisterCredentials),
-    { ssr: false }
-  );
-
-  const DynamicRegisterBio = dynamic(
-    () => import('@rythm/ui-kit').then(mod => mod.RegisterBio),
-    { ssr: false }
-  );
-
+// Simple loading component for SSR
+function SignupNewLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0D1126] to-[#1A1F3D] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {typeof window !== 'undefined' && (
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            size="invisible"
-            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
-          />
-        )}
-        
-        {state.matches('credentials') && (
-          <DynamicRegisterCredentials onContinue={handleCredentialsSubmit} />
-        )}
-        
-        {state.matches('profile') && (
-          <DynamicRegisterBio 
-            onSuccess={handleProfileComplete}
-            onNavigate={(path: string) => router.push(path)}
-          />
-        )}
+    <div className="flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="rounded-lg bg-white px-4 py-8 shadow sm:px-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-sm text-gray-600">Loading signup form...</p>
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+// Dynamically import the full component with SSR disabled
+const SignupNewFull = dynamic(
+  () => import('@/components/SignupNewFull'),
+  {
+    ssr: false,
+    loading: SignupNewLoading,
+  }
+);
+
+export default function SignupNewPage() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return <SignupNewLoading />;
+  }
+
+  return <SignupNewFull />;
 }

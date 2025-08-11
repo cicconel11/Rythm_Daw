@@ -102,7 +102,7 @@ export class EncryptionService implements OnModuleInit {
    */
   encryptObject<T extends object>(obj: T | null): string | null {
     if (!obj) return null;
-    return this.encrypt(JSON.stringify(obj));
+    return this.encrypt(JSON.stringify(obj)) as string;
   }
 
   /**

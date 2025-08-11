@@ -1,12 +1,7 @@
 {
+  "name": "Rythm_Daw",
   "private": true,
-  "workspaces": [
-    "ui-kit",
-    "web",
-    "website",
-    "server",
-    "lovable-src"
-  ],
+  "workspaces": ["web", "server"],
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@prisma/client": "5.22.0",
@@ -36,17 +31,16 @@
   "packageManager": "pnpm@10.13.1",
   "type": "module",
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx --report-unused-disable-directives --max-warnings 50",
-    "lint:web": "eslint --max-warnings 0 web/**/*.tsx ui-kit/**/*.tsx",
-    "typecheck:web": "tsc --noEmit -p web/tsconfig.json",
-    "build": "tsc -b",
-    "dev": "pnpm --parallel --workspace-concurrency=2 --filter=website dev & pnpm --filter=server start:dev",
-    "test": "pnpm --filter=server test",
-    "test:e2e": "pnpm --filter=website exec playwright test --reporter=list",
-    "ci:e2e": "pnpm --filter=web exec playwright test --reporter=list",
-    "db:migrate": "prisma migrate dev"
+    "preinstall": "corepack enable",
+    "postinstall": "pnpm -F server prisma:generate",
+    "dev": "concurrently -n web,api -c auto,auto \"pnpm -F web dev\" \"pnpm -F server dev\"",
+    "build": "pnpm -r -F web -F server build",
+    "start": "concurrently -n web,api -c auto,auto \"pnpm -F web start\" \"pnpm -F server start\"",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm -F web test:e2e"
   },
   "devDependencies": {
+    "concurrently": "^9.0.0",
     "@babel/core": "^7.28.0",
     "@babel/plugin-proposal-class-properties": "^7.18.6",
     "@babel/plugin-proposal-decorators": "^7.28.0",
