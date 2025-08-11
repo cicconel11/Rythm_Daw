@@ -1,6 +1,8 @@
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 import { Dashboard } from '@rythm/ui-kit';
 import { useDashboard } from '@shared/hooks/useDashboard';
-import { withAuth } from '@shared/hooks/withAuth';
 import { Skeleton } from '@rythm/ui-kit';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { useToast } from '@/hooks/use-toast';
@@ -36,4 +38,32 @@ function DashboardPage() {
   );
 }
 
-export default withAuth(DashboardPage);
+export default function IndexPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'loading') return; // Still loading
+
+    if (status === 'unauthenticated') {
+      router.push('/landing');
+    }
+  }, [session, status, router]);
+
+  // Show loading while checking auth status
+  if (status === 'loading') {
+    return (
+      <main className="min-h-screen flex flex-col justify-center items-center bg-white dark:bg-black transition-colors">
+        <div className="text-lg text-gray-600 dark:text-gray-300">Loading...</div>
+      </main>
+    );
+  }
+
+  // Don't render if user is unauthenticated (will redirect)
+  if (status === 'unauthenticated') {
+    return null;
+  }
+
+  // Show dashboard for authenticated users
+  return <DashboardPage />;
+}
