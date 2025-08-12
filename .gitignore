@@ -6,3 +6,32 @@ rhythm-hub-compose-19/
 
 # MCP Configuration (contains sensitive API keys)
 mcp.json
+
+# Build artifacts and compiled files
+build/
+*.a
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# JUCE build artifacts
+JuceLibraryCode/
+*.jucer
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

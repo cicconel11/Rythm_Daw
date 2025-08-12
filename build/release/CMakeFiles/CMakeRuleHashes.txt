@@ -1,3 +1,0 @@
-# Hashes of file build rules.
-994fe692684e8a5376c7b385709f3148 plugins/rythm-plugin/RythmPlugin_artefacts/JuceLibraryCode/RythmPlugin_AU/PkgInfo
-4ddf774fe5aa4b2875048555b39f7243 plugins/rythm-plugin/RythmPlugin_artefacts/JuceLibraryCode/RythmPlugin_VST3/PkgInfo
