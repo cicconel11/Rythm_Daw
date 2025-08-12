@@ -1,0 +1,12 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/louisciccone/Desktop/Rythm_Daw/build/release/cmake_install.cmake",
+		"/Users/louisciccone/Desktop/Rythm_Daw/build/release/plugins/rythm-plugin/cmake_install.cmake",
+		"/Users/louisciccone/Desktop/Rythm_Daw/build/release/plugins/rythm-plugin/JUCE/cmake_install.cmake",
+		"/Users/louisciccone/Desktop/Rythm_Daw/build/release/plugins/rythm-plugin/JUCE/modules/cmake_install.cmake",
+		"/Users/louisciccone/Desktop/Rythm_Daw/build/release/plugins/rythm-plugin/JUCE/extras/Build/cmake_install.cmake",
+		"/Users/louisciccone/Desktop/Rythm_Daw/build/release/plugins/rythm-plugin/JUCE/extras/Build/juceaide/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

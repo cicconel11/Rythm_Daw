@@ -6,22 +6,28 @@ echo "=========================================="
 echo "RHYTHM Plugin Local Installation"
 echo "=========================================="
 
-# Check if we're in the right directory
-if [ ! -f "../../CMakeLists.txt" ]; then
-    echo "Error: This script must be run from plugins/rythm-plugin/scripts/"
+# Determine the project root
+if [ -f "CMakeLists.txt" ]; then
+    # We're in the project root
+    PROJECT_ROOT="."
+elif [ -f "../../../CMakeLists.txt" ]; then
+    # We're in plugins/rythm-plugin/scripts/
+    PROJECT_ROOT="../../.."
+else
+    echo "Error: This script must be run from the project root or plugins/rythm-plugin/scripts/"
     exit 1
 fi
 
 # Go to project root
-cd ../..
+cd "$PROJECT_ROOT"
 
 # Check if build files exist
-if [ ! -f "build/release/RythmPlugin.vst3/Contents/MacOS/RythmPlugin" ]; then
+if [ ! -f "build/release/plugins/rythm-plugin/RythmPlugin_artefacts/Release/VST3/RythmPlugin.vst3/Contents/MacOS/RythmPlugin" ]; then
     echo "Error: VST3 plugin not found. Run build_release.sh first."
     exit 1
 fi
 
-if [ ! -f "build/release/RythmPlugin.component/Contents/MacOS/RythmPlugin" ]; then
+if [ ! -f "build/release/plugins/rythm-plugin/RythmPlugin_artefacts/Release/AU/RythmPlugin.component/Contents/MacOS/RythmPlugin" ]; then
     echo "Error: Audio Unit plugin not found. Run build_release.sh first."
     exit 1
 fi
@@ -38,10 +44,10 @@ rm -rf ~/Library/Audio/Plug-Ins/Components/RythmPlugin.component
 
 # Copy new plugins
 echo "Installing VST3 plugin..."
-cp -R build/release/RythmPlugin.vst3 ~/Library/Audio/Plug-Ins/VST3/
+cp -R build/release/plugins/rythm-plugin/RythmPlugin_artefacts/Release/VST3/RythmPlugin.vst3 ~/Library/Audio/Plug-Ins/VST3/
 
 echo "Installing Audio Unit plugin..."
-cp -R build/release/RythmPlugin.component ~/Library/Audio/Plug-Ins/Components/
+cp -R build/release/plugins/rythm-plugin/RythmPlugin_artefacts/Release/AU/RythmPlugin.component ~/Library/Audio/Plug-Ins/Components/
 
 # Clear Audio Unit cache
 echo "Clearing Audio Unit cache..."

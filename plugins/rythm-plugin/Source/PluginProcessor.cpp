@@ -6,16 +6,24 @@ RythmPluginAudioProcessor::RythmPluginAudioProcessor()
     : AudioProcessor(BusesProperties()
         .withInput("Input", juce::AudioChannelSet::stereo(), true)
         .withOutput("Output", juce::AudioChannelSet::stereo(), true)),
-      parameters(*this, nullptr, juce::Identifier("RythmPlugin"), createParameterLayout())
+      parameters(*this, nullptr, "Parameters", createParameterLayout())
 {
-    // Set up parameter listeners
-    parameters.addParameterListener(inputGainId, this);
-    parameters.addParameterListener(outputGainId, this);
-    parameters.addParameterListener(dryWetId, this);
+    // Initialize smoothed values
+    inputGainSmoothed.setCurrentAndTargetValue(1.0f);
+    outputGainSmoothed.setCurrentAndTargetValue(1.0f);
+    dryWetSmoothed.setCurrentAndTargetValue(0.5f);
+    
+    // Initialize bridge client
+    bridgeClient = std::make_unique<BridgeClient>();
+    bridgeClient->connect();
 }
 
 RythmPluginAudioProcessor::~RythmPluginAudioProcessor()
 {
+    if (bridgeClient)
+    {
+        bridgeClient->disconnect();
+    }
 }
 
 //==============================================================================
@@ -73,17 +81,16 @@ void RythmPluginAudioProcessor::changeProgramName(int index, const juce::String&
 //==============================================================================
 void RythmPluginAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    juce::ignoreUnused(sampleRate, samplesPerBlock);
+    // Set smoothing time constants (50ms)
+    const float smoothingTime = 0.05f;
+    inputGainSmoothed.reset(sampleRate, smoothingTime);
+    outputGainSmoothed.reset(sampleRate, smoothingTime);
+    dryWetSmoothed.reset(sampleRate, smoothingTime);
     
-    // Reset smoothed values
-    inputGainSmoothed.reset(sampleRate, 0.1);
-    outputGainSmoothed.reset(sampleRate, 0.1);
-    dryWetSmoothed.reset(sampleRate, 0.1);
-    
-    // Set initial values
-    inputGainSmoothed.setCurrentAndTargetValue(inputGainValue.load());
-    outputGainSmoothed.setCurrentAndTargetValue(outputGainValue.load());
-    dryWetSmoothed.setCurrentAndTargetValue(dryWetValue.load() / 100.0f);
+    // Set initial values from parameters
+    inputGainSmoothed.setCurrentAndTargetValue(*parameters.getRawParameterValue(inputGainId));
+    outputGainSmoothed.setCurrentAndTargetValue(*parameters.getRawParameterValue(outputGainId));
+    dryWetSmoothed.setCurrentAndTargetValue(*parameters.getRawParameterValue(dryWetId));
 }
 
 void RythmPluginAudioProcessor::releaseResources()
@@ -105,7 +112,7 @@ bool RythmPluginAudioProcessor::isBusesLayoutSupported(const BusesLayout& layout
 void RythmPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused(midiMessages);
-    
+
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
@@ -113,39 +120,39 @@ void RythmPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    const int numSamples = buffer.getNumSamples();
-    const int numChannels = buffer.getNumChannels();
-    
-    // Process each sample
-    for (int sample = 0; sample < numSamples; ++sample)
+    // Update smoothed values from parameters
+    inputGainSmoothed.setTargetValue(*parameters.getRawParameterValue(inputGainId));
+    outputGainSmoothed.setTargetValue(*parameters.getRawParameterValue(outputGainId));
+    dryWetSmoothed.setTargetValue(*parameters.getRawParameterValue(dryWetId));
+
+    // Process audio with parameters
+    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
     {
-        // Update smoothed values
-        const float inputGain = inputGainSmoothed.getNextValue();
-        const float outputGain = outputGainSmoothed.getNextValue();
-        const float dryWet = dryWetSmoothed.getNextValue();
+        float* channelData = buffer.getWritePointer(channel);
         
-        // Convert dB to linear
-        const float inputGainLinear = juce::Decibels::decibelsToGain(inputGain);
-        const float outputGainLinear = juce::Decibels::decibelsToGain(outputGain);
-        
-        for (int channel = 0; channel < numChannels; ++channel)
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            float* channelData = buffer.getWritePointer(channel);
-            const float inputSample = channelData[sample];
+            // Get current smoothed values
+            const float inputGainDb = inputGainSmoothed.getNextValue();
+            const float outputGainDb = outputGainSmoothed.getNextValue();
+            const float dryWet = dryWetSmoothed.getNextValue();
+            
+            // Convert dB to linear gain
+            const float inputGain = juce::Decibels::decibelsToGain(inputGainDb);
+            const float outputGain = juce::Decibels::decibelsToGain(outputGainDb);
             
             // Apply input gain
-            float processedSample = inputSample * inputGainLinear;
+            float inputSample = channelData[sample] * inputGain;
             
-            // Apply output gain
-            processedSample *= outputGainLinear;
+            // Apply dry/wet mix (simple pass-through for now, can be extended with effects)
+            float processedSample = inputSample; // Placeholder for future effects
+            float outputSample = (inputSample * (1.0f - dryWet)) + (processedSample * dryWet);
             
-            // Hard clip protection
-            processedSample = juce::jlimit(-0.98f, 0.98f, processedSample);
+            // Apply output gain with hard clip protection
+            outputSample *= outputGain;
+            outputSample = juce::jlimit(-1.0f, 1.0f, outputSample);
             
-            // Dry/wet mix
-            const float drySample = inputSample;
-            const float wetSample = processedSample;
-            channelData[sample] = drySample * (1.0f - dryWet) + wetSample * dryWet;
+            channelData[sample] = outputSample;
         }
     }
 }
@@ -158,7 +165,7 @@ bool RythmPluginAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* RythmPluginAudioProcessor::createEditor()
 {
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new RythmPluginAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -178,37 +185,47 @@ void RythmPluginAudioProcessor::setStateInformation(const void* data, int sizeIn
             parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
+//==============================================================================
 juce::AudioProcessorValueTreeState::ParameterLayout RythmPluginAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
-
+    
+    // Input Gain: -24dB to +24dB
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         inputGainId,
         "Input Gain",
-        juce::NormalisableRange<float>(0.0f, 24.0f, 0.1f),
+        juce::NormalisableRange<float>(-24.0f, 24.0f, 0.1f),
         0.0f,
-        juce::AudioParameterFloatAttributes()
-            .withLabel("dB")
-            .withCategory("Gain")));
-
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(value, 1) + " dB"; },
+        [](const juce::String& text) { return text.dropLastCharacters(3).getFloatValue(); }
+    ));
+    
+    // Output Gain: -24dB to +24dB
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         outputGainId,
         "Output Gain",
-        juce::NormalisableRange<float>(0.0f, 24.0f, 0.1f),
+        juce::NormalisableRange<float>(-24.0f, 24.0f, 0.1f),
         0.0f,
-        juce::AudioParameterFloatAttributes()
-            .withLabel("dB")
-            .withCategory("Gain")));
-
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(value, 1) + " dB"; },
+        [](const juce::String& text) { return text.dropLastCharacters(3).getFloatValue(); }
+    ));
+    
+    // Dry/Wet: 0% to 100%
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         dryWetId,
         "Dry/Wet",
-        juce::NormalisableRange<float>(0.0f, 100.0f, 0.1f),
-        100.0f,
-        juce::AudioParameterFloatAttributes()
-            .withLabel("%")
-            .withCategory("Mix")));
-
+        juce::NormalisableRange<float>(0.0f, 1.0f, 0.01f),
+        0.5f,
+        juce::String(),
+        juce::AudioProcessorParameter::genericParameter,
+        [](float value, int) { return juce::String(static_cast<int>(value * 100.0f)) + "%"; },
+        [](const juce::String& text) { return text.dropLastCharacters(1).getFloatValue() / 100.0f; }
+    ));
+    
     return { params.begin(), params.end() };
 }
 

@@ -6,17 +6,23 @@ echo "=========================================="
 echo "RHYTHM Plugin Audio Unit Validation"
 echo "=========================================="
 
-# Check if we're in the right directory
-if [ ! -f "../../CMakeLists.txt" ]; then
-    echo "Error: This script must be run from plugins/rythm-plugin/scripts/"
+# Determine the project root
+if [ -f "CMakeLists.txt" ]; then
+    # We're in the project root
+    PROJECT_ROOT="."
+elif [ -f "../../../CMakeLists.txt" ]; then
+    # We're in plugins/rythm-plugin/scripts/
+    PROJECT_ROOT="../../.."
+else
+    echo "Error: This script must be run from the project root or plugins/rythm-plugin/scripts/"
     exit 1
 fi
 
 # Go to project root
-cd ../..
+cd "$PROJECT_ROOT"
 
 # Check if plugin is installed
-if [ ! -f "~/Library/Audio/Plug-Ins/Components/RythmPlugin.component/Contents/MacOS/RythmPlugin" ]; then
+if [ ! -f "$HOME/Library/Audio/Plug-Ins/Components/RythmPlugin.component/Contents/MacOS/RythmPlugin" ]; then
     echo "Error: Audio Unit plugin not found. Run install_local.sh first."
     exit 1
 fi

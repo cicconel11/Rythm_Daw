@@ -3,3 +3,6 @@ node_modules
 .npm-cache/
 .npm-cache/
 rhythm-hub-compose-19/
+
+# MCP Configuration (contains sensitive API keys)
+mcp.json

@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include "Bridge/BridgeClient.h"
 
 class RythmPluginAudioProcessor : public juce::AudioProcessor
 {
@@ -35,26 +36,27 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
+    // Parameter access
     juce::AudioProcessorValueTreeState& getValueTreeState() { return parameters; }
 
 private:
     juce::AudioProcessorValueTreeState parameters;
-    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
-
+    
     // Parameter IDs
     juce::String inputGainId = "inputGain";
     juce::String outputGainId = "outputGain";
     juce::String dryWetId = "dryWet";
-
+    
     // Smoothed values for parameter changes
-    juce::dsp::SmoothedValue<float> inputGainSmoothed;
-    juce::dsp::SmoothedValue<float> outputGainSmoothed;
-    juce::dsp::SmoothedValue<float> dryWetSmoothed;
-
+    juce::SmoothedValue<float> inputGainSmoothed;
+    juce::SmoothedValue<float> outputGainSmoothed;
+    juce::SmoothedValue<float> dryWetSmoothed;
+    
     // Parameter listeners
-    std::atomic<float> inputGainValue{0.0f};
-    std::atomic<float> outputGainValue{0.0f};
-    std::atomic<float> dryWetValue{100.0f};
-
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    
+    // Bridge client
+    std::unique_ptr<BridgeClient> bridgeClient;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RythmPluginAudioProcessor)
 };

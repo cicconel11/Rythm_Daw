@@ -1,0 +1,78 @@
+.app {
+  display: flex;
+  height: 100vh;
+  background: #2d2d30;
+  color: #ffffff;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.section-content {
+  background: #3e3e42;
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 400px;
+}
+
+.parameter-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.parameter-knob {
+  text-align: center;
+}
+
+.parameter-knob label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #cccccc;
+}
+
+.parameter-knob input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #555555;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.parameter-knob input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #007acc;
+  cursor: pointer;
+}
+
+.parameter-knob input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #007acc;
+  cursor: pointer;
+  border: none;
+}
+
+.parameter-value {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #999999;
+}

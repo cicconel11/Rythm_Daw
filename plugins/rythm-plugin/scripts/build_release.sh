@@ -6,14 +6,20 @@ echo "=========================================="
 echo "RHYTHM Plugin Release Build"
 echo "=========================================="
 
-# Check if we're in the right directory
-if [ ! -f "../../CMakeLists.txt" ]; then
-    echo "Error: This script must be run from plugins/rythm-plugin/scripts/"
+# Determine the project root
+if [ -f "CMakeLists.txt" ]; then
+    # We're in the project root
+    PROJECT_ROOT="."
+elif [ -f "../../../CMakeLists.txt" ]; then
+    # We're in plugins/rythm-plugin/scripts/
+    PROJECT_ROOT="../../.."
+else
+    echo "Error: This script must be run from the project root or plugins/rythm-plugin/scripts/"
     exit 1
 fi
 
 # Go to project root
-cd ../..
+cd "$PROJECT_ROOT"
 
 # Build with CMake presets
 echo "Building RHYTHM plugin..."
