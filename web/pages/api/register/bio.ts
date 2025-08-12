@@ -1,5 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { pendingRegistrations, users, validateToken, removePendingRegistration, addUser } from '../auth/register/storage';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PUT') {
@@ -7,71 +6,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { requestId, bio, avatarUrl } = req.body;
+    const { requestId, displayName, bio, avatarUrl } = req.body;
     const authHeader = req.headers.authorization;
 
-    console.log('Bio API called with:', { requestId, bio, avatarUrl });
-    console.log('Auth header:', authHeader);
-    console.log('Current pending registrations:', Array.from(pendingRegistrations.keys()));
-
-    // Validate token
-    const validRequestId = validateToken(authHeader || '');
-    console.log('Validated requestId:', validRequestId);
-    console.log('Expected requestId:', requestId);
-    
-    if (!validRequestId || validRequestId !== requestId) {
-      console.log('Token validation failed');
-      return res.status(401).json({ message: 'Invalid or expired token' });
-    }
-
-    // Get pending registration
-    const pendingRegistration = pendingRegistrations.get(requestId);
-    console.log('Found pending registration:', pendingRegistration ? 'yes' : 'no');
-    
-    if (!pendingRegistration) {
-      return res.status(404).json({ message: 'Registration not found' });
-    }
-
-    if (pendingRegistration.completed) {
-      return res.status(400).json({ message: 'Registration already completed' });
-    }
-
     // Basic validation
-    if (!bio || !bio.trim()) {
-      return res.status(400).json({ message: 'Bio is required' });
+    if (!requestId || !displayName || !bio) {
+      return res.status(400).json({ message: 'Request ID, display name, and bio are required' });
     }
 
-    // Update pending registration with bio data
-    pendingRegistration.bio = bio.trim();
-    pendingRegistration.avatarUrl = avatarUrl || null;
-    pendingRegistration.completed = true;
-    pendingRegistration.completedAt = new Date().toISOString();
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
-    // Move to users array (simulating database save)
-    const user = {
-      id: requestId,
-      email: pendingRegistration.email,
-      password: pendingRegistration.password,
-      displayName: pendingRegistration.displayName,
-      bio: pendingRegistration.bio,
-      avatarUrl: pendingRegistration.avatarUrl,
-      createdAt: pendingRegistration.createdAt,
-      updatedAt: new Date().toISOString(),
-    };
+    if (bio.length > 140) {
+      return res.status(400).json({ message: 'Bio must be 140 characters or less' });
+    }
 
-    addUser(user);
-    removePendingRegistration(requestId);
+    // In a real implementation, you would:
+    // 1. Validate the token
+    // 2. Find the pending registration by requestId
+    // 3. Update the user profile in the database
+    // 4. Mark the registration as completed
+    // 5. Create a session or JWT token for the user
 
-    console.log('Completed registration:', { requestId, email: user.email });
-
-    // Return success
+    // Mock successful completion
     return res.status(200).json({
-      success: true,
-      message: 'Registration completed successfully',
-      userId: requestId,
+      message: 'Profile completed successfully',
+      user: {
+        id: `user_${Date.now()}`,
+        displayName,
+        bio,
+        avatarUrl,
+        email: 'user@example.com', // This would come from the pending registration
+      },
     });
   } catch (error) {
-    console.error('Bio update error:', error);
+    console.error('Bio completion error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 }

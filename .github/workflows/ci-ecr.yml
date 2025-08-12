@@ -48,6 +48,12 @@ jobs:
           key: ${{ runner.os }}-pnpm-website-${{ hashFiles('website/pnpm-lock.yaml') }}
 
       # ---------- AWS ECR login ----------
+      - name: 🔐  Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
       - name: 🔐  Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 

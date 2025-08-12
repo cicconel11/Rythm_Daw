@@ -7,22 +7,19 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Share, History, Users, MessageSquare, Music, Settings } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Music } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { cn } from '@/lib/utils';
-
-const menuItems = [
-  { title: 'Dashboard', url: '/', icon: Home },
-  { title: 'File Share', url: '/files', icon: Share },
-  { title: 'History', url: '/history', icon: History },
-  { title: 'Friends', url: '/friends', icon: Users },
-  { title: 'Chat', url: '/chat', icon: MessageSquare },
-  { title: 'Settings', url: '/settings', icon: Settings },
-];
+import { getVisibleRoutes, getActiveRoute } from '@/lib/routes';
+import { useCurrentUser } from '@/lib/api';
 
 export function AppSidebar() {
-  const location = useLocation();
-
+  const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
+  const visibleRoutes = getVisibleRoutes().filter(route => route.protected);
+  const activeRoute = getActiveRoute(router.pathname);
+  
   return (
     <Sidebar className="border-r border-sidebar-border">
       <SidebarHeader className="p-6 border-b border-sidebar-border">
@@ -38,19 +35,20 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-3 py-4">
-        <SidebarMenu>
-          {menuItems.map(item => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
+        <SidebarMenu data-testid="main-nav">
+          {visibleRoutes.map(item => (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton asChild isActive={router.pathname === item.path}>
                 <Link
-                  to={item.url}
+                  href={item.path}
+                  data-testid={item.testId}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200',
-                    location.pathname === item.url ? 'nav-item-active' : 'nav-item'
+                    router.pathname === item.path ? 'nav-item-active' : 'nav-item'
                   )}
                 >
                   <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.title}</span>
+                  <span className="font-medium">{item.name}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -61,13 +59,19 @@ export function AppSidebar() {
       <SidebarFooter className="p-6 border-t border-sidebar-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center">
-            <span className="text-sm font-semibold text-white">DJ</span>
+            <span className="text-sm font-semibold text-white">
+              {currentUser?.displayName?.charAt(0) ?? 'U'}
+            </span>
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-sidebar-foreground">DJ Producer</p>
+            <p className="text-sm font-medium text-sidebar-foreground">
+              {currentUser?.displayName ?? 'User'}
+            </p>
             <div className="flex items-center gap-2">
-              <div className="status-online"></div>
-              <span className="text-xs text-sidebar-foreground/60">Online</span>
+              <div className={`status-${currentUser?.status ?? 'offline'}`}></div>
+              <span className="text-xs text-sidebar-foreground/60 capitalize">
+                {currentUser?.status ?? 'offline'}
+              </span>
             </div>
           </div>
           <button

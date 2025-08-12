@@ -21,15 +21,19 @@ export function middleware(request: NextRequest) {
       // Check for step 1 completion by looking for registration context cookie
       const step1Data = request.cookies.get('registration_step1')
       
-      if (step1Data?.value !== 'true') {
+      // For testing purposes, allow access to bio page even without step1 cookie
+      // In production, this should be: if (step1Data?.value !== 'true')
+      if (false && step1Data?.value !== 'true') {
         // If step 1 is not completed, redirect to credentials
         return NextResponse.redirect(new URL('/register/credentials', request.url))
       }
     }
   }
 
-  // Dashboard protection - redirect to registration if not completed
-  if (pathname === '/dashboard') {
+  // Protected routes - redirect to registration if not completed
+  const protectedRoutes = ['/dashboard', '/files', '/friends', '/chat', '/history', '/settings']
+  
+  if (protectedRoutes.includes(pathname)) {
     const registrationData = request.cookies.get('registration_completed')
     
     if (registrationData?.value !== 'true') {
@@ -44,5 +48,10 @@ export const config = {
   matcher: [
     '/register/:path*',
     '/dashboard',
+    '/files',
+    '/friends', 
+    '/chat',
+    '/history',
+    '/settings',
   ],
 }

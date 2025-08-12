@@ -1,0 +1,36 @@
+[
+    {
+        "id": "1",
+        "name": "BeatMaker99",
+        "online": true,
+        "compatibility": "High"
+    },
+    {
+        "id": "2",
+        "name": "ProducerX",
+        "online": false
+    },
+    {
+        "id": "3",
+        "name": "SynthMaster",
+        "online": true,
+        "compatibility": "Medium"
+    },
+    {
+        "id": "4",
+        "name": "BassHunter",
+        "online": true,
+        "compatibility": "High"
+    },
+    {
+        "id": "5",
+        "name": "MelodyMaker",
+        "online": false
+    },
+    {
+        "id": "6",
+        "name": "DrumLord",
+        "online": true,
+        "compatibility": "Low"
+    }
+]

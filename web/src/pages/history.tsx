@@ -2,10 +2,13 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@shared/lib/api';
 import { z } from 'zod';
 import { ActivitySchema } from '@shared/types';
+import { usePageMeta } from '@/hooks/usePageMeta';
+import { ROUTES } from '@/lib/routes';
 
 const ActivityListSchema = z.array(ActivitySchema);
 
 export default function History() {
+  usePageMeta(ROUTES.history.name);
   const { data, isLoading, error } = useQuery({
     queryKey: ['activity'],
     queryFn: async () => {

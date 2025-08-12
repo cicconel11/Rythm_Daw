@@ -21,8 +21,14 @@ export const selectors = {
     emailInput: '#email',
     passwordInput: '#password',
     confirmPasswordInput: '#confirmPassword',
+    displayNameInput: '#displayName',
+    bioInput: '#bio',
+    avatarUrlInput: '#avatarUrl',
     submitBtn: 'button[type="submit"]',
+    nextBtn: 'button:has-text("Continue to profile")',
+    backBtn: 'button:has-text("Back")',
     loginLink: 'a:has-text("sign in to your existing account")',
+    characterCount: '.text-xs.text-gray-500.text-right',
   },
 
   // Login
@@ -92,7 +98,7 @@ export const selectors = {
     loadingSpinner: '[data-testid="loading-spinner"]',
     errorMessage: '[data-testid="error-message"]',
     successMessage: '[data-testid="success-message"]',
-    toast: '[data-testid="toast"]',
+    toast: '[data-sonner-toast]',
   },
 };
 

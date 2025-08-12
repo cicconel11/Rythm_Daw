@@ -5,9 +5,6 @@ test.describe('Files Page', () => {
   test.describe.configure({ retries: 2 });
 
   test.beforeEach(async ({ page }) => {
-    // Use authenticated state
-    test.use({ storageState: 'tests/state.json' });
-
     // Mock API responses
     await page.route('**/api/files', route => {
       return route.fulfill({
@@ -31,7 +28,7 @@ test.describe('Files Page', () => {
   });
 
   test('should have the correct title', async ({ page }) => {
-    await expect(page).toHaveTitle(/Files | Rythm/);
+    await expect(page).toHaveTitle(/Files | Rythm Daw/);
   });
 
   test('should display file table with uploaded files', async ({ page }) => {

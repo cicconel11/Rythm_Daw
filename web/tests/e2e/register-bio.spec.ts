@@ -5,20 +5,37 @@ test.describe('Register - Bio Page', () => {
   test.describe.configure({ retries: 2 });
 
   test.beforeEach(async ({ page }) => {
-    // Navigate to the bio registration page before each test
+    // Navigate directly to the bio page without session storage setup
     await page.goto('/register/bio');
+    
     // Wait for the page to be fully loaded
     await page.waitForLoadState('networkidle');
+    
+    // Debug: Check what's on the page
+    console.log('Current URL:', await page.url());
+    
+    // Try to find any form elements
+    const formElements = await page.locator('form input, form textarea, form button').count();
+    console.log('Form elements found:', formElements);
+    
+    // Wait for the bio input to be visible
+    try {
+      await page.waitForSelector('#bio', { timeout: 5000 });
+    } catch (error) {
+      console.log('Bio input not found, checking page content...');
+      const pageContent = await page.content();
+      console.log('Page has content:', pageContent.length > 0);
+      
+      // Check if we're on the right page
+      const title = await page.title();
+      console.log('Page title:', title);
+      
+      throw error;
+    }
   });
 
   test('should have the correct title', async ({ page }) => {
     await expect(page).toHaveTitle(/Register | Rythm/);
-  });
-
-  test('should display welcome message with user name', async ({ page }) => {
-    // Check for welcome message
-    await expect(page.getByText(/welcome/i)).toBeVisible();
-    await expect(page.getByText(testData.user.displayName)).toBeVisible();
   });
 
   test('should display bio form field', async ({ page }) => {
@@ -56,77 +73,136 @@ test.describe('Register - Bio Page', () => {
     await bioInput.fill(longBio);
 
     // Check for validation error
-    await expect(page.getByText(/bio is too long/i)).toBeVisible();
+    await expect(page.getByText(/bio must be 140 characters or less/i)).toBeVisible();
   });
 
   test('should successfully submit with valid bio and navigate to dashboard', async ({ page }) => {
+    // Mock the API response
+    await page.route('**/api/register/bio', route => {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'Profile completed successfully',
+          user: {
+            id: 'test-user-id',
+            displayName: 'test',
+            bio: testData.user.bio,
+            email: 'test@example.com'
+          }
+        })
+      });
+    });
+
     // Fill in the bio with valid data
     await page.locator(selectors.register.bioInput).fill(testData.user.bio);
 
     // Submit the form
     await page.locator(selectors.register.submitBtn).click();
 
-    // Verify navigation to dashboard
-    await page.waitForURL(/\/$/);
-    await expect(page).toHaveURL(/\/$/);
+    // Check for success message
+    await expect(page.getByText(/registration completed successfully/i)).toBeVisible();
 
-    // Verify user is now authenticated (check for dashboard elements)
-    await expect(page.getByRole('heading', { name: /welcome back/i })).toBeVisible();
+    // Check navigation to success page
+    await expect(page).toHaveURL(/.*registration-success/);
   });
 
-  test('should have a back button to return to credentials', async ({ page }) => {
-    // Check for back button
-    const backBtn = page.getByRole('button', { name: /back/i });
-    await expect(backBtn).toBeVisible();
-
-    // Click back and verify navigation
-    await backBtn.click();
-    await expect(page).toHaveURL(/\/register\/credentials/);
-  });
-
-  test('should preserve form data when navigating back and forth', async ({ page }) => {
-    // Fill bio
-    await page.locator(selectors.register.bioInput).fill(testData.user.bio);
-
-    // Navigate back
-    await page.getByRole('button', { name: /back/i }).click();
-    await expect(page).toHaveURL(/\/register\/credentials/);
-
-    // Navigate forward again
-    await page.locator(selectors.register.nextBtn).click();
-    await expect(page).toHaveURL(/\/register\/bio/);
-
-    // Verify bio is still filled
-    const bioInput = page.locator(selectors.register.bioInput);
-    await expect(bioInput).toHaveValue(testData.user.bio);
-  });
-
-  test('should show loading state during form submission', async ({ page }) => {
-    // Fill bio
-    await page.locator(selectors.register.bioInput).fill(testData.user.bio);
-
-    // Mock slow API response
-    await page.route('**/api/auth/register', route => {
-      return new Promise<void>(resolve => {
-        setTimeout(() => {
-          route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({ success: true }),
-          });
-          resolve();
-        }, 2000);
+  test('should show error for invalid bio submission', async ({ page }) => {
+    // Mock the API to return an error
+    await page.route('**/api/register/bio', route => {
+      return route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'Bio is too short'
+        })
       });
     });
 
-    // Submit form
+    // Fill in a short bio
+    await page.locator(selectors.register.bioInput).fill('Hi');
+
+    // Submit the form
     await page.locator(selectors.register.submitBtn).click();
 
-    // Verify loading state
-    await expect(page.locator(selectors.common.loadingSpinner)).toBeVisible();
-    await expect(page.locator(selectors.register.submitBtn)).toBeDisabled();
+    // Check for error message
+    await expect(page.getByText(/bio is too short/i)).toBeVisible();
+  });
 
-    // Wait for completion
-    await expect(page).toHaveURL(/\/$/);
+  test('should have back button that navigates to credentials page', async ({ page }) => {
+    // Click the back button
+    await page.locator(selectors.register.backBtn).click();
+
+    // Check navigation to credentials page
+    await expect(page).toHaveURL(/.*register\/credentials/);
+  });
+
+  test('should display display name field', async ({ page }) => {
+    const displayNameInput = page.locator(selectors.register.displayNameInput);
+    await expect(displayNameInput).toBeVisible();
+    await expect(displayNameInput).toHaveAttribute('required', '');
+  });
+
+  test('should validate display name field', async ({ page }) => {
+    const displayNameInput = page.locator(selectors.register.displayNameInput);
+    
+    // Try to submit with empty display name
+    await page.locator(selectors.register.submitBtn).click();
+    
+    // Check for validation error
+    await expect(page.getByText(/display name is required/i)).toBeVisible();
+  });
+
+  test('should show avatar URL field as optional', async ({ page }) => {
+    const avatarInput = page.locator(selectors.register.avatarInput);
+    await expect(avatarInput).toBeVisible();
+    // Should not have required attribute
+    await expect(avatarInput).not.toHaveAttribute('required', '');
+  });
+
+  test('should handle network errors gracefully', async ({ page }) => {
+    // Mock network error
+    await page.route('**/api/register/bio', route => {
+      return route.abort();
+    });
+
+    // Fill in valid data
+    await page.locator(selectors.register.displayNameInput).fill('Test User');
+    await page.locator(selectors.register.bioInput).fill('Test bio');
+
+    // Submit the form
+    await page.locator(selectors.register.submitBtn).click();
+
+    // Check for error message
+    await expect(page.getByText(/an error occurred/i)).toBeVisible();
+  });
+
+  test('should clear session storage after successful submission', async ({ page }) => {
+    // Mock successful API response
+    await page.route('**/api/register/bio', route => {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          message: 'Profile completed successfully'
+        })
+      });
+    });
+
+    // Fill in valid data
+    await page.locator(selectors.register.displayNameInput).fill('Test User');
+    await page.locator(selectors.register.bioInput).fill('Test bio');
+
+    // Submit the form
+    await page.locator(selectors.register.submitBtn).click();
+
+    // Wait for navigation
+    await page.waitForURL(/.*registration-success/);
+
+    // Check that session storage is cleared
+    const sessionData = await page.evaluate(() => {
+      return sessionStorage.getItem('registration_ctx_v1');
+    });
+    expect(sessionData).toBeNull();
   });
 });

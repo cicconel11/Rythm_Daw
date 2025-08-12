@@ -27,7 +27,7 @@ export default defineConfig({
   timeout: 60000,
 
   // Limit the number of workers on CI, use default for local
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 4 : undefined,
 
   // Reporter to use
   reporter: process.env.CI ? [['list']] : [['html', { open: 'on-failure' }], ['list']],

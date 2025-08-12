@@ -1,6 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { v4 as uuidv4 } from 'uuid';
-import { addPendingRegistration, users } from './register/storage';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -8,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { email, password, displayName, captchaToken } = req.body;
+    const { email, password } = req.body;
 
     // Basic validation
     if (!email || !password) {
@@ -19,46 +17,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Password must be at least 8 characters long' });
     }
 
-    // Check if email already exists
-    const existingUser = users.find(user => user.email === email);
-    if (existingUser) {
+    // Check if email already exists (mock check)
+    if (email === 'existing@example.com') {
       return res.status(409).json({ message: 'Email already in use' });
     }
 
-    // Check if there's already a pending registration for this email
-    const { pendingRegistrations } = await import('./register/storage');
-    const existingPending = Array.from(pendingRegistrations.values()).find(
-      (reg: any) => reg.email === email
-    );
-    if (existingPending) {
-      return res.status(409).json({ message: 'Email already in use' });
-    }
+    // Generate mock response data
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const token = `token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Generate unique identifiers
-    const requestId = uuidv4();
-    const tempToken = uuidv4();
+    // In a real implementation, you would:
+    // 1. Hash the password
+    // 2. Create the user in the database
+    // 3. Generate a proper JWT token
+    // 4. Send verification email
 
-    // Store pending registration
-    const pendingRegistration = {
-      email,
-      password,
-      displayName: displayName || email.split('@')[0],
-      requestId,
-      tempToken,
-      completed: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    addPendingRegistration(pendingRegistration);
-
-    console.log('Created pending registration:', { requestId, email, tempToken });
-
-    // Return success with requestId and token
     return res.status(200).json({
-      success: true,
-      message: 'Registration initiated successfully',
+      message: 'Registration successful',
       requestId,
-      token: tempToken,
+      token,
+      email,
     });
   } catch (error) {
     console.error('Registration error:', error);

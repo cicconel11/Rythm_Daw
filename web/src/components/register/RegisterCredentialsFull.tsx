@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function RegisterCredentialsFull() {
   const [formData, setFormData] = useState({
@@ -10,13 +11,50 @@ export default function RegisterCredentialsFull() {
     confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long';
+    }
+
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      // Show first error as toast
+      const firstError = Object.values(errors)[0];
+      if (firstError) {
+        toast.error(firstError);
+      }
+      return;
+    }
+
     setIsLoading(true);
-    setError('');
 
     try {
       const response = await fetch('/api/auth/register', {
@@ -30,7 +68,9 @@ export default function RegisterCredentialsFull() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        const errorMessage = errorData.message || 'Registration failed';
+        toast.error(errorMessage);
+        return;
       }
 
       const data = await response.json();
@@ -47,12 +87,51 @@ export default function RegisterCredentialsFull() {
       // Set cookie for step 1 completion
       document.cookie = 'registration_step1=true; path=/; max-age=3600';
       
+      toast.success('Account created successfully! Please complete your profile.');
+      
       // Navigate to bio step
       router.push('/register/bio');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      toast.error('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleValidationError = (field: string, message: string) => {
+    setErrors(prev => ({ ...prev, [field]: message }));
+    toast.error(message);
+  };
+
+  const validateField = (field: string, value: string) => {
+    switch (field) {
+      case 'email':
+        if (!value) {
+          handleValidationError(field, 'Email is required');
+        } else if (!/\S+@\S+\.\S+/.test(value)) {
+          handleValidationError(field, 'Please enter a valid email address');
+        } else {
+          setErrors(prev => ({ ...prev, [field]: '' }));
+        }
+        break;
+      case 'password':
+        if (!value) {
+          handleValidationError(field, 'Password is required');
+        } else if (value.length < 8) {
+          handleValidationError(field, 'Password must be at least 8 characters long');
+        } else {
+          setErrors(prev => ({ ...prev, [field]: '' }));
+        }
+        break;
+      case 'confirmPassword':
+        if (!value) {
+          handleValidationError(field, 'Please confirm your password');
+        } else if (formData.password !== value) {
+          handleValidationError(field, 'Passwords do not match');
+        } else {
+          setErrors(prev => ({ ...prev, [field]: '' }));
+        }
+        break;
     }
   };
 
@@ -70,12 +149,6 @@ export default function RegisterCredentialsFull() {
           </div>
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-700">{error}</div>
-              </div>
-            )}
-
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -89,9 +162,20 @@ export default function RegisterCredentialsFull() {
                   required
                   placeholder="Enter your email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    if (errors.email) {
+                      setErrors({ ...errors, email: '' });
+                    }
+                  }}
+                  onBlur={(e) => validateField('email', e.target.value)}
+                  className={`block w-full appearance-none rounded-md border px-3 py-2 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
             </div>
 
@@ -108,9 +192,20 @@ export default function RegisterCredentialsFull() {
                   required
                   placeholder="Enter your password"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  onChange={(e) => {
+                    setFormData({ ...formData, password: e.target.value });
+                    if (errors.password) {
+                      setErrors({ ...errors, password: '' });
+                    }
+                  }}
+                  onBlur={(e) => validateField('password', e.target.value)}
+                  className={`block w-full appearance-none rounded-md border px-3 py-2 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
             </div>
 
@@ -127,9 +222,20 @@ export default function RegisterCredentialsFull() {
                   required
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  onChange={(e) => {
+                    setFormData({ ...formData, confirmPassword: e.target.value });
+                    if (errors.confirmPassword) {
+                      setErrors({ ...errors, confirmPassword: '' });
+                    }
+                  }}
+                  onBlur={(e) => validateField('confirmPassword', e.target.value)}
+                  className={`block w-full appearance-none rounded-md border px-3 py-2 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                )}
               </div>
             </div>
 
@@ -143,6 +249,18 @@ export default function RegisterCredentialsFull() {
               </button>
             </div>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <a
+                href="/auth/login"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Sign in to your existing account
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

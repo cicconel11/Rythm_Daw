@@ -8,105 +8,74 @@ import {
   CardContent, 
   CardHeader, 
   CardTitle,
-  Badge 
-} from '@rythm/ui-kit';
+  Badge,
+  Skeleton
+} from '@/components/ui';
 import { Search, UserPlus, MessageSquare, Music, Users } from 'lucide-react';
-
-interface Friend {
-  id: number;
-  username: string;
-  status: 'online' | 'offline' | 'away';
-  avatar: string;
-  plugins: string[];
-  mutualFriends: number;
-  lastSeen: string;
-}
-
-const friends: Friend[] = [
-  {
-    id: 1,
-    username: 'BeatMaker99',
-    status: 'online',
-    avatar: 'BM',
-    plugins: ['Serum', 'Pro-Q 3', 'Ozone 10'],
-    mutualFriends: 5,
-    lastSeen: 'online',
-  },
-  {
-    id: 2,
-    username: 'ProducerX',
-    status: 'offline',
-    avatar: 'PX',
-    plugins: ['Massive X', 'Waves SSL', 'Ableton Live'],
-    mutualFriends: 3,
-    lastSeen: '2h ago',
-  },
-  {
-    id: 3,
-    username: 'SynthMaster',
-    status: 'away',
-    avatar: 'SM',
-    plugins: ['Serum', 'Ableton Live', 'ValhallaDSP'],
-    mutualFriends: 7,
-    lastSeen: '30m ago',
-  },
-  {
-    id: 4,
-    username: 'BassHunter',
-    status: 'online',
-    avatar: 'BH',
-    plugins: ['Sylenth1', 'FabFilter', 'iZotope'],
-    mutualFriends: 2,
-    lastSeen: 'online',
-  },
-  {
-    id: 5,
-    username: 'MelodyMaker',
-    status: 'offline',
-    avatar: 'MM',
-    plugins: ['Kontakt', 'Omnisphere', 'Native Instruments'],
-    mutualFriends: 4,
-    lastSeen: '5h ago',
-  },
-  {
-    id: 6,
-    username: 'DrumLord',
-    status: 'online',
-    avatar: 'DL',
-    plugins: ['Superior Drummer', 'EZdrummer', 'Addictive Drums'],
-    mutualFriends: 8,
-    lastSeen: 'online',
-  },
-];
+import { usePageMeta } from '@/hooks/usePageMeta';
+import { ROUTES } from '@/lib/routes';
+import { useFriends, useFriendRequests, useSendFriendRequest } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Friends() {
+  usePageMeta(ROUTES.friends.name);
+  
   const router = useRouter();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [newFriendInput, setNewFriendInput] = useState('');
 
+  const { data: friends = [], isLoading: friendsLoading } = useFriends();
+  const { data: friendRequests = [], isLoading: requestsLoading } = useFriendRequests();
+  const sendFriendRequestMutation = useSendFriendRequest();
+
   const filteredFriends = friends.filter(friend =>
-    friend.username.toLowerCase().includes(searchTerm.toLowerCase())
+    friend.user.displayName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const onlineFriends = filteredFriends.filter(friend => friend.status === 'online');
-  const offlineFriends = filteredFriends.filter(friend => friend.status === 'offline');
-  const awayFriends = filteredFriends.filter(friend => friend.status === 'away');
+  const onlineFriends = filteredFriends.filter(friend => friend.user.status === 'online');
+  const offlineFriends = filteredFriends.filter(friend => friend.user.status !== 'online');
 
   // Transform friends data to match the expected format for FriendsPanel
   const friendsForPanel = filteredFriends.map(friend => ({
     id: friend.id,
-    name: friend.username,
-    avatar: friend.avatar,
-    status: friend.status,
-    plugins: friend.plugins,
-    mutualFriends: friend.mutualFriends,
-    lastSeen: friend.lastSeen,
-    reason: ''
+    name: friend.user.displayName,
+    avatar: friend.user.avatar || friend.user.displayName.substring(0, 2).toUpperCase(),
+    status: friend.user.status,
+    plugins: friend.sharedPlugins,
+    mutualFriends: friend.mutualFriends.length,
+    lastSeen: friend.user.lastSeen || 'unknown',
+    reason: `${friend.compatibility}% compatibility`
   }));
 
   const handleNavigate = (path: string) => {
     router.push(path);
+  };
+
+  const handleSendFriendRequest = async () => {
+    if (!newFriendInput.trim()) return;
+    
+    try {
+      await sendFriendRequestMutation.mutateAsync({ 
+        userId: newFriendInput, 
+        message: 'Let\'s collaborate!' 
+      });
+      
+      toast({
+        title: 'Friend Request Sent',
+        description: 'Your friend request has been sent successfully.',
+      });
+      
+      setNewFriendInput('');
+      setShowAddFriend(false);
+    } catch (error) {
+      toast({
+        title: 'Request Failed',
+        description: 'Failed to send friend request. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -131,7 +100,11 @@ export default function Friends() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Friends</p>
-                <p className="text-2xl font-bold text-primary">{friends.length}</p>
+                {friendsLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold text-primary">{friends.length}</p>
+                )}
               </div>
               <Users className="w-8 h-8 text-primary" />
             </div>
@@ -143,7 +116,11 @@ export default function Friends() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Online Now</p>
-                <p className="text-2xl font-bold text-green-500">{onlineFriends.length}</p>
+                {friendsLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold text-green-500">{onlineFriends.length}</p>
+                )}
               </div>
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
             </div>
@@ -154,10 +131,14 @@ export default function Friends() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Away</p>
-                <p className="text-2xl font-bold text-yellow-500">{awayFriends.length}</p>
+                <p className="text-sm text-muted-foreground">Offline</p>
+                {friendsLoading ? (
+                  <Skeleton className="h-8 w-12" />
+                ) : (
+                  <p className="text-2xl font-bold text-gray-500">{offlineFriends.length}</p>
+                )}
               </div>
-              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+              <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
             </div>
           </CardContent>
         </Card>
@@ -185,7 +166,13 @@ export default function Friends() {
                 onChange={e => setNewFriendInput(e.target.value)}
                 className="flex-1"
               />
-              <Button className="bg-primary hover:bg-primary/90">Send Request</Button>
+              <Button 
+                className="bg-primary hover:bg-primary/90"
+                onClick={handleSendFriendRequest}
+                disabled={sendFriendRequestMutation.isPending}
+              >
+                {sendFriendRequestMutation.isPending ? 'Sending...' : 'Send Request'}
+              </Button>
             </div>
           </CardContent>
         </Card>

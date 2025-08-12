@@ -7,6 +7,12 @@ rhythm-hub-compose-19/
 # MCP Configuration (contains sensitive API keys)
 mcp.json
 
+# Environment files
+.env
+.env.local
+.env.production
+.env.example
+
 # Build artifacts and compiled files
 build/
 *.a

@@ -7,6 +7,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Home, Share, History, Users, MessageSquare, Music, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -42,15 +43,10 @@ export function AppSidebar() {
         <SidebarMenu>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
+              <SidebarMenuButton asChild isActive={location.pathname === item.url}>
                 <Link
                   to={item.url}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
-                    location.pathname === item.url
-                      ? "nav-item-active"
-                      : "nav-item"
-                  )}
+                  className="flex items-center gap-3"
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.title}</span>
