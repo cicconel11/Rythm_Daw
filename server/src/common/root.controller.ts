@@ -1,17 +1,17 @@
-import { Controller, Get, Inject } from '@nestjs/common';
-// import { PrismaService } from '../prisma/prisma.service';
+import { Controller, Get, Inject, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { Redis } from 'ioredis';
 
 @Controller('/')
 export class RootController {
   constructor(
-    // private readonly prisma: PrismaService,
     @Inject('REDIS_CLIENT') private readonly redis: Redis
   ) {}
 
   @Get()
-  root() {
-    return 'OK';
+  root(@Res() res: Response) {
+    // Redirect to the Next.js application
+    res.redirect('http://localhost:3000');
   }
 
   @Get('healthz')

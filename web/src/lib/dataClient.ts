@@ -31,6 +31,34 @@ export type FileItem = {
 
 export const getFiles = () => useApi ? fromApi<FileItem[]>('/api/files') : fromMock<FileItem[]>('files.json');
 
+export const uploadFile = async (file: File): Promise<FileItem> => {
+  if (useApi) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch('/api/files/upload', {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.status}`);
+    }
+    
+    return response.json();
+  }
+  
+  // Mock upload
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return {
+    id: Date.now().toString(),
+    name: file.name,
+    size: file.size,
+    status: 'inbox' as const,
+  };
+};
+
 export type Friend = { 
   id: string; 
   name: string; 

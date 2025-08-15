@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 
 export default function RegisterBioFull() {
@@ -88,7 +88,10 @@ export default function RegisterBioFull() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    // Always validate form first
+    const isValid = validateForm();
+    if (!isValid) {
+      // The errors are already set by validateForm(), no need to force re-render
       return;
     }
 

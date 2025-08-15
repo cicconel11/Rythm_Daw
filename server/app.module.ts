@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PluginsModule } from './modules/plugins/plugins.module';
+import { FilesModule } from './modules/files/files.module';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
@@ -16,6 +17,7 @@ import { JwtModule } from '@nestjs/jwt';
     AuthModule,
     UsersModule,
     PluginsModule,
+    FilesModule,
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,

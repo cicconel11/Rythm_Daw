@@ -50,6 +50,13 @@ export const FileTransferSchema = z.object({
   progress: z.number(),
   timestamp: z.string().transform((s) => new Date(s)),
   direction: z.enum(["sent", "received"]),
+  // Plugin-specific fields
+  projectId: z.string().optional(),
+  peerId: z.string().optional(),
+  transferType: z.enum(["s3", "webrtc"]).optional().default("s3"),
+  sha256: z.string().optional(),
+  chunkSize: z.number().optional(),
+  totalChunks: z.number().optional(),
 });
 export type FileTransfer = z.infer<typeof FileTransferSchema>;
 

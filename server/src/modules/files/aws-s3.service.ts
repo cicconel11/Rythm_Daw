@@ -83,4 +83,24 @@ export class AwsS3Service {
       throw new Error('Failed to generate presigned URLs');
     }
   }
+
+  async getDownloadUrl(key: string): Promise<string> {
+    // Return mock URL in test environment
+    if (process.env.NODE_ENV === 'test') {
+      return `https://s3.amazonaws.com/test-bucket/${key}`;
+    }
+
+    try {
+      const downloadUrl = await this.s3.getSignedUrlPromise('getObject', {
+        Bucket: this.bucketName,
+        Key: key,
+        Expires: 3600, // 1 hour
+      });
+
+      return downloadUrl;
+    } catch (error) {
+      console.error('Error generating download URL:', error);
+      throw new Error('Failed to generate download URL');
+    }
+  }
 }

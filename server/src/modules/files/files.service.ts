@@ -18,4 +18,8 @@ export class FilesService {
     console.log('FilesService.getPresignedPair - awsS3Service result:', result);
     return result;
   }
+
+  async getDownloadUrl(s3Key: string): Promise<string> {
+    return this.awsS3Service.getDownloadUrl(s3Key);
+  }
 }

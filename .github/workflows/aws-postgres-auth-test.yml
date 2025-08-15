@@ -1,0 +1,152 @@
+name: AWS PostgreSQL Authentication Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  DATABASE_URL: ${{ secrets.AWS_POSTGRES_URL }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  S3_BUCKET: ${{ secrets.S3_BUCKET }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+  JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+
+jobs:
+  aws-postgres-auth-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd server
+        npm install
+
+    - name: Setup AWS PostgreSQL environment
+      run: |
+        cd server
+        node scripts/setup-aws-postgres.js
+      env:
+        DATABASE_URL: ${{ secrets.AWS_POSTGRES_URL }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+
+    - name: Run database migrations
+      run: |
+        cd server
+        npx prisma migrate deploy
+      env:
+        DATABASE_URL: ${{ secrets.AWS_POSTGRES_URL }}
+
+    - name: Build application
+      run: |
+        cd server
+        npm run build
+      env:
+        DATABASE_URL: ${{ secrets.AWS_POSTGRES_URL }}
+
+    - name: Start server
+      run: |
+        cd server
+        npm run start:dev &
+        sleep 10
+      env:
+        DATABASE_URL: ${{ secrets.AWS_POSTGRES_URL }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+
+    - name: Run AWS PostgreSQL authentication tests
+      run: |
+        cd server
+        npm run test:e2e auth-aws-postgres.spec.ts
+      env:
+        DATABASE_URL: ${{ secrets.AWS_POSTGRES_URL }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: server/test-results/
+        retention-days: 7
+
+    - name: Upload Playwright report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: server/playwright-report/
+        retention-days: 7
+
+  aws-s3-integration-test:
+    runs-on: ubuntu-latest
+    needs: aws-postgres-auth-test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: |
+        cd server
+        npm install
+
+    - name: Test S3 integration
+      run: |
+        cd server
+        node scripts/test-s3-real.js
+      env:
+        DATABASE_URL: ${{ secrets.AWS_POSTGRES_URL }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+
+    - name: Run S3 integration tests
+      run: |
+        cd server
+        npm run test:e2e file-share-s3.spec.ts
+      env:
+        DATABASE_URL: ${{ secrets.AWS_POSTGRES_URL }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}

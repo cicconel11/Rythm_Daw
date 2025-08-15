@@ -16,7 +16,8 @@ const modelNames = [
   'Tag',
   'ChatMessage',
   'RTCPeerConnection',
-  'QoSMetrics'
+  'QoSMetrics',
+  'FileTransfer'
 ] as const;
 
 @Injectable()

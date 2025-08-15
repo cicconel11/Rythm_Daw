@@ -215,18 +215,73 @@ model EntityTag {
 }
 
 model FileTransfer {
-  id        String   @id @default(cuid())
-  fileName  String
-  size      Int
-  mimeType  String
-  fromUserId String
-  toUserId  String
-  status    String   @default("pending")
-  progress  Int      @default(0)
-  fileKey   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  fileName      String
+  fileSize      Int
+  mimeType      String
+  fromUserId    String
+  toUserId      String
+  status        String    @default("pending")
+  progress      Int       @default(0)
+  s3Key         String?   // S3 object key for the file
+  declineReason String?   // Reason for declining the transfer
+  
+  // Plugin-specific fields
+  projectId     String?   // For project-based file sharing
+  peerId        String?   // For WebRTC peer-to-peer transfers
+  transferType  String?   @default("s3") // "s3" or "webrtc"
+  sha256        String?   // File hash for integrity verification
+  chunkSize     Int?      // For chunked transfers
+  totalChunks   Int?      // Total number of chunks
+  
+  // Timestamps
+  acceptedAt    DateTime?
+  declinedAt    DateTime?
+  uploadedAt    DateTime?
+  downloadedAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  fromUser  User     @relation("FromTransfers", fields: [fromUserId], references: [id])
-  toUser    User     @relation("ToTransfers", fields: [toUserId], references: [id])
+  fromUser      User      @relation("FromTransfers", fields: [fromUserId], references: [id])
+  toUser        User      @relation("ToTransfers", fields: [toUserId], references: [id])
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([status])
+  @@index([projectId])
+  @@index([createdAt])
+}
+
+enum ActivityType {
+  FILE_UPLOAD
+  FILE_DOWNLOAD
+  FILE_SHARE
+  FILE_TRANSFER
+  MESSAGE_SENT
+  MESSAGE_RECEIVED
+  CHAT_SESSION
+  FRIEND_REQUEST
+  FRIEND_CONNECTED
+  PROFILE_UPDATE
+  PLUGIN_INSTALL
+  PLUGIN_UNINSTALL
+  SETTINGS_CHANGE
+  LOGIN
+  LOGOUT
+  PROJECT_SHARE
+  VERSION_UPDATE
+  COMMENT
+}
+
+model Activity {
+  id        String       @id @default(cuid())
+  type      ActivityType
+  userId    String
+  actorId   String?
+  projectId String?
+  createdAt DateTime     @default(now())
+  payload   Json
+
+  @@index([userId, createdAt])
+  @@index([type, createdAt])
 }

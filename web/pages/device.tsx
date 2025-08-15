@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ROUTES } from '@/lib/routes';
@@ -117,6 +117,8 @@ export default function DevicePage() {
                 <button
                   onClick={() => router.push('/dashboard')}
                   className="text-blue-600 hover:text-blue-500 text-sm"
+                  role="button"
+                  aria-label="Skip to Dashboard"
                 >
                   Skip to Dashboard
                 </button>

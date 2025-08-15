@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'html',
   use: {
     trace: 'on-first-retry',
-    baseURL: 'http://localhost:3001', // or your app port
+    baseURL: 'http://localhost:4000', // Match the PORT in .env
   },
   projects: [
     {
@@ -19,8 +19,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm start:dev',
-    port: 3001, // Confirm actual port
+    command: 'pnpm dev',
+    port: 4000, // Match the PORT in .env
     timeout: 120000, // Increase to 2min
     reuseExistingServer: !process.env.CI,
   },

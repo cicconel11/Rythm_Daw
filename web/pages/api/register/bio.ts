@@ -30,6 +30,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 5. Create a session or JWT token for the user
 
     // Mock successful completion
+    // Set the registration_completed cookie so middleware allows access to protected routes
+    res.setHeader('Set-Cookie', [
+      'registration_completed=true; Path=/; HttpOnly; SameSite=Lax',
+      'registration_step1=true; Path=/; HttpOnly; SameSite=Lax'
+    ]);
+    
     return res.status(200).json({
       message: 'Profile completed successfully',
       user: {

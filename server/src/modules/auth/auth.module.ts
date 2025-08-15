@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
@@ -32,6 +33,7 @@ import { RefreshTokenGuard } from './guards/refresh-token.guard';
     PrismaService,
     JwtStrategy,
     JwtRefreshStrategy,
+    LocalStrategy,
     JwtAuthGuard,
     RefreshTokenGuard,
   ],

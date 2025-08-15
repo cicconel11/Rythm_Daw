@@ -16,8 +16,8 @@ test.describe('Device Connection Page', () => {
   });
 
   test('should display connection code element', async ({ page }) => {
-    // Check for connect code element
-    const connectCode = page.locator(selectors.device.connectCode);
+    // Check for connect code element - it's in a div with specific classes
+    const connectCode = page.locator('.text-4xl.font-mono.font-bold.text-blue-600');
     await expect(connectCode).toBeVisible();
 
     // Verify it contains a code (alphanumeric)
@@ -30,16 +30,27 @@ test.describe('Device Connection Page', () => {
     const refreshBtn = page.getByRole('button', { name: /generate new code/i });
     await expect(refreshBtn).toBeVisible();
     
-    // Click refresh to trigger loading state
+    // Get initial code
+    const connectCode = page.locator('.text-4xl.font-mono.font-bold.text-blue-600');
+    const initialCode = await connectCode.textContent();
+    
+    // Click refresh to trigger code generation
     await refreshBtn.click();
     
-    // Check for loading state
-    await expect(page.getByText(/generating/i)).toBeVisible();
+    // Wait a moment for the generation to complete
+    await page.waitForTimeout(100);
+    
+    // Verify that a new code was generated (should be different)
+    const newCode = await connectCode.textContent();
+    expect(newCode).not.toBe(initialCode);
+    
+    // Button should still be enabled and functional
+    await expect(refreshBtn).toBeEnabled();
   });
 
   test('should allow manual refresh of connection code', async ({ page }) => {
     // Get initial code
-    const connectCode = page.locator(selectors.device.connectCode);
+    const connectCode = page.locator('.text-4xl.font-mono.font-bold.text-blue-600');
     const initialCode = await connectCode.textContent();
 
     // Click refresh button
@@ -63,7 +74,7 @@ test.describe('Device Connection Page', () => {
   });
 
   test('should have skip to dashboard button', async ({ page }) => {
-    // Check for skip button
+    // Check for skip button - it's a button with role="button"
     const skipBtn = page.getByRole('button', { name: /skip to dashboard/i });
     await expect(skipBtn).toBeVisible();
     await expect(skipBtn).toBeEnabled();
@@ -76,8 +87,8 @@ test.describe('Device Connection Page', () => {
   });
 
   test('should display device icon', async ({ page }) => {
-    // Check for device icon (SVG)
-    const deviceIcon = page.locator('svg');
+    // Check for device icon - it's a specific SVG in the device icon container
+    const deviceIcon = page.locator('.mx-auto.flex.h-16.w-16 svg');
     await expect(deviceIcon).toBeVisible();
   });
 

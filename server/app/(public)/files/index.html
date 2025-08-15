@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Hub - File Share</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .file-input-wrapper {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        
+        .file-input-wrapper:hover {
+            border-color: #667eea;
+        }
+        
+        .file-input-wrapper.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+            transition: background 0.3s;
+        }
+        
+        .upload-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .search-section {
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-btn {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .file-list {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .file-item {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: box-shadow 0.3s;
+        }
+        
+        .file-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .file-details h3 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .file-details p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .download-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-accepted { background: #d4edda; color: #155724; }
+        .status-declined { background: #f8d7da; color: #721c24; }
+        .status-uploaded { background: #d1ecf1; color: #0c5460; }
+        .status-downloaded { background: #d4edda; color: #155724; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+        }
+        
+        .friend-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .friend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .friend-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .friend-item.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        
+        .friend-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #667eea;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Studio Hub - File Share</h1>
+            <p>Share files with your collaborators in real-time</p>
+        </div>
+        
+        <div class="content">
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="file-input-wrapper" id="file-drop-zone">
+                    <p>Drag and drop files here or click to select</p>
+                    <input type="file" id="file-input" multiple>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button class="upload-btn" id="select-friends">Select Friends</button>
+                    <button class="upload-btn" id="send-files" disabled>Send Files</button>
+                </div>
+            </div>
+            
+            <!-- Search and Filter -->
+            <div class="search-section">
+                <input type="text" class="search-input" placeholder="Search files..." id="search-input">
+            </div>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="received">Inbox</button>
+                <button class="filter-btn" data-filter="sent">Sent</button>
+            </div>
+            
+            <!-- File List -->
+            <div id="file-list" class="file-list">
+                <div class="loading">Loading files...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Friend Selection Modal -->
+    <div class="modal" id="friend-modal">
+        <div class="modal-content">
+            <h2>Select Friends to Share With</h2>
+            <div class="friend-list" id="friend-list">
+                <!-- Friends will be populated here -->
+            </div>
+            <div style="text-align: right;">
+                <button class="upload-btn" id="cancel-friends">Cancel</button>
+                <button class="upload-btn" id="confirm-friends">Send to Selected Friends</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Global state
+        let selectedFiles = [];
+        let selectedFriends = [];
+        let allTransfers = [];
+        let currentFilter = 'all';
+        let searchTerm = '';
+        
+        // API base URL
+        const API_BASE = '/api';
+        const WS_URL = `ws://${window.location.host}/file-transfer`;
+        
+        // DOM elements
+        const fileInput = document.getElementById('file-input');
+        const fileDropZone = document.getElementById('file-drop-zone');
+        const selectFriendsBtn = document.getElementById('select-friends');
+        const sendFilesBtn = document.getElementById('send-files');
+        const searchInput = document.getElementById('search-input');
+        const fileList = document.getElementById('file-list');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const friendModal = document.getElementById('friend-modal');
+        const friendList = document.getElementById('friend-list');
+        const cancelFriendsBtn = document.getElementById('cancel-friends');
+        const confirmFriendsBtn = document.getElementById('confirm-friends');
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadTransfers();
+            setupWebSocket();
+        });
+        
+        function setupEventListeners() {
+            // File input
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Drag and drop
+            fileDropZone.addEventListener('click', () => fileInput.click());
+            fileDropZone.addEventListener('dragover', handleDragOver);
+            fileDropZone.addEventListener('drop', handleDrop);
+            fileDropZone.addEventListener('dragenter', handleDragEnter);
+            fileDropZone.addEventListener('dragleave', handleDragLeave);
+            
+            // Buttons
+            selectFriendsBtn.addEventListener('click', showFriendModal);
+            sendFilesBtn.addEventListener('click', sendFiles);
+            cancelFriendsBtn.addEventListener('click', hideFriendModal);
+            confirmFriendsBtn.addEventListener('click', confirmFriendSelection);
+            
+            // Search and filter
+            searchInput.addEventListener('input', handleSearch);
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => handleFilter(btn.dataset.filter));
+            });
+        }
+        
+        function handleFileSelect(event) {
+            selectedFiles = Array.from(event.target.files);
+            updateSendButton();
+        }
+        
+        function handleDragOver(event) {
+            event.preventDefault();
+        }
+        
+        function handleDragEnter(event) {
+            event.preventDefault();
+            fileDropZone.classList.add('dragover');
+        }
+        
+        function handleDragLeave(event) {
+            event.preventDefault();
+            fileDropZone.classList.remove('dragover');
+        }
+        
+        function handleDrop(event) {
+            event.preventDefault();
+            fileDropZone.classList.remove('dragover');
+            selectedFiles = Array.from(event.dataTransfer.files);
+            updateSendButton();
+        }
+        
+        function updateSendButton() {
+            sendFilesBtn.disabled = selectedFiles.length === 0;
+        }
+        
+        function showFriendModal() {
+            if (selectedFiles.length === 0) {
+                alert('Please select files first');
+                return;
+            }
+            
+            loadFriends();
+            friendModal.style.display = 'block';
+        }
+        
+        function hideFriendModal() {
+            friendModal.style.display = 'none';
+            selectedFriends = [];
+        }
+        
+        async function loadFriends() {
+            try {
+                // For demo purposes, using mock friends
+                // In production, this would call your API
+                const mockFriends = [
+                    { id: '1', name: 'John Doe', avatar: null },
+                    { id: '2', name: 'Jane Smith', avatar: null },
+                    { id: '3', name: 'Bob Johnson', avatar: null }
+                ];
+                
+                friendList.innerHTML = mockFriends.map(friend => `
+                    <div class="friend-item" data-id="${friend.id}">
+                        <div class="friend-avatar">${friend.name.charAt(0)}</div>
+                        <span>${friend.name}</span>
+                    </div>
+                `).join('');
+                
+                // Add click handlers
+                friendList.querySelectorAll('.friend-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        item.classList.toggle('selected');
+                        const friendId = item.dataset.id;
+                        if (item.classList.contains('selected')) {
+                            if (!selectedFriends.includes(friendId)) {
+                                selectedFriends.push(friendId);
+                            }
+                        } else {
+                            selectedFriends = selectedFriends.filter(id => id !== friendId);
+                        }
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading friends:', error);
+                showError('Failed to load friends');
+            }
+        }
+        
+        function confirmFriendSelection() {
+            if (selectedFriends.length === 0) {
+                alert('Please select at least one friend');
+                return;
+            }
+            
+            hideFriendModal();
+            sendFiles();
+        }
+        
+        async function sendFiles() {
+            if (selectedFiles.length === 0 || selectedFriends.length === 0) {
+                alert('Please select files and friends');
+                return;
+            }
+            
+            sendFilesBtn.disabled = true;
+            sendFilesBtn.textContent = 'Sending...';
+            
+            try {
+                for (const file of selectedFiles) {
+                    for (const friendId of selectedFriends) {
+                        await sendFileToFriend(file, friendId);
+                    }
+                }
+                
+                showSuccess(`Successfully sent ${selectedFiles.length} file(s) to ${selectedFriends.length} friend(s)`);
+                selectedFiles = [];
+                selectedFriends = [];
+                fileInput.value = '';
+                updateSendButton();
+                loadTransfers();
+            } catch (error) {
+                console.error('Error sending files:', error);
+                showError('Failed to send files');
+            } finally {
+                sendFilesBtn.disabled = false;
+                sendFilesBtn.textContent = 'Send Files';
+            }
+        }
+        
+        async function sendFileToFriend(file, friendId) {
+            try {
+                // Get presigned URL
+                const presignResponse = await fetch(`${API_BASE}/files/presign`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        name: file.name,
+                        mime: file.type,
+                        size: file.size
+                    })
+                });
+                
+                if (!presignResponse.ok) {
+                    throw new Error('Failed to get presigned URL');
+                }
+                
+                const presignData = await presignResponse.json();
+                
+                // Upload to S3
+                const uploadResponse = await fetch(presignData.uploadUrl, {
+                    method: 'PUT',
+                    body: file
+                });
+                
+                if (!uploadResponse.ok) {
+                    throw new Error('Failed to upload file');
+                }
+                
+                // Initiate transfer via WebSocket
+                initiateTransfer({
+                    fileName: file.name,
+                    size: file.size,
+                    mimeType: file.type,
+                    toUserId: friendId,
+                    s3Key: presignData.path
+                });
+                
+            } catch (error) {
+                console.error('Error sending file:', error);
+                throw error;
+            }
+        }
+        
+        function initiateTransfer(transferData) {
+            if (window.fileTransferSocket && window.fileTransferSocket.readyState === WebSocket.OPEN) {
+                window.fileTransferSocket.send(JSON.stringify({
+                    event: 'init_transfer',
+                    data: transferData
+                }));
+            }
+        }
+        
+        async function loadTransfers() {
+            try {
+                const response = await fetch(`${API_BASE}/files/transfers`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load transfers');
+                }
+                
+                allTransfers = await response.json();
+                renderTransfers();
+            } catch (error) {
+                console.error('Error loading transfers:', error);
+                fileList.innerHTML = '<div class="error">Failed to load files</div>';
+            }
+        }
+        
+        function renderTransfers() {
+            const filteredTransfers = allTransfers.filter(transfer => {
+                const matchesFilter = currentFilter === 'all' || 
+                    (currentFilter === 'sent' && transfer.direction === 'sent') ||
+                    (currentFilter === 'received' && transfer.direction === 'received');
+                
+                const matchesSearch = !searchTerm || 
+                    transfer.file.name.toLowerCase().includes(searchTerm.toLowerCase());
+                
+                return matchesFilter && matchesSearch;
+            });
+            
+            if (filteredTransfers.length === 0) {
+                fileList.innerHTML = '<div class="loading">No files found</div>';
+                return;
+            }
+            
+            fileList.innerHTML = filteredTransfers.map(transfer => `
+                <div class="file-item">
+                    <div class="file-info">
+                        <div class="file-icon">${getFileIcon(transfer.file.name)}</div>
+                        <div class="file-details">
+                            <h3>${transfer.file.name}</h3>
+                            <p>${formatFileSize(transfer.file.size)} • ${transfer.direction === 'sent' ? 'Sent to' : 'From'} ${transfer.direction === 'sent' ? transfer.toUser?.name : transfer.fromUser?.name}</p>
+                            <p>${new Date(transfer.timestamp).toLocaleDateString()}</p>
+                            ${transfer.progress < 100 ? `
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${transfer.progress}%"></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="file-actions">
+                        <span class="status-badge status-${transfer.status}">${transfer.status}</span>
+                        ${transfer.status === 'uploaded' ? `
+                            <button class="action-btn download-btn" onclick="downloadFile('${transfer.id}')">Download</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop()?.toLowerCase();
+            const icons = {
+                'pdf': '📄',
+                'doc': '📝',
+                'docx': '📝',
+                'txt': '📄',
+                'mp3': '🎵',
+                'wav': '🎵',
+                'mp4': '🎬',
+                'avi': '🎬',
+                'jpg': '🖼️',
+                'jpeg': '🖼️',
+                'png': '🖼️',
+                'gif': '🖼️'
+            };
+            return icons[ext] || '📁';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function handleSearch(event) {
+            searchTerm = event.target.value;
+            renderTransfers();
+        }
+        
+        function handleFilter(filter) {
+            currentFilter = filter;
+            filterBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTransfers();
+        }
+        
+        async function downloadFile(transferId) {
+            try {
+                const response = await fetch(`${API_BASE}/files/${transferId}/download`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get download URL');
+                }
+                
+                const data = await response.json();
+                window.open(data.url, '_blank');
+            } catch (error) {
+                console.error('Error downloading file:', error);
+                showError('Failed to download file');
+            }
+        }
+        
+        function setupWebSocket() {
+            const token = getAuthToken();
+            if (!token) {
+                console.warn('No auth token available for WebSocket connection');
+                return;
+            }
+            
+            const ws = new WebSocket(`${WS_URL}?token=${token}`);
+            
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+            };
+            
+            ws.onmessage = function(event) {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onclose = function() {
+                console.log('WebSocket disconnected');
+                // Reconnect after 5 seconds
+                setTimeout(setupWebSocket, 5000);
+            };
+            
+            window.fileTransferSocket = ws;
+        }
+        
+        function handleWebSocketMessage(message) {
+            switch (message.event) {
+                case 'transfer-initiated':
+                    showSuccess('File transfer initiated');
+                    loadTransfers();
+                    break;
+                case 'transfer-status':
+                    showSuccess(`Transfer ${message.status}: ${message.transferId}`);
+                    loadTransfers();
+                    break;
+                case 'transfer-error':
+                    showError(`Transfer error: ${message.message}`);
+                    break;
+            }
+        }
+        
+        function getAuthToken() {
+            // In a real app, this would get the token from localStorage, cookies, etc.
+            // For demo purposes, we'll use a mock token
+            return localStorage.getItem('authToken') || 'demo-token';
+        }
+        
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.content').insertBefore(successDiv, document.querySelector('.upload-section'));
+            
+            setTimeout(() => successDiv.remove(), 5000);
+        }
+        
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.content').insertBefore(errorDiv, document.querySelector('.upload-section'));
+            
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+    </script>
+</body>
+</html>

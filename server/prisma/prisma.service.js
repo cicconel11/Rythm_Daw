@@ -23,7 +23,8 @@ const modelNames = [
     'Tag',
     'ChatMessage',
     'RTCPeerConnection',
-    'QoSMetrics'
+    'QoSMetrics',
+    'FileTransfer'
 ];
 let PrismaService = class PrismaService extends client_1.PrismaClient {
     async onModuleInit() {
@@ -36,8 +37,9 @@ let PrismaService = class PrismaService extends client_1.PrismaClient {
         if (process.env.NODE_ENV === 'production')
             return;
         return Promise.all(modelNames.map((modelName) => {
+            var _a, _b;
             const prismaModelKey = modelName[0].toLowerCase() + modelName.slice(1);
-            return this[prismaModelKey]?.deleteMany?.({});
+            return (_b = (_a = this[prismaModelKey]) === null || _a === void 0 ? void 0 : _a.deleteMany) === null || _b === void 0 ? void 0 : _b.call(_a, {});
         })).then(results => {
             return results.filter(Boolean);
         });

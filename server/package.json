@@ -13,14 +13,13 @@
     "dev": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/main.ts",
     "build": "nest build",
     "start": "node dist/main.js",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "test:e2e": "playwright test"
   },
   "prisma": {
     "seed": "node prisma/seed-minimal.js"
   },
   "dependencies": {
-    "@prisma/client": "^5.18.0",
-    "cross-env": "^7.0.3",
     "@aws-sdk/client-s3": "^3.848.0",
     "@aws-sdk/s3-request-presigner": "^3.848.0",
     "@nestjs/common": "^11.1.3",
@@ -37,6 +36,7 @@
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.1.4",
+    "@prisma/client": "^6.13.0",
     "@socket.io/redis-adapter": "^8.3.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/ioredis": "^5.0.0",
@@ -45,6 +45,7 @@
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "cross-env": "^7.0.3",
     "dotenv": "^17.1.0",
     "helmet": "^8.1.0",
     "ioredis": "^5.6.1",
@@ -66,7 +67,7 @@
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/swagger": "^11.0.0",
     "@nestjs/testing": "^11.1.3",
-    "prisma": "^5.18.0",
+    "@playwright/test": "^1.54.2",
     "@types/aws-sdk": "^2.7.4",
     "@types/bcrypt": "^5.0.2",
     "@types/express": "^4.17.23",

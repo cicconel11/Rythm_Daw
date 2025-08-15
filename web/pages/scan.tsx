@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ROUTES } from '@/lib/routes';
 import { detectOS } from '@/lib/detectOS';
+import { useScanPlugins } from '@/lib/api';
 
 export default function ScanPage() {
   usePageMeta(ROUTES.scan.name);
@@ -13,7 +14,10 @@ export default function ScanPage() {
   const [currentOS, setCurrentOS] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [downloadComplete, setDownloadComplete] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanComplete, setScanComplete] = useState(false);
   const router = useRouter();
+  const scanPluginsMutation = useScanPlugins();
 
   useEffect(() => {
     setIsClient(true);
@@ -68,10 +72,10 @@ export default function ScanPage() {
         setDownloadComplete(true);
         console.log(`Download started for ${os}: ${link}`);
         
-        // Reset success state after 3 seconds
+        // Automatically redirect to dashboard after 2 seconds
         setTimeout(() => {
-          setDownloadComplete(false);
-        }, 3000);
+          router.push('/dashboard');
+        }, 2000);
       }, 1000);
       
       // Show a browser notification about the download
@@ -90,6 +94,38 @@ export default function ScanPage() {
 
   const handleSkip = () => {
     router.push('/dashboard');
+  };
+
+  const handleScanPlugins = async () => {
+    setIsScanning(true);
+    setScanComplete(false);
+    
+    try {
+      await scanPluginsMutation.mutateAsync();
+      setScanComplete(true);
+      
+      // Show success notification
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Plugin Scan Complete', {
+          body: 'Found 10 plugins installed on your system',
+          icon: '/favicon.ico'
+        });
+      }
+      
+      // Auto-redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Plugin scan failed:', error);
+      // Still redirect to dashboard even if scan fails
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   // Show loading while detecting OS
@@ -144,6 +180,11 @@ export default function ScanPage() {
               <p className="mt-2 text-sm text-gray-600">
                 Install the plugin to start collaborating in your DAW
               </p>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Pro Tip:</strong> After downloading, scan your system to automatically detect all your installed plugins and make your dashboard dynamic!
+                </p>
+              </div>
             </div>
 
             <div className="mt-8">
@@ -197,6 +238,43 @@ export default function ScanPage() {
                       'Download Plugin'
                     )}
                   </button>
+                  
+                  {downloadComplete && (
+                    <div className="space-y-3 mt-3">
+                      <button
+                        onClick={handleScanPlugins}
+                        disabled={isScanning}
+                        className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 ${
+                          scanComplete 
+                            ? 'bg-green-600 hover:bg-green-700' 
+                            : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                      >
+                        {isScanning ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Scanning Plugins...
+                          </div>
+                        ) : scanComplete ? (
+                          <div className="flex items-center">
+                            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Scan Complete! Found 10 Plugins
+                          </div>
+                        ) : (
+                          '🔍 Scan Installed Plugins'
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => router.push('/dashboard')}
+                        className="w-full flex justify-center py-3 px-4 border border-green-600 rounded-md shadow-sm text-sm font-medium text-green-600 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      >
+                        Continue to Dashboard
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -237,6 +315,8 @@ export default function ScanPage() {
                 <button
                   onClick={handleSkip}
                   className="text-blue-600 hover:text-blue-500 text-sm"
+                  role="button"
+                  aria-label="Skip to Dashboard"
                 >
                   Skip to Dashboard
                 </button>

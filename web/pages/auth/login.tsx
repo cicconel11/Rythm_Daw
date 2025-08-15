@@ -97,20 +97,20 @@ export default function LoginPage() {
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    className={`relative block w-full appearance-none rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm mt-1 ${
+                      errors.email ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className={`relative block w-full appearance-none rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                 )}
@@ -118,20 +118,20 @@ export default function LoginPage() {
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    className={`relative block w-full appearance-none rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm mt-1 ${
+                      errors.password ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className={`relative block w-full appearance-none rounded-md border px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                />
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password}</p>
                 )}

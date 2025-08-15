@@ -1,0 +1,7 @@
+[
+  { "id": "1", "name": "BeatMaker99", "online": true, "compatibility": "High" },
+  { "id": "2", "name": "ProducerX", "online": false },
+  { "id": "3", "name": "SynthMaster", "online": true, "compatibility": "Medium" },
+  { "id": "4", "name": "DJ Producer", "online": true, "compatibility": "High" },
+  { "id": "5", "name": "SoundDesigner", "online": false }
+]

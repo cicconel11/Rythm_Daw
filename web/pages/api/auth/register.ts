@@ -32,6 +32,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 3. Generate a proper JWT token
     // 4. Send verification email
 
+    // Set the step1 cookie so middleware allows access to bio page
+    res.setHeader('Set-Cookie', 'registration_step1=true; Path=/; HttpOnly; SameSite=Lax');
+
     return res.status(200).json({
       message: 'Registration successful',
       requestId,

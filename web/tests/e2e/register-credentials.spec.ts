@@ -166,7 +166,7 @@ test.describe('Register - Credentials Page', () => {
     await expect(toast).toContainText('Password must be at least 8 characters long');
   });
 
-  test('should successfully submit with valid credentials and redirect to login', async ({ page }) => {
+  test('should successfully submit with valid credentials and redirect to bio page', async ({ page }) => {
     // Mock successful registration
     await page.route('**/api/auth/register', route => {
       return route.fulfill({
@@ -184,23 +184,9 @@ test.describe('Register - Credentials Page', () => {
     // Submit form
     await page.locator(selectors.register.submitBtn).click();
     
-    try {
-      // Check for success message (might be a toast or on the page)
-      await expect(
-        page.getByText(/account created successfully/i)
-      ).toBeVisible({
-        timeout: 5000,
-      });
-    } catch (e) {
-      // If no success message, check if we were redirected to login
-      await page.waitForURL('**/auth/login', { timeout: 5000 });
-      expect(page.url()).toContain('/auth/login');
-      return;
-    }
-    
-    // If we got a success message, wait for redirect to login
-    await page.waitForURL('**/auth/login', { timeout: 5000 });
-    expect(page.url()).toContain('/auth/login');
+    // Should redirect to bio page (next step in registration)
+    await page.waitForURL('**/register/bio', { timeout: 5000 });
+    expect(page.url()).toContain('/register/bio');
   });
 
   test('should show loading state during submission', async ({ page }) => {

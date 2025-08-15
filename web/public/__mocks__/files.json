@@ -1,0 +1,7 @@
+[
+  { "id": "1", "name": "Project Alpha.wav", "size": 45200000, "status": "inbox" },
+  { "id": "2", "name": "Mixdown Final.mp3", "size": 12800000, "status": "sent" },
+  { "id": "3", "name": "Session Notes.pdf", "size": 2100000, "status": "processing" },
+  { "id": "4", "name": "Bass Track.wav", "size": 32000000, "status": "inbox" },
+  { "id": "5", "name": "Drum Loop.wav", "size": 8500000, "status": "sent" }
+]

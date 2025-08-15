@@ -14,12 +14,6 @@ import type {
   DeviceStatus,
 } from './types';
 
-// Environment check
-export const shouldUseMocks = () => {
-  return process.env.NEXT_PUBLIC_USE_MOCKS === 'true' || 
-         process.env.NODE_ENV === 'test' || 
-         typeof window === 'undefined';
-};
 
 // API base configuration
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -59,6 +53,10 @@ export const api = {
   getPlugins: () => shouldUseMocks()
     ? mockClient(getMockData.plugins())
     : apiClient<Plugin[]>('/plugins'),
+
+  scanPlugins: () => shouldUseMocks()
+    ? mockClient(getMockData.scanPlugins())
+    : apiClient<{ plugins: Plugin[]; stats: DashboardStats }>('/plugins/scan', { method: 'POST' }),
 
   // Activities
   getActivities: () => shouldUseMocks()
@@ -284,6 +282,21 @@ export const useConnectDevice = () => {
     mutationFn: api.connectDevice,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deviceStatus'] });
+    },
+  });
+};
+
+export const useScanPlugins = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: api.scanPlugins,
+    onSuccess: (data) => {
+      // Update both plugins and dashboard data
+      queryClient.setQueryData(['plugins'], data.plugins);
+      queryClient.setQueryData(['dashboard'], data.stats);
+      queryClient.invalidateQueries({ queryKey: ['plugins'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 };

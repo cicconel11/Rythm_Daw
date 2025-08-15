@@ -21,8 +21,42 @@ export const useTransferActions = () => {
     PreviousTransfers
   >({
     mutationFn: async ({ id, dto }) => {
-      const res = await api.post<FileTransfer>(`/files/${id}/accept`, dto);
-      return FileTransferSchema.parse(res.data);
+      const ws = new WebSocket(
+        (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000") + "/file-transfer",
+      );
+      
+      return new Promise<FileTransfer>((resolve, reject) => {
+        ws.onopen = () => {
+          ws.send(JSON.stringify({
+            event: "accept_transfer",
+            data: { transferId: id },
+          }));
+        };
+        
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.event === "transfer-status" && msg.status === "accepted") {
+            ws.close();
+            // Return a mock transfer object since we don't get the full transfer back
+            resolve(FileTransferSchema.parse({
+              id,
+              file: { id, name: "", size: 0, type: "", lastModified: Date.now() },
+              status: "accepted",
+              progress: 100,
+              timestamp: new Date().toISOString(),
+              direction: "received",
+            }));
+          } else if (msg.event === "transfer-error") {
+            ws.close();
+            reject(new Error(msg.data.message));
+          }
+        };
+        
+        ws.onerror = (error) => {
+          ws.close();
+          reject(error);
+        };
+      });
     },
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: ["transfers"] });
@@ -51,8 +85,42 @@ export const useTransferActions = () => {
     PreviousTransfers
   >({
     mutationFn: async ({ id, dto }) => {
-      const res = await api.post<FileTransfer>(`/files/${id}/decline`, dto);
-      return FileTransferSchema.parse(res.data);
+      const ws = new WebSocket(
+        (process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000") + "/file-transfer",
+      );
+      
+      return new Promise<FileTransfer>((resolve, reject) => {
+        ws.onopen = () => {
+          ws.send(JSON.stringify({
+            event: "decline_transfer",
+            data: { transferId: id },
+          }));
+        };
+        
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+          if (msg.event === "transfer-status" && msg.status === "declined") {
+            ws.close();
+            // Return a mock transfer object since we don't get the full transfer back
+            resolve(FileTransferSchema.parse({
+              id,
+              file: { id, name: "", size: 0, type: "", lastModified: Date.now() },
+              status: "declined",
+              progress: 0,
+              timestamp: new Date().toISOString(),
+              direction: "received",
+            }));
+          } else if (msg.event === "transfer-error") {
+            ws.close();
+            reject(new Error(msg.data.message));
+          }
+        };
+        
+        ws.onerror = (error) => {
+          ws.close();
+          reject(error);
+        };
+      });
     },
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: ["transfers"] });
@@ -76,11 +144,11 @@ export const useTransferActions = () => {
 
   const download = useMutation({
     mutationFn: async (id: string) => {
-      const response = await api.get<{ downloadUrl: string }>(
+      const response = await api.get<{ url: string }>(
         `/files/${id}/download`,
       );
-      if (response.data?.downloadUrl) {
-        window.open(response.data.downloadUrl, "_blank");
+      if (response.data?.url) {
+        window.open(response.data.url, "_blank");
       }
     },
   });
